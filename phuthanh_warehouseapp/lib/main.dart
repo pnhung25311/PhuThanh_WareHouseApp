@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/router/AppRouter.router.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 void main() {
-  runApp(const MainApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  AppState.instance.init();
+  runApp(const MyApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Hello World!'),
-        ),
-      ),
+    return MaterialApp(
+      title: 'Demo 2025',
+      debugShowCheckedModeBanner: false,
+      initialRoute: '/login',
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }
