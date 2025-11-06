@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseSearchScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseScreenHome.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomBottomNavigator.custom.dart';
 

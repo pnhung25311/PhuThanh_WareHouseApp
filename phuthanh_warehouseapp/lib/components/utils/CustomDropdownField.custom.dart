@@ -142,12 +142,12 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                                 itemBuilder: (context, index) {
                                   final item = _filteredItems[index];
                                   final label = widget.getLabel(item);
+                                  print("==============================>>>");
+                                  print(label.toString());
                                   final isSelected =
                                       widget.selectedValue != null &&
-                                      widget.getLabel(
-                                            widget.selectedValue as T,
-                                          ) ==
-                                          label;
+                                      widget.getLabel(widget.selectedValue as T,) == label;
+                                  print(isSelected);
                                   return ListTile(
                                     title: Text(
                                       label,
@@ -197,7 +197,6 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
     final display = widget.selectedValue == null
         ? (widget.hintText ?? 'Chưa chọn')
         : widget.getLabel(widget.selectedValue as T);
-
     return GestureDetector(
       onTap: widget.readOnly ? null : _openSelectDialog,
       child: AbsorbPointer(

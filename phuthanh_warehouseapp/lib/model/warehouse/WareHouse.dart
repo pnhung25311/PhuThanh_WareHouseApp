@@ -1,142 +1,143 @@
 class WareHouse {
-  final String productID;
+  final String dataWareHouseAID;
+  final String productAID;
+  final String? productID;
   final String? idKeeton;
-  final String idIndustrial;
+  final String? idIndustrial;
   final String? idPartNo;
   final String? idReplacedPartNo;
-  final String nameProduct;
-  final double qty;
-  final double qtyExpected;
-  final String idBill;
-  final String parameter;
-  final int manufacturerID;
-  final int countryID;
-  final int supplierID;
-  final int unitID;
-  final String locationID;
-  final String img1;
-  final String img2;
-  final String img3;
-  final String remark;
-  final String? fullName;
-  final String lastModifiedTime;
+  final String? nameProduct;
+  final double? qtyExpected;
+  final String? idBill;
+  final String? parameter;
+  final String? vehicleDetail;
+  final int? vehicleTypeID;
+  final double? qty;
+  final int? manufacturerID;
+  final int? countryID;
+  final int? supplierID;
+  final int? unitID;
+  final String? locationID;
+  final String? img1;
+  final String? img2;
+  final String? img3;
+  final String? remarkOfProduct;
+  final DateTime? lastTime;
+  final String? remarkOfDataWarehouse;
+  final String? lastUser;
 
-  WareHouse({
-    required this.productID,
-    required this.idKeeton,
-    required this.idIndustrial,
-    required this.idPartNo,
-    required this.idReplacedPartNo,
-    required this.nameProduct,
-    required this.qty,
-    required this.qtyExpected,
-    required this.idBill,
-    required this.parameter,
-    required this.manufacturerID,
-    required this.countryID,
-    required this.supplierID,
-    required this.unitID,
-    required this.locationID,
-    required this.img1,
-    required this.img2,
-    required this.img3,
-    required this.remark,
-    required this.fullName,
-    required this.lastModifiedTime,
+  const WareHouse({
+    required this.dataWareHouseAID,
+    required this.productAID,
+    this.productID,
+    this.idKeeton,
+    this.idIndustrial,
+    this.idPartNo,
+    this.idReplacedPartNo,
+    this.nameProduct,
+    this.qtyExpected,
+    this.idBill,
+    this.parameter,
+    this.vehicleDetail,
+    this.vehicleTypeID,
+    this.qty,
+    this.manufacturerID,
+    this.countryID,
+    this.supplierID,
+    this.unitID,
+    this.locationID,
+    this.img1,
+    this.img2,
+    this.img3,
+    this.remarkOfProduct,
+    this.lastTime,
+    this.remarkOfDataWarehouse,
+    this.lastUser,
   });
 
+  /// ---- JSON serialization ----
   factory WareHouse.fromJson(Map<String, dynamic> json) {
     return WareHouse(
-      productID: json["ProductID"] ?? "",
-      idKeeton: json["ID_Keeton"],
-      idIndustrial: json["ID_Industrial"] ?? "",
-      idPartNo: json["ID_PartNo"],
-      idReplacedPartNo: json["ID_ReplacedPartNo"],
-      nameProduct: json["NameProduct"] ?? "",
-      qty: (json["Qty"] ?? 0).toDouble(),
-      qtyExpected: (json["Qty_Expected"] ?? 0).toDouble(),
-      idBill: json["ID_Bill"] ?? "",
-      parameter: json["Parameter"] ?? "",
-      manufacturerID: json["ManufacturerID"] ?? 0,
-      countryID: json["CountryID"] ?? 0,
-      supplierID: json["SupplierID"] ?? 0,
-      unitID: json["UnitID"] ?? 0,
-      locationID: json["LocationID"] ?? 0,
-      img1: json["Img1"] ?? "",
-      img2: json["Img2"] ?? "",
-      img3: json["Img3"] ?? "",
-      remark: json["Remark"] ?? "",
-      fullName: (json["FullName"] ?? "").toString(),
-      lastModifiedTime: json["LastModifiedTime"] ?? "",
+      dataWareHouseAID: json['DataWareHouseAID'] ?? '',
+      productAID: json['ProductAID'] ?? '',
+      productID: json['ProductID'] ?? '',
+      idKeeton: json['ID_Keeton'] ?? '',
+      idIndustrial: json['ID_Industrial'] ?? '',
+      idPartNo: json['ID_PartNo'] ?? '',
+      idReplacedPartNo: json['ID_ReplacedPartNo'] ?? '',
+      nameProduct: json['NameProduct'] ?? '',
+      qtyExpected: json['Qty_Expected'] != null
+          ? double.tryParse(json['Qty_Expected'].toString())
+          : 0,
+      qty: json['Qty'] != null ? double.tryParse(json['Qty'].toString()) : 0,
+      idBill: json['ID_Bill'] ?? '',
+      parameter: json['Parameter'] ?? '',
+      vehicleDetail: json['VehicleDetail'] ?? '',
+      vehicleTypeID: (json['VehicleTypeID'] as num?)?.toInt(),
+      manufacturerID: (json['ManufacturerID'] as num?)?.toInt(),
+      countryID: (json['CountryID'] as num?)?.toInt(),
+      supplierID: (json['SupplierID'] as num?)?.toInt(),
+      unitID: (json['UnitID'] as num?)?.toInt(),
+      locationID: json['LocationID'] ?? "",
+      img1: json['Img1'] ?? '',
+      img2: json['Img2'] ?? '',
+      img3: json['Img3'] ?? '',
+      remarkOfProduct: json['RemarkOfProduct'] ?? '',
+      lastTime: json['LastTime'] != null
+          ? DateTime.tryParse(json['LastTime'])
+          : null,
+      remarkOfDataWarehouse: json['RemarkOfDataWarehouse'] ?? '',
+      lastUser: json['lastUser'] ?? '',
     );
   }
 
-  factory WareHouse.empty() {
-    return WareHouse(
-      productID: "",
-      idKeeton: null,
-      idIndustrial: "",
-      idPartNo: null,
-      idReplacedPartNo: null,
-      nameProduct: "",
-      qty: 0.0,
-      qtyExpected: 0.0,
-      idBill: "",
-      parameter: "",
-      manufacturerID: 0,
-      countryID: 0,
-      supplierID: 0,
-      unitID: 0,
-      locationID: "",
-      img1: "",
-      img2: "",
-      img3: "",
-      remark: "",
-      fullName: "",
-      lastModifiedTime: "",
-    );
-  }
-
-  /// 🔹 Convert Object → JSON
   Map<String, dynamic> toJson() {
     return {
-      "ProductID": productID,
-      "ID_Keeton": idKeeton,
-      "ID_Industrial": idIndustrial,
-      "ID_PartNo": idPartNo,
-      "ID_ReplacedPartNo": idReplacedPartNo,
-      "NameProduct": nameProduct,
-      "Qty": qty,
-      "Qty_Expected": qtyExpected,
-      "ID_Bill": idBill,
-      "Parameter": parameter,
-      "ManufacturerID": manufacturerID,
-      "CountryID": countryID,
-      "SupplierID": supplierID,
-      "UnitID": unitID,
-      "LocationID": locationID,
-      "Img1": img1,
-      "Img2": img2,
-      "Img3": img3,
-      "Remark": remark,
-      "fullName": fullName ?? "",
-      "LastModifiedTime": lastModifiedTime,
+      'DataWareHouseAID': dataWareHouseAID,
+      'ProductAID': productAID,
+      'ProductID': productID,
+      'ID_Keeton': idKeeton,
+      'ID_Industrial': idIndustrial,
+      'ID_PartNo': idPartNo,
+      'ID_ReplacedPartNo': idReplacedPartNo,
+      'NameProduct': nameProduct,
+      'Qty_Expected': qtyExpected,
+      'ID_Bill': idBill,
+      'Parameter': parameter,
+      'VehicleDetail': vehicleDetail,
+      'VehicleTypeID': vehicleTypeID,
+      'Qty': qty,
+      'ManufacturerID': manufacturerID,
+      'CountryID': countryID,
+      'SupplierID': supplierID,
+      'UnitID': unitID,
+      'LocationID': locationID,
+      'Img1': img1,
+      'Img2': img2,
+      'Img3': img3,
+      'RemarkOfProduct': remarkOfProduct,
+      'LastTime': lastTime?.toIso8601String(),
+      'RemarkOfDataWarehouse': remarkOfDataWarehouse,
+      'lastUser': lastUser,
     };
   }
 
-  // ...existing code...
-  // thêm method copyWith bên trong class WareHouse
+  /// ---- copyWith (để update object dễ dàng) ----
   WareHouse copyWith({
+    String? dataWareHouseAID,
+    String? productAID,
     String? productID,
     String? idKeeton,
     String? idIndustrial,
     String? idPartNo,
     String? idReplacedPartNo,
     String? nameProduct,
-    double? qty,
     double? qtyExpected,
     String? idBill,
     String? parameter,
+    String? vehicleDetail,
+    int? vehicleTypeID,
+    int? qty,
     int? manufacturerID,
     int? countryID,
     int? supplierID,
@@ -145,34 +146,96 @@ class WareHouse {
     String? img1,
     String? img2,
     String? img3,
-    String? remark,
-    String? fullName,
-    String? lastModifiedTime,
+    String? remarkOfProduct,
+    DateTime? lastTime,
+    String? remarkOfDataWarehouse,
+    String? lastUser
   }) {
     return WareHouse(
+      dataWareHouseAID: dataWareHouseAID ?? this.dataWareHouseAID,
+      productAID: productAID ?? this.productAID,
       productID: productID ?? this.productID,
       idKeeton: idKeeton ?? this.idKeeton,
       idIndustrial: idIndustrial ?? this.idIndustrial,
       idPartNo: idPartNo ?? this.idPartNo,
       idReplacedPartNo: idReplacedPartNo ?? this.idReplacedPartNo,
       nameProduct: nameProduct ?? this.nameProduct,
-      qty: qty ?? this.qty,
-      qtyExpected: qtyExpected ?? this.qtyExpected,
+      qtyExpected: qtyExpected?.toDouble() ?? this.qtyExpected,
       idBill: idBill ?? this.idBill,
       parameter: parameter ?? this.parameter,
-      manufacturerID: manufacturerID ?? this.manufacturerID,
-      countryID: countryID ?? this.countryID,
-      supplierID: supplierID ?? this.supplierID,
-      unitID: unitID ?? this.unitID,
+      vehicleDetail: vehicleDetail ?? this.vehicleDetail,
+      vehicleTypeID: (vehicleTypeID as num?)?.toInt() ?? this.vehicleTypeID,
+      qty: qty?.toDouble() ?? this.qty,
+      manufacturerID: (manufacturerID as num?)?.toInt() ?? this.manufacturerID,
+      countryID: (countryID as num?)?.toInt() ?? this.countryID,
+      supplierID: (supplierID as num?)?.toInt() ?? this.supplierID,
+      unitID: (unitID as num?)?.toInt() ?? this.unitID,
       locationID: locationID ?? this.locationID,
       img1: img1 ?? this.img1,
       img2: img2 ?? this.img2,
       img3: img3 ?? this.img3,
-      remark: remark ?? this.remark,
-      fullName: fullName ?? this.fullName,
-      lastModifiedTime: lastModifiedTime ?? this.lastModifiedTime,
+      remarkOfProduct: remarkOfProduct ?? this.remarkOfProduct,
+      lastTime: lastTime ?? this.lastTime,
+      remarkOfDataWarehouse:
+          remarkOfDataWarehouse ?? this.remarkOfDataWarehouse,
+          lastUser: lastUser??this.lastUser
     );
   }
- // ...existing code...
-}
 
+  /// ---- equals & hashCode (so sánh 2 object) ----
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WareHouse &&
+          runtimeType == other.runtimeType &&
+          dataWareHouseAID == other.dataWareHouseAID &&
+          productAID == other.productAID;
+
+  @override
+  int get hashCode => dataWareHouseAID.hashCode ^ productAID.hashCode;
+
+  /// ---- toString (in ra log dễ đọc) ----
+  @override
+  String toString() {
+    return 'WareHouse(product: $nameProduct, qty: $qty, lastTime: $lastTime)';
+  }
+
+  /// ---- Tính toán hoặc xử lý phụ ----
+  bool get isLowStock => (qty ?? 0) < (qtyExpected ?? 0);
+
+  String get formattedLastTime => lastTime != null
+      ? '${lastTime!.day}/${lastTime!.month}/${lastTime!.year}'
+      : 'N/A';
+
+  /// ✅ Constructor rỗng
+  factory WareHouse.empty() {
+    return const WareHouse(
+      dataWareHouseAID: '',
+      productAID: '',
+      productID: '',
+      idKeeton: '',
+      idIndustrial: '',
+      idPartNo: '',
+      idReplacedPartNo: '',
+      nameProduct: '',
+      qtyExpected: 0,
+      idBill: '',
+      parameter: '',
+      vehicleDetail: '',
+      vehicleTypeID: 0,
+      qty: 0,
+      manufacturerID: null, // hoặc 0
+      countryID: null, // hoặc 0
+      supplierID: null, // hoặc 0
+      unitID: null, // hoặc 0
+      locationID: null, // hoặc 0
+      img1: '',
+      img2: '',
+      img3: '',
+      remarkOfProduct: '',
+      lastTime: null,
+      remarkOfDataWarehouse: '',
+      lastUser:'',
+    );
+  }
+}

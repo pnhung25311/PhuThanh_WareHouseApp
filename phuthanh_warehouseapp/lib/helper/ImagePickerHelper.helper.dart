@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 // import 'package:phuthanh_warehouseapp/Screen/WareHouse/ViewImgWareHouse.screen.dart';
-import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
+// import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phuthanh_warehouseapp/service/SftpService.service.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
@@ -140,15 +140,15 @@ class ImagePickerHelper {
                     label: const Text("Đóng"),
                   ),
                   const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: () {
-                      AppState.instance.remove(nameImg);
-                      onImageChanged(null);
-                      Navigator.pop(ctx);
-                    },
-                    icon: const Icon(Icons.delete, color: Colors.redAccent),
-                    label: const Text("Xóa ảnh"),
-                  ),
+                  // TextButton.icon(
+                  //   onPressed: () {
+                  //     AppState.instance.remove(nameImg);
+                  //     onImageChanged(null);
+                  //     Navigator.pop(ctx);
+                  //   },
+                  //   icon: const Icon(Icons.delete, color: Colors.redAccent),
+                  //   label: const Text("Xóa ảnh"),
+                  // ),
                 ],
               ),
             ),
@@ -164,14 +164,15 @@ class ImagePickerHelper {
     required String? currentImageUrl,
     required String productID,
     required ValueChanged<String?> onImageChanged,
-    required WareHouse wh,
+    // required WareHouse wh,
     required String nameImg,
+    required bool isUpdate,
   }) async {
     showModalBottomSheet(
       context: context,
       builder: (ctx) => SafeArea(
         child: Wrap(
-          children: currentImageUrl != null && currentImageUrl.isNotEmpty
+          children: currentImageUrl != null && currentImageUrl.isNotEmpty || !isUpdate
               ? [
                   // Đã có ảnh → chỉ hiện xem và xóa
                   ListTile(
@@ -183,83 +184,90 @@ class ImagePickerHelper {
                         context,
                         nameImg,
                         onImageChanged: onImageChanged,
-                        imageUrl: currentImageUrl
+                        imageUrl: currentImageUrl,
                       );
                     },
                   ),
-
-                  ListTile(
-                    leading: const Icon(Icons.delete, color: Colors.redAccent),
-                    title: const Text('Xóa ảnh hiện tại'),
-                    onTap: () async {
-                      Navigator.pop(ctx);
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (dctx) => AlertDialog(
-                          title: const Text("Xác nhận xóa ảnh"),
-                          content: const Text("Bạn có chắc muốn xóa ảnh này?"),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(dctx, false),
-                              child: const Text("Hủy"),
+                  if (isUpdate)
+                    ListTile(
+                      leading: const Icon(
+                        Icons.delete,
+                        color: Colors.redAccent,
+                      ),
+                      title: const Text('Xóa ảnh hiện tại'),
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (dctx) => AlertDialog(
+                            title: const Text("Xác nhận xóa ảnh"),
+                            content: const Text(
+                              "Bạn có chắc muốn xóa ảnh này?",
                             ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(dctx, true),
-                              child: const Text("Xóa"),
-                            ),
-                          ],
-                        ),
-                      );
-                      if (confirm == true) {
-                        // final success = await deleteImage(
-                        //   currentImageUrl,
-                        //   productID,
-                        // );
-                        // if (success)
-                        onImageChanged(null);
-                      }
-                    },
-                  ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dctx, false),
+                                child: const Text("Hủy"),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(dctx, true),
+                                child: const Text("Xóa"),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true) {
+                          final success = await deleteImage(
+                            currentImageUrl.toString(),
+                            productID,
+                          );
+                          if (success)
+                          onImageChanged(null);
+                        }
+                      },
+                    ),
                 ]
               : [
                   // Chưa có ảnh → chỉ hiện chọn mới
-                  ListTile(
-                    leading: const Icon(Icons.photo_library),
-                    title: const Text('Chọn ảnh từ thư viện'),
-                    onTap: () async {
-                      final file = await pickImage(
-                        context,
-                        fromCamera: false,
-                        nameImg: nameImg,
-                      );
-                      if (file != null) {
-                        final url = await uploadImage(file, productID);
-                        if (url != null) onImageChanged(url);
-                      }
-                      Navigator.pop(ctx);
-                    },
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.camera_alt),
-                    title: const Text('Chụp ảnh mới'),
-                    onTap: () async {
-                      final file = await pickImage(
-                        context,
-                        fromCamera: true,
-                        nameImg: nameImg,
-                      );
-                      print("==============================================");
-                      print(file);
-                      if (file != null) {
-                        // final url = await uploadImage(file, productID);
-                        //
-                        print("đã vào");
-                        AppState.instance.set(nameImg, file);
-                        onImageChanged(file.path);
-                      }
-                      Navigator.pop(ctx);
-                    },
-                  ),
+                  if (isUpdate)
+                    ListTile(
+                      leading: const Icon(Icons.photo_library),
+                      title: const Text('Chọn ảnh từ thư viện'),
+                      onTap: () async {
+                        final file = await pickImage(
+                          context,
+                          fromCamera: false,
+                          nameImg: nameImg,
+                        );
+                        if (file != null) {
+                          final url = await uploadImage(file, productID);
+                          if (url != null) onImageChanged(url);
+                        }
+                        Navigator.pop(ctx);
+                      },
+                    ),
+                  if (isUpdate)
+                    ListTile(
+                      leading: const Icon(Icons.camera_alt),
+                      title: const Text('Chụp ảnh mới'),
+                      onTap: () async {
+                        final file = await pickImage(
+                          context,
+                          fromCamera: true,
+                          nameImg: nameImg,
+                        );
+                        print("==============================================");
+                        print(file);
+                        if (file != null) {
+                          // final url = await uploadImage(file, productID);
+                          //
+                          print("đã vào");
+                          AppState.instance.set(nameImg, file);
+                          onImageChanged(file.path);
+                        }
+                        Navigator.pop(ctx);
+                      },
+                    ),
                 ],
         ),
       ),

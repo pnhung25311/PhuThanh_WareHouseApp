@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class HistoryService {
   static Future<List<History>> LoadDtata(String condition) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/find/vwWareHouseHistory/productID/" + condition,
+        "dynamic/find/History"+AppState.instance.get("StatusHome")+"/DataWareHouseAID/" + condition,
       );
 
       if (response.statusCode == 200) {
@@ -24,10 +25,12 @@ class HistoryService {
     }
   }
 
-    static Future<History?> FindByIDHistory(String condition) async {
+  static Future<History?> FindByIDHistory(String condition) async {
     try {
       const apiClient = ApiClient();
-      final response = await apiClient.get("dynamic/find/history/productID/" + condition);
+      final response = await apiClient.get(
+        "dynamic/find/history/productID/" + condition,
+      );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
@@ -43,4 +46,27 @@ class HistoryService {
     }
   }
 
+  static Future<Map<String, dynamic>> AddHistory(
+    String table,
+    String body,
+  ) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.post(
+        "dynamic/insert/history" +
+            AppState.instance.get("StatusHome") +
+            "/" +
+            table,
+        body,
+      );
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
+    } catch (e) {
+      print(e);
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
+    }
+  }
 }

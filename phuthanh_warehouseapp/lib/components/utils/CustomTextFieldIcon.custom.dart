@@ -21,6 +21,7 @@ class CustomTextFieldIcon extends StatefulWidget {
   final Color? borderColor;
   final ValueChanged<String>? onChanged;
   final List<TextInputFormatter>? inputFormatters;
+  final ValueChanged<String>? onSubmitted;
 
   const CustomTextFieldIcon({
     super.key,
@@ -36,12 +37,16 @@ class CustomTextFieldIcon extends StatefulWidget {
     this.isPassword = false,
     this.height = 48,
     this.fontSize = 14,
-    this.contentPadding = const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    this.contentPadding = const EdgeInsets.symmetric(
+      horizontal: 12,
+      vertical: 8,
+    ),
     this.borderRadius = 8,
     this.backgroundColor,
     this.borderColor,
     this.onChanged,
     this.inputFormatters,
+    this.onSubmitted, // 🔹 Thêm dòng này
   });
 
   @override
@@ -58,7 +63,9 @@ class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
 
     return InputDecoration(
       hintText: widget.hintText ?? widget.label,
-      prefixIcon: widget.prefixIcon != null ? Icon(widget.prefixIcon, color: iconColor) : null,
+      prefixIcon: widget.prefixIcon != null
+          ? Icon(widget.prefixIcon, color: iconColor)
+          : null,
       suffixIcon: widget.suffixIcon != null
           ? IconButton(
               icon: Icon(widget.suffixIcon, color: iconColor),
@@ -73,7 +80,9 @@ class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
       filled: widget.backgroundColor != null,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(widget.borderRadius),
-        borderSide: BorderSide(color: widget.borderColor ?? Colors.grey.shade400),
+        borderSide: BorderSide(
+          color: widget.borderColor ?? Colors.grey.shade400,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(widget.borderRadius),
@@ -124,6 +133,7 @@ class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
                   decoration: _buildDecoration(),
                   onChanged: widget.onChanged,
                   inputFormatters: widget.inputFormatters,
+                  onSubmitted: widget.onSubmitted,
                 ),
         ),
       ],

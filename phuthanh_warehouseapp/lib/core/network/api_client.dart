@@ -1,7 +1,9 @@
-import 'dart:convert';
+// import 'dart:convert';
 // import 'dart:io';
 
 // import 'package:flutter_demo/model/warehouse/WareHouse.dart';
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
 
 class ApiClient {
@@ -13,9 +15,8 @@ class ApiClient {
     try {
       final url = Uri.parse('http://checkip.amazonaws.com/');
       final result = await http.get(url);
-      // print(result);
-      print("AAAA123 "+ result.statusCode.toString());
-      if (result.body.trim() == "14.224.207.115" || result.body.trim() == "Unknown") {
+      if (result.body.trim() == "14.224.207.115" ||
+          result.body.trim() == "Unknown") {
         return localIP;
       }
       return puclicIP;
@@ -33,26 +34,60 @@ class ApiClient {
   }
 
   // POST request
-  Future<http.Response> post(String endpoint, Map<String, dynamic> body) async {
+  Future<http.Response> post(String endpoint, String body) async {
     final baseUrl = await getBaseUrl(); // ✅ Lấy URL async
     final url = Uri.parse('$baseUrl$endpoint');
-    print("================================>123");
-    print(url);
     return await http.post(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
+      body: body,
     );
   }
 
   // PUT request
-  Future<http.Response> put(String endpoint, Map<String, dynamic> body) async {
+  Future<http.Response> put(String endpoint, String body) async {
     final baseUrl = await getBaseUrl(); // ✅ Lấy URL async
     final url = Uri.parse('$baseUrl$endpoint');
     return await http.put(
       url,
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
+      body: body,
     );
+  }
+
+  /// ✅ POST upload file
+  Future<http.StreamedResponse> postFile(
+    String endpoint,
+    File file, {
+    Map<String, String>? fields, // optional: gửi thêm form-data text
+    String fileField = "file", // tên field upload (backend nhận)
+  }) async {
+    final baseUrl = await getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    final request = http.MultipartRequest('POST', url);
+
+    // Gửi dữ liệu text (nếu có)
+    if (fields != null) {
+      request.fields.addAll(fields);
+    }
+
+    // Gửi file
+    final fileStream = http.MultipartFile.fromBytes(
+      fileField,
+      await file.readAsBytes(),
+      filename: file.path.split('/').last,
+    );
+
+    request.files.add(fileStream);
+
+    return await request.send();
+  }
+
+  // Delete
+  Future<http.Response> delete(String endpoint) async {
+    final baseUrl = await getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+    return await http.delete(url);
   }
 }

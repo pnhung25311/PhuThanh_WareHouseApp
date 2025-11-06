@@ -1,65 +1,66 @@
 class History {
-  final int? id;
-  final String? productID;
+  final String historyAID;
+  final String dataWareHouseAID;
   final double qty;
-  final int? idEmployee;
-  final String? fullName;
-  final int? partner;
-  final String? remark;
-  final String? time;
-  final String? timeUpdate;
+  final int employeeId;
+  final int partner;
+  final String remark;
+  final String time;
+  final String lastUser;
+  final String lastTime;
 
   History({
-    this.id,
-    this.productID,
+    required this.historyAID,
+    required this.dataWareHouseAID,
     required this.qty,
-    this.idEmployee,
-    this.fullName,
-    this.partner,
-    this.remark,
-    this.time,
-    this.timeUpdate,
+    required this.employeeId,
+    required this.partner,
+    required this.remark,
+    required this.time,
+    required this.lastUser,
+    required this.lastTime,
   });
+
+  /// ✅ Constructor để tạo object rỗng (empty)
+  factory History.empty() {
+    return History(
+      historyAID: "",
+      dataWareHouseAID: "",
+      qty: 0.0,
+      employeeId: 0,
+      partner: 0,
+      remark: "",
+      time: "",
+      lastUser: "",
+      lastTime: "",
+    );
+  }
 
   factory History.fromJson(Map<String, dynamic> json) {
     return History(
-      id: json['ID'] as int?,
-      productID: json['ProductID']?.toString(),
+      historyAID: json['HistoryAID'] ?? '',
+      dataWareHouseAID: json['DataWareHouseAID'] ?? '',
       qty: (json['Qty'] ?? 0).toDouble(),
-      idEmployee: json['ID_Employee'] as int?,
-      partner: json['Partner'] as int?,
-      remark: json['Remark']?.toString(),
-      time: json['Time']?.toString(),
-      timeUpdate: json['Time_Update']?.toString(),
-      fullName: json['FullName']?.toString(),
+      employeeId: json['ID_Employee'] ?? 0,
+      partner: json['Partner'] ?? 0,
+      remark: json['Remark'] ?? '',
+      time: json['Time'] ?? '',
+      lastUser: json['LastUser'] ?? '',
+      lastTime: json['LastTime'] ?? '',
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'ID': id,
-      'ProductID': productID,
+      'HistoryAID': historyAID,
+      'DataWareHouseAID': dataWareHouseAID,
       'Qty': qty,
-      'ID_Employee': idEmployee,
+      'ID_Employee': employeeId,
       'Partner': partner,
       'Remark': remark,
       'Time': time,
-      'Time_Update': timeUpdate,
-      'FullName': fullName,
+      'LastUser': lastUser,
+      'LastTime': lastTime,
     };
-  }
-
-  factory History.empty() {
-    return History(
-      id: null,
-      productID: null,
-      qty: 0,
-      idEmployee: null,
-      partner: null,
-      remark: '',
-      time: '',
-      timeUpdate: '',
-      fullName: '',
-    );
   }
 }

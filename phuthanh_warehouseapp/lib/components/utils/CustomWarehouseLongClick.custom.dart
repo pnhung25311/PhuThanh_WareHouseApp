@@ -1,12 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomDialog.custom.dart';
-import 'package:phuthanh_warehouseapp/helper/WarehouseHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
-import 'package:phuthanh_warehouseapp/Screen/WareHouse/ViewImgWareHouse.screen.dart';
-import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseHistoryScreen.screen.dart';
-import 'package:flutter/services.dart'; // cần để dùng Clipboard
-import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
+import 'package:phuthanh_warehouseapp/Screen/history/WarehouseHistoryScreen.screen.dart';
+import 'package:flutter/services.dart'; 
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 
 class WarehouseLongClick {
@@ -17,56 +13,6 @@ class WarehouseLongClick {
     // Kiểm tra null và lấy fullname
     String? fullname = account?["FullName"];
     return fullname;
-  }
-
-  static Future<void> showDialog(BuildContext context, WareHouse item) async {
-    List<String> items = await Warehouseservice.getItemhWareHouse();
-    // 🔹 Tạo Map từ danh sách
-    Map<String, String> converted = {
-      for (var it in items) it: convertWarehouseName(it),
-    };
-    final cleared = WareHouseHelper.clearFields(item, [
-      'Qty_Expected',
-      'locationID',
-      'ID_Bill',
-      'Qty',
-      'Remark',
-    ]);
-    String? fullname = await getFullname();
-    final clearedWithFullname = cleared.copyWith(fullName: fullname ?? '');
-    // --- Single-select example (nếu cần) ---
-    final chosenSingle = await GenericPickerDialog.showSingle<String>(
-      context,
-      items: items,
-      title: 'Chọn 1 vị trí',
-      labelBuilder: (key) => converted[key] ?? key,
-      initialValue: null, // hoặc a key string nếu có
-    );
-
-    if (chosenSingle != null) {
-      print(chosenSingle);
-      print(item.toJson());
-      final response = await Warehouseservice.addWarehouseRow(
-        chosenSingle,
-        clearedWithFullname.toJson(),
-      );
-
-      if (response.isNotEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('✅ Nhân bản thành công')));
-        Navigator.pop(context, true); // quay lại và báo màn trước refresh
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('❌ Lỗi nhân bản: ${response}')));
-      }
-      Navigator.pop(context);
-    }
-  }
-
-  static String convertWarehouseName(String name) {
-    return name.replaceFirst('WareHouse', 'Kho ');
   }
 
   static void show(BuildContext context, WareHouse item) {
@@ -80,7 +26,7 @@ class WarehouseLongClick {
         children: [
           Center(
             child: Text(
-              item.productID,
+              item.productID.toString(),
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 22,
@@ -89,17 +35,17 @@ class WarehouseLongClick {
             ),
           ),
           //XEM ẢNH
-          ListTile(
-            leading: const Icon(Icons.image, color: Colors.blue),
-            title: const Text('Xem ảnh'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => ViewImageScreen(item: item)),
-              );
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.image, color: Colors.blue),
+          //   title: const Text('Xem ảnh'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (_) => ViewImageScreen(item: item)),
+          //     );
+          //   },
+          // ),
           //SAO CHÉP
           ListTile(
             leading: const Icon(Icons.copy, color: Colors.green),
@@ -107,7 +53,7 @@ class WarehouseLongClick {
             onTap: () async {
               // 1️⃣ Chuẩn bị nội dung copy
               String textToCopy =
-                  '''Product ID: ${item.productID}\nMã keeton: ${item.idKeeton}\nMã công nghiệp: ${item.idIndustrial}\nDanh điểm: ${item.idPartNo}\nDanh điểm tương đương: ${item.idReplacedPartNo}\nTên sản phẩm: ${item.nameProduct}\nSố lượng: ${item.qty}\nSố lượng dự kiến: ${item.qtyExpected}\nMã số hóa đơn: ${item.idBill}\nThông số: ${item.parameter}\nGhi chú: ${item.remark}\n''';
+                  '''Product ID: ${item.productID}\nMã keeton: ${item.idKeeton}\nMã công nghiệp: ${item.idIndustrial}\nDanh điểm: ${item.idPartNo}\nDanh điểm tương đương: ${item.idReplacedPartNo}\nTên sản phẩm: ${item.nameProduct}\nSố lượng: ${item.qty}\nSố lượng dự kiến: ${item.qtyExpected}\nMã số hóa đơn: ${item.idBill}\nThông số: ${item.parameter}\nGhi chú: ${item.remarkOfDataWarehouse}\n''';
 
               // 2️⃣ Copy vào clipboard
               await Clipboard.setData(ClipboardData(text: textToCopy));
@@ -131,7 +77,7 @@ class WarehouseLongClick {
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
-                      WarehouseHistoryScreen(productID: item.productID),
+                      WarehouseHistoryScreen(item: item),
                 ),
               );
             },
@@ -164,19 +110,19 @@ class WarehouseLongClick {
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
-                      WarehouseDetailScreen(item: item, isUpDate: true),
+                      WarehouseDetailScreen(item: item, isUpDate: true, isReadOnlyHistory: false,),
                 ),
               );
             },
           ),
           //NHÂN BẢN
-          ListTile(
-            leading: const Icon(Icons.update, color: Colors.green),
-            title: const Text('Nhân bản'),
-            onTap: () async {
-              showDialog(context, item);
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.update, color: Colors.green),
+          //   title: const Text('Nhân bản'),
+          //   onTap: () async {
+          //     // showDialog(context, item);
+          //   },
+          // ),
         ],
       ),
     );

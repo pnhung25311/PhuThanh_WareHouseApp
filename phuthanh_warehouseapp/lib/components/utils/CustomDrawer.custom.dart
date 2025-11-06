@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
 
 class CustomDrawer extends StatefulWidget {
-  final VoidCallback? onWarehouseSelected; // 👈 callback reload
+  final VoidCallback? onWarehouseSelected; // callback reload
   const CustomDrawer({super.key, this.onWarehouseSelected});
 
   @override
@@ -16,18 +18,23 @@ class _CustomDrawerState extends State<CustomDrawer> {
   @override
   void initState() {
     super.initState();
-    _loadSelectedWarehouse();
+    _init();
+  }
+
+  Future<void> _init() async {
+    await _loadSelectedWarehouse();
   }
 
   Future<void> _loadSelectedWarehouse() async {
-    String? wh = await MySharedPreferences.getDataString("statusWH");
+    String? wh = AppState.instance.get("StatusHome") ?? "Product";
     setState(() {
       _selectedWarehouse = wh;
     });
   }
 
   String convertWarehouseName(String name) {
-    return name.replaceFirst('WareHouse', 'Kho ');
+    // Chuyển WareHouse1 → Kho 1
+    return name.replaceFirst('DataWareHouse', 'Kho ');
   }
 
   Future<void> _showLogoutDialog(BuildContext context) async {
@@ -38,12 +45,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
         content: const Text('Bạn có chắc chắn muốn đăng xuất không?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => NavigationHelper.pop(context, false),
             child: const Text('Hủy'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => NavigationHelper.pop(context, true),
             child: const Text('Đăng xuất'),
           ),
         ],
@@ -52,8 +59,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
     if (confirm == true) {
       await MySharedPreferences.clearAll();
-      Navigator.pop(context); // đóng drawer
-      Navigator.pushReplacementNamed(context, '/login');
+      NavigationHelper.pop(context); // đóng drawer
+      NavigationHelper.pushReplacementNamed(context, '/login');
     }
   }
 
@@ -63,7 +70,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Header
+          // Header người dùng
           FutureBuilder<String?>(
             future: MySharedPreferences.getDataString('username'),
             builder: (context, snapshot) {
@@ -89,12 +96,33 @@ class _CustomDrawerState extends State<CustomDrawer> {
             },
           ),
 
-          // Danh sách kho
+          // Sản phẩm
+          ListTile(
+            leading: const Icon(Icons.inventory, color: Colors.grey),
+            title: const Text(
+              'Danh sách sản phẩm',
+              style: TextStyle(color: Colors.blue),
+            ),
+            onTap: () {
+              AppState.instance.set("StatusHome", "Product");
+              widget.onWarehouseSelected?.call();
+              Navigator.pop(context, true);
+            },
+          ),
+
+          const Divider(),
+
+          // 🔹 Danh sách kho gọi API
           FutureBuilder<List<String>>(
             future: Warehouseservice.getItemhWareHouse(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
               } else if (snapshot.hasError) {
                 return ListTile(
                   leading: const Icon(Icons.error, color: Colors.red),
@@ -139,18 +167,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     onTap: () async {
-                      await MySharedPreferences.setDataString(
-                        "statusWH",
-                        original,
-                      );
-
+                      AppState.instance.set("StatusHome", original);
+                      AppState.instance.remove("DataWareHouse");
                       setState(() {
                         _selectedWarehouse = original;
                       });
 
-                      Navigator.pop(context);
+                      NavigationHelper.pop(context);
 
-                      // 🔹 Hiển thị thông báo
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Đang ở $display'),
@@ -169,7 +193,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
           const Divider(),
 
-          // 🔹 Đăng xuất có dialog xác nhận
+          // Đăng xuất
           ListTile(
             leading: const Icon(
               Icons.logout,

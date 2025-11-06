@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 
@@ -114,7 +116,7 @@ Future<bool?> showAddDialogDynamic(
                   }
 
                   setBody();
-                  await InfoService.addAppendix(table, body);
+                  await InfoService.addAppendix(table,jsonEncode( body));
                   Navigator.of(context).pop(true); // ✅ Báo thêm thành công
                 },
                 child: const Text('Lưu'),

@@ -25,7 +25,7 @@ class WarehouseItem extends StatelessWidget {
       elevation: 3,
       child: ListTile(
         title: Text(
-          item.nameProduct,
+          item.nameProduct.toString(),
           overflow: TextOverflow.ellipsis, // 👈 rút gọn nếu tên quá dài
           maxLines: 1,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -55,7 +55,11 @@ class WarehouseItem extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => WarehouseDetailScreen(item: item, readOnly: true,),
+              builder: (context) => WarehouseDetailScreen(
+                item: item,
+                readOnly: true,
+                isReadOnlyHistory: true,
+              ),
             ),
           );
         },

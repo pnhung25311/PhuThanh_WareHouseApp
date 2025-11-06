@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/formatters/DotToMinusFormatte.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDatePicker.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDialogAppendix.custom.dart';
@@ -9,24 +7,18 @@ import 'package:phuthanh_warehouseapp/components/utils/CustomSmartDropdown.custo
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextField.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/GenerateCodeAID.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Location.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Unit.model.dart';
-import 'package:phuthanh_warehouseapp/service/HistoryService.service.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
-import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
-class WarehouseDetailScreen extends StatefulWidget {
+class HistoryDetailScreen  extends StatefulWidget {
   final WareHouse item;
   final History itemHistory;
   final bool isUpDate;
@@ -35,7 +27,7 @@ class WarehouseDetailScreen extends StatefulWidget {
   final bool isReadOnlyHistory;
   final bool readOnly;
 
-  WarehouseDetailScreen({
+  HistoryDetailScreen ({
     super.key,
     required this.item,
     History? itemHistory, // ✅ đổi thành nullable
@@ -47,10 +39,10 @@ class WarehouseDetailScreen extends StatefulWidget {
   }) : itemHistory = itemHistory ?? History.empty(); // ✅ gán mặc định ở đây
 
   @override
-  State<WarehouseDetailScreen> createState() => _WarehouseDetailScreenState();
+  State<HistoryDetailScreen > createState() => _HistoryDetailScreenState();
 }
 
-class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
+class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
   List<Country> countries = [];
   List<Manufacturer> manufacturers = [];
   List<Supplier> suppliers = [];
@@ -61,7 +53,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   List<Supplier> suppliers3 = [];
   List<Unit> units = [];
   List<Employee> emps = [];
-  List<VehicleType> vehicles = [];
 
   List<Location> locations = [];
   List<Location> selectedLocation = [];
@@ -76,7 +67,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   Unit? selectedUnit;
   Employee? selectedEmployee;
   String? selectedTimePicker;
-  VehicleType? selectedVehicleType;
 
   final TextEditingController remarkController = TextEditingController();
   final TextEditingController productIDController = TextEditingController();
@@ -90,7 +80,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   final TextEditingController parameterController = TextEditingController();
   final TextEditingController replacedPartNoController =
       TextEditingController();
-  final TextEditingController vehicleDetailController = TextEditingController();
   final TextEditingController image1Controller = TextEditingController();
   final TextEditingController image2Controller = TextEditingController();
   final TextEditingController image3Controller = TextEditingController();
@@ -119,16 +108,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     remarkController.text = widget.item.remarkOfDataWarehouse.toString();
     productIDController.text = widget.item.productID.toString();
     qtyController.text = widget.item.qty.toString();
-    qtyExpectedController.text = widget.item.qtyExpected?.toString() ?? "";
+    qtyExpectedController.text = widget.item.qtyExpected?.toString()??"";
     keetonController.text = widget.item.idKeeton ?? "";
     industrialController.text = widget.item.idIndustrial.toString();
     partNoController.text = widget.item.idPartNo ?? "";
     replacedPartNoController.text = widget.item.idReplacedPartNo ?? "";
     nameProductController.text = widget.item.nameProduct.toString();
-    idBillController.text = widget.item.idBill ?? "";
+    idBillController.text = widget.item.idBill??"";
     parameterController.text = widget.item.parameter.toString();
-    vehicleDetailController.text = widget.item.vehicleDetail.toString();
-
     image1Controller.text = widget.item.img1.toString();
     image2Controller.text = widget.item.img2.toString();
     image3Controller.text = widget.item.img3.toString();
@@ -141,26 +128,26 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           .toString(); // ID hoặc tên tùy theo model
       employeeHistoryController.text = widget.itemHistory.employeeId.toString();
     }
-    qtyHistoryController.addListener(() async {
-      try {
-        double query = double.tryParse(qtyHistoryController.text) ?? 0;
+    // qtyHistoryController.addListener(() async {
+    //   try {
+    //     double query = double.tryParse(qtyHistoryController.text) ?? 0;
 
-        if (query > 0) {
-          suppliersHistory = await InfoService.LoadDtataSupplierCategory("2");
-        } else if (query < 0) {
-          suppliersHistory = await InfoService.LoadDtataSupplierCategory("3");
-        } else {
-          suppliersHistory = await InfoService.LoadDtataSupplier();
-        }
-        if (suppliersHistory.isNotEmpty && mounted) {
-          setState(() {
-            selectedSupplierHistory = suppliersHistory.first;
-          });
-        }
-      } catch (e) {
-        print("❌ Lỗi load suppliers: $e");
-      }
-    });
+    //     if (query > 0) {
+    //       suppliersHistory = await InfoService.LoadDtataSupplierCategory("2");
+    //     } else if (query < 0) {
+    //       suppliersHistory = await InfoService.LoadDtataSupplierCategory("3");
+    //     } else {
+    //       suppliersHistory = await InfoService.LoadDtataSupplier();
+    //     }
+    //     if (suppliersHistory.isNotEmpty && mounted) {
+    //       setState(() {
+    //         selectedSupplierHistory = suppliersHistory.first;
+    //       });
+    //     }
+    //   } catch (e) {
+    //     print("❌ Lỗi load suppliers: $e");
+    //   }
+    // });
     _init().then((_) {
       // 💡 Chỉ cuộn khi đang ở chế độ tạo mới
       if (widget.isCreateHistory) {
@@ -184,8 +171,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     await loadTime();
     await _loadDataEmployee();
     await _loadDataSupplier();
-    await _loadPinnedDate();
-    await _loadPinnedRemarkOfHistory();
   }
 
   Future<void> loadSuppliers() async {
@@ -351,24 +336,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     }
   }
 
-  Future<void> _loadPinnedDate() async {
-    DateTime? pinnedDate = Formatdatehelper.loadPinnedDate();
-
-    setState(() {
-      initialDate = pinnedDate ?? DateTime.now();
-      selectedTimePicker = Formatdatehelper.formatYMD(initialDate);
-    });
-  }
-
-  Future<void> _loadPinnedRemarkOfHistory() async {
-    String? pinnedRemarkOfHistory = AppState.instance.get("PinRemark");
-    if (pinnedRemarkOfHistory != null && pinnedRemarkOfHistory.isNotEmpty) {
-      setState(() {
-        remarkOfHistoryController.text = pinnedRemarkOfHistory;
-      });
-    }
-  }
-
   Future<void> _loadAllData() async {
     try {
       countries = await InfoService.LoadDtataCountry();
@@ -376,7 +343,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
       suppliers =
           await InfoService.LoadDtataSupplier(); //1 là nhà cung cấp; 2 là nhập khẩu; 3 là khách hàng
       units = await InfoService.LoadDtataUnit();
-      vehicles = await InfoService.LoadDtataVehicleType();
       setState(() {
         selectedCountry = countries.firstWhere(
           (e) => e.CountryID.toString() == widget.item.countryID.toString(),
@@ -388,138 +354,22 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               widget.item.manufacturerID.toString(),
           orElse: () => manufacturers.first,
         );
+
         selectedSupplier = suppliers.firstWhere(
           (e) => e.SupplierID.toString() == widget.item.supplierID.toString(),
           orElse: () => suppliers.first,
         );
+        print(selectedSupplier?.SupplierID.toString());
+        print(selectedSupplier?.Name.toString());
         selectedUnit = units.firstWhere(
           (e) => e.UnitID.toString() == widget.item.unitID.toString(),
           orElse: () => units.first,
-        );
-        selectedVehicleType = vehicles.firstWhere(
-          (e) =>
-              e.VehicleTypeID.toString() ==
-              widget.item.vehicleTypeID.toString(),
-          orElse: () => vehicles.first,
         );
         loading = false;
       });
     } catch (e) {
       print("❌ Lỗi load dữ liệu: $e");
       setState(() => loading = false);
-    }
-  }
-
-  Future<String?> getFullname() async {
-    Map<String, dynamic>? account = await MySharedPreferences.getDataObject(
-      "account",
-    );
-    // Kiểm tra null và lấy fullname
-    String? fullname = account?["FullName"];
-    return fullname;
-  }
-
-  void _upDateWareHouse() async {
-    try {
-      String locaResult = selectedLocationIds.join(",");
-      String? fullName = await getFullname();
-      print(fullName);
-
-      final historyCreate = History(
-        historyAID: await CodeHelper.generateCodeAID("LS"),
-        dataWareHouseAID: widget.item.dataWareHouseAID.trim(),
-        qty: double.tryParse(qtyHistoryController.text.trim()) ?? 0,
-        employeeId: selectedEmployee?.EmployeeID ?? 0,
-        partner: selectedSupplierHistory?.SupplierID ?? 0,
-        remark: remarkOfHistoryController.text.trim(),
-        time:
-            selectedTimePicker ??
-            Formatdatehelper.formatYMD(DateTime.now()).trim(),
-        lastUser: await fullName.toString().trim(),
-        lastTime: Formatdatehelper.formatYMD(DateTime.now()).trim(),
-      );
-
-      if (widget.isCreate) {
-        final table = AppState.instance.get("StatusHome");
-
-        final response = await Warehouseservice.addWarehouseRow(
-          table,
-          jsonEncode({
-            "dataWareHouseAID": widget.item.dataWareHouseAID.trim(),
-            "productAID": widget.item.productAID.trim(),
-            "LocationID": locaResult.trim(),
-            "Qty_Expected":
-                double.tryParse(qtyExpectedController.text.trim()) ?? 0,
-            "ID_Bill": idBillController.text.trim(),
-            "LastTime": DateTime.now().toIso8601String().trim(),
-            "LastUser": await fullName.toString().trim(),
-          }),
-        );
-
-        if (response["isSuccess"]) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thêm sản phẩm thành công')),
-          );
-          NavigationHelper.pushAndRemoveUntil(context, const HomeScreen());
-        }
-      }
-
-      if (widget.isUpDate) {
-        final response = await Warehouseservice.upDateWareHouse(
-          widget.item.dataWareHouseAID.toString(),
-          jsonEncode({
-            "productAID": widget.item.productAID.trim(),
-            "LocationID": locaResult.trim(),
-            "Qty_Expected":
-                double.tryParse(qtyExpectedController.text.trim()) ?? 0,
-            "ID_Bill": idBillController.text.trim(),
-            "LastTime": DateTime.now().toIso8601String().trim(),
-            "LastUser": await fullName.toString().trim(),
-          }),
-        );
-
-        if (response["isSuccess"]) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cập nhật sản phẩm thành công')),
-          );
-          NavigationHelper.pushAndRemoveUntil(context, const HomeScreen());
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cập nhật sản phẩm thất bại')),
-          );
-          print(response["body"]);
-        }
-      }
-
-      if (widget.isCreateHistory &&
-          qtyHistoryController.text.isNotEmpty &&
-          qtyHistoryController.text != "0") {
-        final response = await HistoryService.AddHistory(
-          AppState.instance.get("StatusHome"),
-          jsonEncode(historyCreate.toJson()),
-        );
-        if (response["isSuccess"]) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Cập nhật thành công')),
-          );
-          NavigationHelper.pushAndRemoveUntil(
-            context,
-            const HomeScreen(),
-          ); // quay lại và báo màn trước refresh
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ Lỗi cập nhật: ${response["statusCode"]}'),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('⚠️ Lỗi kết nối: $e')));
     }
   }
 
@@ -611,37 +461,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             ),
             const SizedBox(height: 10),
 
-            //DÒNG XE
-            CustomTextField(
-              label: "Dòng xe:",
-              controller: vehicleDetailController,
-              hintText: "Nhập dòng xe",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
-
             // ======= DROPDOWN =======
-            //LOẠI XE
-            CustomDropdownField(
-              label: "Loại xe",
-              selectedValue: selectedVehicleType,
-              items: vehicles,
-              getLabel: (i) => i.VehicleTypeName.toString(),
-              onChanged: (v) => setState(() => selectedVehicleType = v),
-              readOnly: widget.readOnly,
-              isSearch: true,
-              isCreate: StatusCreate,
-              textCreate: "Thêm mới loại xe",
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 4);
-                if (result != null) {
-                  await _loadAllData(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-            ),
-            const SizedBox(height: 10),
             //NHÀ SẢN XUẤT
             CustomDropdownField(
               label: "Nhà sản xuất",
@@ -772,15 +592,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                     .map((e) => e.LocationID)
                     .toList();
               }),
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 3);
-                if (result != null) {
-                  await _loadDataLocation(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-              dropdownMaxHeight: 300,
             ),
             const Divider(),
             // ======= HISTORY =======
@@ -814,23 +625,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 isCreate: StatusCreate,
                 textCreate: "Thêm mới nhân viên",
                 readOnly: widget.isReadOnlyHistory,
-                functionCreate: () async {
-                  // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                  final result = await showAddDialogDynamic(context, model: 2);
-                  if (result != null) {
-                    await _loadAllData(); // reload danh sách
-                    setState(() {}); // cập nhật lại UI
-                  }
-                },
-                rightIcon: AppState.instance.get("isPinEmployee") == true
-                    ? Icons.push_pin
-                    : Icons.push_pin_outlined,
-                onRightIconTap: () async {
-                  final newPinState =
-                      !(AppState.instance.get("isPinEmployee") ?? false);
-                  await toggleEmployeePin(newPinState);
-                  setState(() {});
-                },
               ),
             ),
             const SizedBox(height: 10),
@@ -847,23 +641,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 isSearch: true,
                 isCreate: StatusCreate,
                 readOnly: widget.isReadOnlyHistory,
-                functionCreate: () async {
-                  // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                  final result = await showAddDialogDynamic(context, model: 5);
-                  if (result != null) {
-                    await _loadAllData(); // reload danh sách
-                    setState(() {}); // cập nhật lại UI
-                  }
-                },
-                rightIcon: AppState.instance.get("isPinPartner") == true
-                    ? Icons.push_pin
-                    : Icons.push_pin_outlined,
-                onRightIconTap: () async {
-                  final newPinState =
-                      !(AppState.instance.get("isPinPartner") ?? false);
-                  await togglePartnerPin(newPinState);
-                  setState(() {});
-                },
               ),
             ),
             //THỜI GIAN
@@ -881,13 +658,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                     initialDate = value;
                   });
                 },
-                rightIcon: AppState.instance.get("isPinDate") == true
-                    ? Icons.push_pin
-                    : Icons.push_pin_outlined,
-                onRightIconTap: () async {
-                  await togglePinDate(initialDate);
-                  setState(() {});
-                },
                 readOnly: widget.isReadOnlyHistory,
               ),
             ),
@@ -899,15 +669,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 controller: remarkOfHistoryController,
                 hintText: "Nhập diễn giải ",
                 readOnly: widget.isReadOnlyHistory,
-                suffixIcon: AppState.instance.get("isPinRemark") == true
-                    ? Icons.push_pin
-                    : Icons.push_pin_outlined,
-                onSuffixIconPressed: () async {
-                  final newPinState =
-                      (AppState.instance.get("PinRemark") ?? "");
-                  await toggleRemarkOfHistory(newPinState);
-                  setState(() {});
-                },
               ),
             ),
 
@@ -917,23 +678,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 mainAxisAlignment:
                     MainAxisAlignment.center, // căn giữa hàng ngang
                 children: [
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 12,
-                      ),
-                    ),
-                    onPressed:
-                        widget.isUpDate ||
-                            widget.isCreate ||
-                            widget.isCreateHistory
-                        ? _upDateWareHouse
-                        : null,
-                    icon: const Icon(Icons.save),
-                    label: const Text("Lưu thay đổi"),
-                  ),
+
                   const SizedBox(width: 20), // khoảng cách giữa 2 nút
                   ElevatedButton.icon(
                     onPressed: () => Navigator.pop(context),
@@ -948,81 +693,5 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> toggleEmployeePin(bool isPinned) async {
-    if (isPinned) {
-      if (selectedEmployee == null) return;
-
-      // Lưu employee và trạng thái pin
-      AppState.instance.set(
-        "employee",
-        selectedEmployee!.EmployeeID.toString(),
-      );
-      AppState.instance.set("isPinEmployee", true);
-    } else {
-      // Bỏ ghim: xóa dữ liệu
-      AppState.instance.set("employee", null);
-      AppState.instance.set("isPinEmployee", false);
-
-      if (!mounted) return; // đảm bảo widget còn tồn tại
-
-      setState(() {
-        selectedEmployee = null;
-        employeeHistoryController.clear();
-      });
-    }
-  }
-
-  Future<void> togglePartnerPin(bool isPinned) async {
-    if (isPinned) {
-      if (selectedSupplier == null) return;
-
-      // Lưu employee và trạng thái pin
-      AppState.instance.set("partner", selectedSupplier!.SupplierID.toString());
-      AppState.instance.set("isPinPartner", true);
-    } else {
-      // Bỏ ghim: xóa dữ liệu
-      AppState.instance.set("partner", null);
-      AppState.instance.set("isPinPartner", false);
-
-      if (!mounted) return; // đảm bảo widget còn tồn tại
-      setState(() {
-        selectedSupplier = null;
-        partnerController.clear();
-      });
-    }
-  }
-
-  Future<void> togglePinDate(DateTime? date) async {
-    if (!mounted) return;
-    bool isPinned = AppState.instance.get("isPinDate") == true;
-    AppState.instance.set("isPinDate", !isPinned);
-
-    if (!isPinned && date != null) {
-      AppState.instance.set("pinnedDate", Formatdatehelper.formatYMD(date));
-      print("đã pin date");
-    } else {
-      AppState.instance.set("pinnedDate", null);
-    }
-  }
-
-  Future<void> toggleRemarkOfHistory(String? remark) async {
-    if (!mounted) return;
-
-    // Lấy trạng thái hiện tại
-    bool isPinned = AppState.instance.get("isPinRemark") == true;
-
-    // Đảo trạng thái pin
-    AppState.instance.set("isPinRemark", !isPinned);
-
-    if (!isPinned && remark != null) {
-      // Ghim: lưu ngày hiện tại
-      AppState.instance.set("PinRemark", remarkOfHistoryController.text);
-      print("đã pin remark " + AppState.instance.get("PinRemark"));
-    } else {
-      // Bỏ ghim: xóa dữ liệu
-      AppState.instance.set("PinRemark", null);
-    }
   }
 }

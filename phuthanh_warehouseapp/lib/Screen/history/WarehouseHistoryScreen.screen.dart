@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/history/HistoryDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/HistoryService.service.dart';
-import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
 
 class WarehouseHistoryScreen extends StatefulWidget {
-  final String productID;
+  final WareHouse item;
 
-  const WarehouseHistoryScreen({Key? key, required this.productID})
-      : super(key: key);
+  const WarehouseHistoryScreen({Key? key, required this.item})
+    : super(key: key);
 
   @override
   State<WarehouseHistoryScreen> createState() => _WarehouseHistoryScreen();
@@ -22,14 +22,14 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _futureHistory = HistoryService.LoadDtata(widget.productID);
+    _futureHistory = HistoryService.LoadDtata(widget.item.dataWareHouseAID);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Lịch sử nhập/xuất: ${widget.productID}"),
+        title: Text("Lịch sử nhập/xuất: ${widget.item.productID}"),
         centerTitle: true,
       ),
       body: FutureBuilder<List<History>>(
@@ -53,7 +53,9 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
           return RefreshIndicator(
             onRefresh: () async {
               setState(() {
-                _futureHistory = HistoryService.LoadDtata(widget.productID);
+                _futureHistory = HistoryService.LoadDtata(
+                  widget.item.dataWareHouseAID,
+                );
               });
             },
             child: ListView.builder(
@@ -61,7 +63,6 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
               itemBuilder: (context, index) {
                 final h = histories[index];
                 final bool isImport = h.qty > 0;
-
                 return Card(
                   margin: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -85,27 +86,20 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
                     ),
                     child: ListTile(
                       onTap: () async {
-                        WareHouse? itemWh =
-                            await Warehouseservice.FindByIDWareHouse(
-                                  widget.productID,
-                                ) ??
-                                WareHouse.empty();
-
-                        Navigator.push(
+                        NavigationHelper.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => WarehouseDetailScreen(
-                              item: itemWh,
-                              itemHistory: h,
-                              isReadOnlyHistory: false,
-                              isCreateHistory: true,
-                              readOnly: true
-                            ),
+                          HistoryDetailScreen(
+                            item: widget.item,
+                            itemHistory: h,
+                            isReadOnlyHistory: true,
+                            isCreateHistory: true,
+                            readOnly: true,
                           ),
                         );
                       },
                       title: Text(
-                        "${isImport ? "Nhập" : "Xuất"} hàng - ${h.productID}",
+                        "${isImport ? "Nhập" : "Xuất"} hàng - ${widget.item.productID}",
+                        // "${isImport ? "Nhập" : "Xuất"} hàng - ${h.productID}",
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -117,15 +111,16 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text("Số lượng: ${h.qty}"),
-                            if (h.remark?.isNotEmpty ?? false)
+                            if (h.remark.isNotEmpty)
                               Text("Ghi chú: ${h.remark}"),
                             Text(
-                                "Thời gian: ${Formatdatehelper.formatDMY(Formatdatehelper.parseDate(h.time ?? ""))}"),
-                            if (h.timeUpdate != null)
-                              Text(
-                                  "Cập nhật: ${Formatdatehelper.formatDMY(Formatdatehelper.parseDate(h.timeUpdate!))}"),
-                            if (h.fullName != null)
-                              Text("Người thao tác: ${h.fullName}"),
+                              "Thời gian: ${Formatdatehelper.formatDMY(Formatdatehelper.parseDate(h.time.toString()))}",
+                            ),
+                            // if (h.timeUpdate != null)
+                            //   Text(
+                            //       "Cập nhật: ${Formatdatehelper.formatDMY(Formatdatehelper.parseDate(h.timeUpdate!))}"),
+                            if (h.lastUser.isNotEmpty)
+                              Text("Người thao tác: ${h.lastUser.toString()}"),
                           ],
                         ),
                       ),

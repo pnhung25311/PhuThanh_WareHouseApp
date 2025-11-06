@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
-import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
+import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class Warehouseservice {
   static Future<List<WareHouse>> LoadDtata(String table) async {
@@ -50,11 +51,13 @@ class Warehouseservice {
   static Future<WareHouse?> getWarehouseById(String id) async {
     try {
       const apiClient = ApiClient();
-      final table = await MySharedPreferences.getDataString("statusWH");
-      final safeTable = table ?? "WareHouseA";
-      final response = await apiClient.post("dynamic/find/" + safeTable, {
-        "productID": id,
-      });
+      final table = AppState.instance.get("StatusHome");
+      final safeTable = table ?? "Product";
+      // print("safeTable: " + safeTable);
+      final response = await apiClient.post(
+        "dynamic/find/vw" + safeTable,
+        jsonEncode({"productID": id}),
+      );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
@@ -69,27 +72,25 @@ class Warehouseservice {
     }
   }
 
-  static Future<WareHouse?> upDateWareHouse(
+  static Future<Map<String, dynamic>> upDateWareHouse(
     String id,
-    Map<String, dynamic> wh,
+    String body,
   ) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.put(
-        "dynamic/update/warehousea/productID/" + id.toString(),
-        wh,
+        "dynamic/update/"+AppState.instance.get("StatusHome")+"/dataWareHouseAID/" + id.toString(),
+        body,
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        return WareHouse.fromJson(data);
-      } else {
-        print("=======>" + response.statusCode.toString());
-        return null;
-      }
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
     } catch (e) {
       print(e);
-      return null;
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 
@@ -134,9 +135,9 @@ class Warehouseservice {
     }
   }
 
-  static Future<String> addWarehouseRow(
+  static Future<Map<String, dynamic>> addWarehouseRow(
     String table,
-    Map<String, dynamic> body,
+    String body,
   ) async {
     try {
       const apiClient = ApiClient();
@@ -144,27 +145,25 @@ class Warehouseservice {
         "dynamic/insert/" + table.toString(),
         body,
       );
-
-      if (response.statusCode == 200) {
-        return response.body;
-      } else {
-        print("=======>" + response.statusCode.toString());
-        return "";
-      }
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
     } catch (e) {
       // log nếu cần
       print(e);
-      return "";
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 
   static Future<WareHouse?> FindByIDWareHouse(String condition) async {
     try {
       const apiClient = ApiClient();
-      final table = await MySharedPreferences.getDataString("statusWH");
-      final safeTable = table ?? "WareHouseA";
-      final response = await apiClient.get(
-        "dynamic/find/$safeTable/productID/$condition",
+      final table = AppState.instance.get("StatusHome");
+      final safeTable = table ?? "Product";
+      final response = await apiClient.get(        
+        "dynamic/find/vw$safeTable/productID/$condition",
       );
 
       if (response.statusCode == 200) {
@@ -187,6 +186,30 @@ class Warehouseservice {
     } catch (e) {
       print("❌ Lỗi FindByIDWareHouse: $e");
       return null;
+    }
+  }
+
+  static Future<List<Product>> LoadDtataLimitProduct(
+    String table,
+    String limit,
+  ) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.get(
+        "dynamic/get-all/" + table + "/" + limit,
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => Product.fromJson(e)).toList();
+      } else {
+        print("=======>" + response.statusCode.toString());
+        // throw Exception("Failed to load data (${response.statusCode})");
+        return [];
+      }
+    } catch (e) {
+      print(e);
+      return [];
     }
   }
 }
