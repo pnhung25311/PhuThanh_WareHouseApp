@@ -30,6 +30,7 @@ class CustomTextField extends StatelessWidget {
         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
         TextField(
+          showCursor: true,
           controller: controller,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),

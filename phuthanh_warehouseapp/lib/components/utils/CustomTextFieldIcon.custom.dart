@@ -113,6 +113,7 @@ class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
           child: widget.isPassword
               ? ShowHidePassword(
                   passwordField: (hidePassword) => TextField(
+                    showCursor: true,
                     controller: widget.controller,
                     obscureText: hidePassword,
                     keyboardType: widget.keyboardType,
@@ -126,9 +127,15 @@ class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
                 )
               : TextField(
                   controller: widget.controller,
+                  showCursor:
+                      !widget.readOnly, // nếu bạn không muốn cursor nháy
                   keyboardType: widget.keyboardType,
                   readOnly: widget.readOnly,
                   enabled: widget.enabled,
+                  enableInteractiveSelection: true, // ✅ cho phép copy
+                  focusNode: widget.readOnly
+                      ? FocusNode()
+                      : null, // ✅ iOS cần để không crash
                   style: TextStyle(fontSize: widget.fontSize),
                   decoration: _buildDecoration(),
                   onChanged: widget.onChanged,

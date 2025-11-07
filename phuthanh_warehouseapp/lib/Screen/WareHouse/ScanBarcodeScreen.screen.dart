@@ -119,6 +119,7 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
           );
         } else {
+          
           _reloadScanPage();
         }
         // } else {
