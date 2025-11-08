@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
@@ -7,6 +8,7 @@ import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 // import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -21,6 +23,7 @@ class _ScanScreenState extends State<ScanScreen> {
   String scannedCode = '';
   bool isProcessing = false;
   final TextEditingController _manualController = TextEditingController();
+  String _statusHome = "Product";
 
   void _handleBarcode(BarcodeCapture barcodeCapture) async {
     if (isProcessing) return;
@@ -42,93 +45,83 @@ class _ScanScreenState extends State<ScanScreen> {
     });
 
     try {
-      final scannedItem = await Warehouseservice.getWarehouseById(code);
-      if (scannedItem?.productAID.toString() != "") {
-        // ✅ Tìm thấy sản phẩm -> nhảy trang
-        if (widget.isUpdate) {
-          Future.delayed(const Duration(milliseconds: 100), () {
+      if (widget.isUpdate) {
+        _statusHome = AppState.instance.get("StatusHome") ?? "Product";
+        if (_statusHome == 'Product') {
+          final product = await InfoService.findProduct(code);
+          if (product != null) {
             NavigationHelper.pushReplacement(
               context,
-              WarehouseDetailScreen(
-                item: scannedItem ?? WareHouse.empty(),
+              ProductDetailScreen(
+                item: product,
                 isCreateHistory: true,
+                isCreate: true,
+                readOnly: true,
                 isReadOnlyHistory: false,
               ),
             );
-          });
+          }
         } else {
-          NavigationHelper.pop(context, scannedCode);
+          final scannedItem = await Warehouseservice.getWarehouseById(code);
+          if (scannedItem != null) {
+            // ✅ Tìm thấy sản phẩm -> nhảy trang
+            Future.delayed(const Duration(milliseconds: 100), () {
+              NavigationHelper.pushReplacement(
+                context,
+                WarehouseDetailScreen(
+                  item: scannedItem,
+                  isCreateHistory: true,
+                  isReadOnlyHistory: false,
+                ),
+              );
+            });
+          } else {
+            // ❌ Không tìm thấy sản phẩm -> hỏi có muốn thêm không
+            final product = await InfoService.findProduct(code);
+            if (product != null) {
+              final dataWareHouseAID = await CodeHelper.generateCodeAID("WH");
+
+              final item = WareHouse(
+                dataWareHouseAID: dataWareHouseAID,
+                productAID: product.productAID,
+                productID: product.productID,
+                idKeeton: product.idKeeton,
+                // idBill: product.idBill,
+                countryID: product.countryID,
+                idIndustrial: product.idIndustrial,
+                idPartNo: product.idPartNo,
+                idReplacedPartNo: product.idReplacedPartNo,
+                img1: product.img1,
+                img2: product.img2,
+                img3: product.img3,
+                lastTime: product.lastTime,
+                manufacturerID: product.manufacturerID,
+                nameProduct: product.nameProduct,
+                parameter: product.parameter,
+                // qtyExpected: product.qtyExpected,
+                supplierID: product.supplierID,
+                unitID: product.unitID,
+                remarkOfDataWarehouse: "",
+                qty: 0,
+              );
+              NavigationHelper.pushReplacement(
+                context,
+                WarehouseDetailScreen(
+                  item: item,
+                  isCreateHistory: true,
+                  isCreate: true,
+                  readOnly: true,
+                  isReadOnlyHistory: false,
+                ),
+              );
+            } else {
+              _reloadScanPage();
+            }
+            setState(() => isProcessing = false);
+          }
         }
       } else {
-        // ❌ Không tìm thấy sản phẩm -> hỏi có muốn thêm không
-        final product = await InfoService.findProduct(code);
-        if (product != null) {
-          // final shouldAdd = await showDialog<bool>(
-          //   context: context,
-          //   builder: (context) => AlertDialog(
-          //     title: const Text('Không tìm thấy sản phẩm'),
-          //     content: Text(
-          //       'Mã barcode "$code" chưa có trong kho.\nBạn có muốn thêm sản phẩm này vào kho không?',
-          //     ),
-          //     actions: [
-          //       TextButton(
-          //         onPressed: () => Navigator.of(context).pop(false),
-          //         child: const Text('Không'),
-          //       ),
-          //       ElevatedButton(
-          //         onPressed: () => Navigator.of(context).pop(true),
-          //         child: const Text('Có'),
-          //       ),
-          //     ],
-          //   ),
-          // );
-          // if (shouldAdd == true) {
-          final dataWareHouseAID = await CodeHelper.generateCodeAID("WH");
-
-          final item = WareHouse(
-            dataWareHouseAID: dataWareHouseAID,
-            productAID: product.productAID,
-            productID: product.productID,
-            idKeeton: product.idKeeton,
-            // idBill: product.idBill,
-            countryID: product.countryID,
-            idIndustrial: product.idIndustrial,
-            idPartNo: product.idPartNo,
-            idReplacedPartNo: product.idReplacedPartNo,
-            img1: product.img1,
-            img2: product.img2,
-            img3: product.img3,
-            lastTime: product.lastTime,
-            manufacturerID: product.manufacturerID,
-            nameProduct: product.nameProduct,
-            parameter: product.parameter,
-            // qtyExpected: product.qtyExpected,
-            supplierID: product.supplierID,
-            unitID: product.unitID,
-            remarkOfDataWarehouse: "",
-            qty: 0,
-          );
-          NavigationHelper.pushReplacement(
-            context,
-            WarehouseDetailScreen(
-              item: item,
-              isCreateHistory: true,
-              isCreate: true,
-              readOnly: true,
-              isReadOnlyHistory: false,
-            ),
-          );
-        } else {
-          
-          _reloadScanPage();
-        }
-        // } else {
-        //   ScaffoldMessenger.of(context).showSnackBar(
-        //     const SnackBar(content: Text('Mã barcode không tồn tại')),
-        //   );
-        //   _reloadScanPage();
-        // }
-        setState(() => isProcessing = false);
+        NavigationHelper.pop(context, scannedCode);
       }
     } catch (e) {
       print('❌ Lỗi khi lấy sản phẩm: $e');

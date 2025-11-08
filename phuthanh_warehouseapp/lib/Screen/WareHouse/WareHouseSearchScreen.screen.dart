@@ -56,6 +56,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     try {
       if (table == "Product") {
+        AppState.instance.set("ListProduct", null);
         final cached = AppState.instance.get("ListProduct");
         if (cached != null) {
           _allProducts = cached;
@@ -66,6 +67,7 @@ class _SearchScreenState extends State<SearchScreen> {
         }
         _filteredProducts = _allProducts;
       } else {
+        AppState.instance.set("DataWareHouse", null);
         final cached = AppState.instance.get("DataWareHouse");
         if (cached != null) {
           _allWarehouses = cached;
@@ -102,7 +104,7 @@ class _SearchScreenState extends State<SearchScreen> {
     setState(() {});
   }
 
-  /// ✅ Khi đổi kho / tab từ Drawer
+  /// Khi đổi kho / tab từ Drawer
   void _onDrawerReload() async {
     searchController.clear();
 
@@ -182,6 +184,23 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
+  /// ✅ Widget loading overlay
+  Widget _buildLoading() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 12),
+          Text(
+            "Đang tải dữ liệu...",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -199,35 +218,24 @@ class _SearchScreenState extends State<SearchScreen> {
             fontSize: 13,
             borderRadius: 8,
             backgroundColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 4,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             onChanged: _onSearchChanged,
           ),
         ),
       ),
       drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        child: _statusHome == "Product"
-            ? _buildProductList()
-            : _buildWarehouseList(),
+      body: Stack(
+        children: [
+          RefreshIndicator(
+            onRefresh: _loadData,
+            child: _statusHome == "Product"
+                ? _buildProductList()
+                : _buildWarehouseList(),
+          ),
+          // Overlay loading
+          if (_isLoading) _buildLoading(),
+        ],
       ),
-      // Stack(
-      //   children: [
-      //     _statusHome == "Product"
-      //         ? _buildProductList()
-      //         : _buildWarehouseList(),
-      //     if (_isLoading)
-      //       Positioned.fill(
-      //         child: Container(
-      //           color: Colors.black.withOpacity(0.25),
-      //           child: const Center(child: CircularProgressIndicator()),
-      //         ),
-      //       ),
-      //   ],
-      // ),
     );
   }
 }

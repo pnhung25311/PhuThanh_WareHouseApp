@@ -16,6 +16,7 @@ class WareHouse {
   final int? manufacturerID;
   final int? countryID;
   final int? supplierID;
+  final int? supplierActualID;
   final int? unitID;
   final String? locationID;
   final String? img1;
@@ -44,6 +45,7 @@ class WareHouse {
     this.manufacturerID,
     this.countryID,
     this.supplierID,
+    this.supplierActualID,
     this.unitID,
     this.locationID,
     this.img1,
@@ -77,6 +79,7 @@ class WareHouse {
       manufacturerID: (json['ManufacturerID'] as num?)?.toInt(),
       countryID: (json['CountryID'] as num?)?.toInt(),
       supplierID: (json['SupplierID'] as num?)?.toInt(),
+      supplierActualID: (json['SupplierActualID'] as num?)?.toInt(),
       unitID: (json['UnitID'] as num?)?.toInt(),
       locationID: json['LocationID'] ?? "",
       img1: json['Img1'] ?? '',
@@ -110,6 +113,7 @@ class WareHouse {
       'ManufacturerID': manufacturerID,
       'CountryID': countryID,
       'SupplierID': supplierID,
+      'SupplierActualID': supplierActualID,
       'UnitID': unitID,
       'LocationID': locationID,
       'Img1': img1,
@@ -141,6 +145,7 @@ class WareHouse {
     int? manufacturerID,
     int? countryID,
     int? supplierID,
+    int? supplierActualID,
     int? unitID,
     String? locationID,
     String? img1,
@@ -169,6 +174,7 @@ class WareHouse {
       manufacturerID: (manufacturerID as num?)?.toInt() ?? this.manufacturerID,
       countryID: (countryID as num?)?.toInt() ?? this.countryID,
       supplierID: (supplierID as num?)?.toInt() ?? this.supplierID,
+      supplierActualID: (supplierActualID as num?)?.toInt() ?? this.supplierActualID,
       unitID: (unitID as num?)?.toInt() ?? this.unitID,
       locationID: locationID ?? this.locationID,
       img1: img1 ?? this.img1,
@@ -227,6 +233,7 @@ class WareHouse {
       manufacturerID: null, // hoặc 0
       countryID: null, // hoặc 0
       supplierID: null, // hoặc 0
+      supplierActualID: null, // hoặc 0
       unitID: null, // hoặc 0
       locationID: null, // hoặc 0
       img1: '',

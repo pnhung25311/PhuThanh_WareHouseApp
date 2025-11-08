@@ -9,6 +9,7 @@ import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custo
 import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Location.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
@@ -17,8 +18,9 @@ import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Unit.model.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
+import 'package:collection/collection.dart';
 
-class HistoryDetailScreen  extends StatefulWidget {
+class HistoryDetailScreen extends StatefulWidget {
   final WareHouse item;
   final History itemHistory;
   final bool isUpDate;
@@ -27,7 +29,7 @@ class HistoryDetailScreen  extends StatefulWidget {
   final bool isReadOnlyHistory;
   final bool readOnly;
 
-  HistoryDetailScreen ({
+  HistoryDetailScreen({
     super.key,
     required this.item,
     History? itemHistory, // ✅ đổi thành nullable
@@ -39,34 +41,33 @@ class HistoryDetailScreen  extends StatefulWidget {
   }) : itemHistory = itemHistory ?? History.empty(); // ✅ gán mặc định ở đây
 
   @override
-  State<HistoryDetailScreen > createState() => _HistoryDetailScreenState();
+  State<HistoryDetailScreen> createState() => _HistoryDetailScreenState();
 }
 
-class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
+class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   List<Country> countries = [];
   List<Manufacturer> manufacturers = [];
   List<Supplier> suppliers = [];
   List<Supplier> suppliersHistory = [];
   //1 là nhà cung cấp; 2 là nhập khẩu; 3 là khách hàng
-  List<Supplier> suppliers1 = [];
-  List<Supplier> suppliers2 = [];
-  List<Supplier> suppliers3 = [];
+  List<Supplier> supplierActuals = [];
   List<Unit> units = [];
   List<Employee> emps = [];
 
   List<Location> locations = [];
   List<Location> selectedLocation = [];
   List<int> selectedLocationIds = [];
+  List<VehicleType> vehicles = [];
 
   Country? selectedCountry;
   Manufacturer? selectedManufacturer;
   Supplier? selectedSupplier;
   Supplier? selectedSupplierHistory;
-  Supplier? selectedSupplier2;
-  Supplier? selectedSupplier3;
+  Supplier? selectedSupplierActual;
   Unit? selectedUnit;
   Employee? selectedEmployee;
   String? selectedTimePicker;
+  VehicleType? selectedVehicleType;
 
   final TextEditingController remarkController = TextEditingController();
   final TextEditingController productIDController = TextEditingController();
@@ -89,6 +90,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
   final TextEditingController partnerController = TextEditingController();
   final TextEditingController remarkOfHistoryController =
       TextEditingController();
+  final TextEditingController vehicleDetailController = TextEditingController();
   final TextEditingController timeController = TextEditingController();
   final TextEditingController supplierHistoryController =
       TextEditingController();
@@ -108,14 +110,16 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
     remarkController.text = widget.item.remarkOfDataWarehouse.toString();
     productIDController.text = widget.item.productID.toString();
     qtyController.text = widget.item.qty.toString();
-    qtyExpectedController.text = widget.item.qtyExpected?.toString()??"";
+    qtyExpectedController.text = widget.item.qtyExpected?.toString() ?? "";
     keetonController.text = widget.item.idKeeton ?? "";
     industrialController.text = widget.item.idIndustrial.toString();
     partNoController.text = widget.item.idPartNo ?? "";
     replacedPartNoController.text = widget.item.idReplacedPartNo ?? "";
     nameProductController.text = widget.item.nameProduct.toString();
-    idBillController.text = widget.item.idBill??"";
+    idBillController.text = widget.item.idBill ?? "";
     parameterController.text = widget.item.parameter.toString();
+    vehicleDetailController.text = widget.item.vehicleDetail.toString();
+
     image1Controller.text = widget.item.img1.toString();
     image2Controller.text = widget.item.img2.toString();
     image3Controller.text = widget.item.img3.toString();
@@ -186,9 +190,9 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
 
     if (widget.itemHistory.partner.toString().isNotEmpty &&
         suppliersHistory.isNotEmpty) {
-      selectedSupplierHistory = suppliersHistory.firstWhere(
+      selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
         (s) => s.SupplierID.toString() == widget.itemHistory.partner.toString(),
-        orElse: () => suppliersHistory.first,
+        // orElse: () => suppliersHistory.first,
       );
     }
 
@@ -202,9 +206,9 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
     // 2. Set selectedSupplier nếu có giá trị trong itemHistory
     if (widget.itemHistory.partner.toString().isNotEmpty &&
         suppliersHistory.isNotEmpty) {
-      selectedSupplierHistory = suppliersHistory.firstWhere(
+      selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
         (s) => s.SupplierID.toString() == widget.itemHistory.partner.toString(),
-        orElse: () => suppliersHistory.first,
+        // orElse: () => suppliersHistory.first,
       );
     }
 
@@ -274,9 +278,9 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
       // a) Employee đã ghim (pin)
       final pinnedEmpId = AppState.instance.get("employee")?.toString();
       if (pinnedEmpId != null && pinnedEmpId.isNotEmpty) {
-        selectedEmployee = emps.firstWhere(
+        selectedEmployee = emps.firstWhereOrNull(
           (e) => e.EmployeeID.toString() == pinnedEmpId,
-          orElse: () => emps.first,
+          // orElse: () => emps.first,
         );
         return; // đã chọn xong, không cần tiếp tục
       }
@@ -314,18 +318,18 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
         // Ưu tiên giá trị partner pin
         final storedPartnerId = AppState.instance.get("partner")?.toString();
         if (storedPartnerId != null && storedPartnerId.isNotEmpty) {
-          selectedSupplierHistory = suppliersHistory.firstWhere(
+          selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
             (s) => s.SupplierID.toString() == storedPartnerId,
-            orElse: () => suppliersHistory.first,
+            // orElse: () => suppliersHistory.first,
           );
         }
         // Nếu không có pin thì dùng itemHistory
         else if (widget.itemHistory.partner.toString().isNotEmpty) {
-          selectedSupplierHistory = suppliersHistory.firstWhere(
+          selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
             (s) =>
                 s.SupplierID.toString() ==
                 widget.itemHistory.partner.toString(),
-            orElse: () => suppliersHistory.first,
+            // orElse: () => suppliersHistory.first,
           );
         }
         // Fallback: chọn item đầu tiên
@@ -337,34 +341,50 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
   }
 
   Future<void> _loadAllData() async {
+    setState(() => loading = true);
     try {
-      countries = await InfoService.LoadDtataCountry();
-      manufacturers = await InfoService.LoadDtataManufacturer();
-      suppliers =
-          await InfoService.LoadDtataSupplier(); //1 là nhà cung cấp; 2 là nhập khẩu; 3 là khách hàng
-      units = await InfoService.LoadDtataUnit();
+      // ✅ Chạy tất cả API song song
+      final results = await Future.wait([
+        InfoService.LoadDtataCountry(),
+        InfoService.LoadDtataManufacturer(),
+        InfoService.LoadDtataSupplier(),
+        InfoService.LoadDtataUnit(),
+        InfoService.LoadDtataVehicleType(),
+      ]);
+
+      countries = results[0] as List<Country>;
+      manufacturers = results[1] as List<Manufacturer>;
+      suppliers = results[2] as List<Supplier>;
+      supplierActuals = results[2] as List<Supplier>;
+      units = results[3] as List<Unit>;
+      vehicles = results[4] as List<VehicleType>;
+
       setState(() {
-        selectedCountry = countries.firstWhere(
+        selectedCountry = countries.firstWhereOrNull(
           (e) => e.CountryID.toString() == widget.item.countryID.toString(),
-          orElse: () => countries.first,
         );
-        selectedManufacturer = manufacturers.firstWhere(
+        selectedManufacturer = manufacturers.firstWhereOrNull(
           (e) =>
               e.ManufacturerID.toString() ==
               widget.item.manufacturerID.toString(),
-          orElse: () => manufacturers.first,
+        );
+        selectedSupplier = suppliers.firstWhereOrNull(
+          (e) => e.SupplierID.toString() == widget.item.supplierID.toString(),
+        );
+        selectedSupplierActual = supplierActuals.firstWhereOrNull(
+          (e) =>
+              e.SupplierID.toString() ==
+              widget.item.supplierActualID.toString(),
+        );
+        selectedUnit = units.firstWhereOrNull(
+          (e) => e.UnitID.toString() == widget.item.unitID.toString(),
+        );
+        selectedVehicleType = vehicles.firstWhereOrNull(
+          (e) =>
+              e.VehicleTypeID.toString() ==
+              widget.item.vehicleTypeID.toString(),
         );
 
-        selectedSupplier = suppliers.firstWhere(
-          (e) => e.SupplierID.toString() == widget.item.supplierID.toString(),
-          orElse: () => suppliers.first,
-        );
-        print(selectedSupplier?.SupplierID.toString());
-        print(selectedSupplier?.Name.toString());
-        selectedUnit = units.firstWhere(
-          (e) => e.UnitID.toString() == widget.item.unitID.toString(),
-          orElse: () => units.first,
-        );
         loading = false;
       });
     } catch (e) {
@@ -460,7 +480,35 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
               readOnly: widget.readOnly,
             ),
             const SizedBox(height: 10),
-
+            //LOẠI XE
+            CustomDropdownField(
+              label: "Loại xe",
+              selectedValue: selectedVehicleType,
+              items: vehicles,
+              getLabel: (i) => i.VehicleTypeName.toString(),
+              onChanged: (v) => setState(() => selectedVehicleType = v),
+              readOnly: widget.readOnly,
+              isSearch: true,
+              isCreate: StatusCreate,
+              textCreate: "Thêm mới loại xe",
+              functionCreate: () async {
+                // 👇 Tắt dropdown tự động, mở dialog thêm mới
+                final result = await showAddDialogDynamic(context, model: 4);
+                if (result != null) {
+                  await _loadAllData(); // reload danh sách
+                  setState(() {}); // cập nhật lại UI
+                }
+              },
+            ),
+            const SizedBox(height: 10),
+            //DÒNG XE
+            CustomTextField(
+              label: "Dòng xe:",
+              controller: vehicleDetailController,
+              hintText: "Nhập dòng xe",
+              readOnly: widget.readOnly,
+            ),
+            const SizedBox(height: 10),
             // ======= DROPDOWN =======
             //NHÀ SẢN XUẤT
             CustomDropdownField(
@@ -515,6 +563,27 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
               isCreate: StatusCreate,
               isSearch: true,
               textCreate: "Thêm mới nhà cung cấp",
+              functionCreate: () async {
+                // 👇 Tắt dropdown tự động, mở dialog thêm mới
+                final result = await showAddDialogDynamic(context, model: 5);
+                if (result != null) {
+                  await _loadAllData(); // reload danh sách
+                  setState(() {}); // cập nhật lại UI
+                }
+              },
+            ),
+            const SizedBox(height: 15),
+            //NHÀ PHÂN KHỐI THỰC TẾ
+            CustomDropdownField(
+              label: "Nhà phân phối thực tế",
+              selectedValue: selectedSupplierActual,
+              items: supplierActuals,
+              getLabel: (i) => i.Name.toString(),
+              onChanged: (v) => setState(() => selectedSupplierActual = v),
+              readOnly: widget.readOnly,
+              isCreate: StatusCreate,
+              isSearch: true,
+              textCreate: "Thêm mới nhà phân phối",
               functionCreate: () async {
                 // 👇 Tắt dropdown tự động, mở dialog thêm mới
                 final result = await showAddDialogDynamic(context, model: 5);
@@ -678,7 +747,6 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen > {
                 mainAxisAlignment:
                     MainAxisAlignment.center, // căn giữa hàng ngang
                 children: [
-
                   const SizedBox(width: 20), // khoảng cách giữa 2 nút
                   ElevatedButton.icon(
                     onPressed: () => Navigator.pop(context),

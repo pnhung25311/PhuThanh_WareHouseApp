@@ -97,14 +97,36 @@ class _CustomDrawerState extends State<CustomDrawer> {
           ),
 
           // Sản phẩm
+          // Sản phẩm
           ListTile(
-            leading: const Icon(Icons.inventory, color: Colors.grey),
-            title: const Text(
+            leading: Icon(
+              Icons.inventory,
+              color: _selectedWarehouse == "Product"
+                  ? Colors.blue
+                  : Colors.grey,
+            ),
+            title: Text(
               'Danh sách sản phẩm',
-              style: TextStyle(color: Colors.blue),
+              style: TextStyle(
+                color: _selectedWarehouse == "Product"
+                    ? Colors.blue
+                    : Colors.black87,
+                fontWeight: _selectedWarehouse == "Product"
+                    ? FontWeight.bold
+                    : FontWeight.normal,
+              ),
+            ),
+            tileColor: _selectedWarehouse == "Product"
+                ? Colors.blue.withOpacity(0.1)
+                : Colors.transparent,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
             ),
             onTap: () {
               AppState.instance.set("StatusHome", "Product");
+              setState(() {
+                _selectedWarehouse = "Product";
+              });
               widget.onWarehouseSelected?.call();
               Navigator.pop(context, true);
             },

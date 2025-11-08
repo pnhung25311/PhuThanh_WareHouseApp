@@ -36,7 +36,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
       _statusHome = AppState.instance.get("StatusHome") ?? "Product";
       await _loadData();
     } catch (e) {
-      debugPrint("Lỗi khi load dữ liệu: $e");
+      print("Lỗi khi load dữ liệu: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -46,7 +46,6 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
     setState(() => _isLoading = true);
 
     final table = AppState.instance.get("StatusHome") ?? "Product";
-    print(table);
     try {
       if (table == "Product") {
         AppState.instance.set("ListProductLimit", null);
@@ -73,7 +72,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
         }
       }
     } catch (e) {
-      debugPrint("Lỗi load: $e");
+      print("Lỗi load: $e");
     } finally {
       setState(() => _isLoading = false);
     }
@@ -156,7 +155,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
         title: Text(
           _statusHome == "Product"
               ? "Danh sách sản phẩm"
-              : "Danh sách kho hàng",
+              : "Danh sách kho hàng ${_statusHome.replaceFirst('DataWareHouse', '')}",
         ),
         backgroundColor: Colors.blue,
       ),

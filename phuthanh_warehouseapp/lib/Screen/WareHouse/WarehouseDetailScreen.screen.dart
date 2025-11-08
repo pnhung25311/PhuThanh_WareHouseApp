@@ -25,6 +25,7 @@ import 'package:phuthanh_warehouseapp/service/HistoryService.service.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
+import 'package:collection/collection.dart';
 
 class WarehouseDetailScreen extends StatefulWidget {
   final WareHouse item;
@@ -56,9 +57,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   List<Supplier> suppliers = [];
   List<Supplier> suppliersHistory = [];
   //1 là nhà cung cấp; 2 là nhập khẩu; 3 là khách hàng
-  List<Supplier> suppliers1 = [];
-  List<Supplier> suppliers2 = [];
-  List<Supplier> suppliers3 = [];
+  List<Supplier> supplierActuals = [];
   List<Unit> units = [];
   List<Employee> emps = [];
   List<VehicleType> vehicles = [];
@@ -71,8 +70,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   Manufacturer? selectedManufacturer;
   Supplier? selectedSupplier;
   Supplier? selectedSupplierHistory;
-  Supplier? selectedSupplier2;
-  Supplier? selectedSupplier3;
+  Supplier? selectedSupplierActual;
   Unit? selectedUnit;
   Employee? selectedEmployee;
   String? selectedTimePicker;
@@ -154,7 +152,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         }
         if (suppliersHistory.isNotEmpty && mounted) {
           setState(() {
-            selectedSupplierHistory = suppliersHistory.first;
+            // selectedSupplierHistory = suppliersHistory.first;
           });
         }
       } catch (e) {
@@ -201,9 +199,9 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
     if (widget.itemHistory.partner.toString().isNotEmpty &&
         suppliersHistory.isNotEmpty) {
-      selectedSupplierHistory = suppliersHistory.firstWhere(
+      selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
         (s) => s.SupplierID.toString() == widget.itemHistory.partner.toString(),
-        orElse: () => suppliersHistory.first,
+        // orElse: () => suppliersHistory.first,
       );
     }
 
@@ -217,9 +215,9 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     // 2. Set selectedSupplier nếu có giá trị trong itemHistory
     if (widget.itemHistory.partner.toString().isNotEmpty &&
         suppliersHistory.isNotEmpty) {
-      selectedSupplierHistory = suppliersHistory.firstWhere(
+      selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
         (s) => s.SupplierID.toString() == widget.itemHistory.partner.toString(),
-        orElse: () => suppliersHistory.first,
+        // orElse: () => suppliersHistory.first,
       );
     }
 
@@ -280,18 +278,18 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         final empRes = await InfoService.LoadDtataEmployee();
         AppState.instance.set("employeeAppState", empRes);
         emps = empRes;
-        if (emps.isNotEmpty) {
-          selectedEmployee = emps.first;
-        }
+        // if (emps.isNotEmpty) {
+        //   selectedEmployee = emps.first;
+        // }
         setState(() {});
       }
       // 2️⃣ Xác định employee được chọn theo thứ tự ưu tiên:
       // a) Employee đã ghim (pin)
       final pinnedEmpId = AppState.instance.get("employee")?.toString();
       if (pinnedEmpId != null && pinnedEmpId.isNotEmpty) {
-        selectedEmployee = emps.firstWhere(
+        selectedEmployee = emps.firstWhereOrNull(
           (e) => e.EmployeeID.toString() == pinnedEmpId,
-          orElse: () => emps.first,
+          // orElse: () => emps.first,
         );
         return; // đã chọn xong, không cần tiếp tục
       }
@@ -329,23 +327,24 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         // Ưu tiên giá trị partner pin
         final storedPartnerId = AppState.instance.get("partner")?.toString();
         if (storedPartnerId != null && storedPartnerId.isNotEmpty) {
-          selectedSupplierHistory = suppliersHistory.firstWhere(
+          selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
             (s) => s.SupplierID.toString() == storedPartnerId,
-            orElse: () => suppliersHistory.first,
+            // orElse: () => suppliersHistory.first,
           );
         }
         // Nếu không có pin thì dùng itemHistory
         else if (widget.itemHistory.partner.toString().isNotEmpty) {
-          selectedSupplierHistory = suppliersHistory.firstWhere(
+          selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
             (s) =>
                 s.SupplierID.toString() ==
                 widget.itemHistory.partner.toString(),
-            orElse: () => suppliersHistory.first,
+            // orElse: () => suppliersHistory.first,
           );
         }
         // Fallback: chọn item đầu tiên
       });
     } catch (e) {
+      print("============1");
       print("❌ Lỗi load dữ liệu: $e");
       setState(() => loading = false);
     }
@@ -370,41 +369,55 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   }
 
   Future<void> _loadAllData() async {
+    setState(() => loading = true);
     try {
-      countries = await InfoService.LoadDtataCountry();
-      manufacturers = await InfoService.LoadDtataManufacturer();
-      suppliers =
-          await InfoService.LoadDtataSupplier(); //1 là nhà cung cấp; 2 là nhập khẩu; 3 là khách hàng
-      units = await InfoService.LoadDtataUnit();
-      vehicles = await InfoService.LoadDtataVehicleType();
+      // ✅ Chạy tất cả API song song
+      final results = await Future.wait([
+        InfoService.LoadDtataCountry(),
+        InfoService.LoadDtataManufacturer(),
+        InfoService.LoadDtataSupplier(),
+        InfoService.LoadDtataUnit(),
+        InfoService.LoadDtataVehicleType(),
+      ]);
+
+      countries = results[0] as List<Country>;
+      manufacturers = results[1] as List<Manufacturer>;
+      suppliers = results[2] as List<Supplier>;
+      supplierActuals = results[2] as List<Supplier>;
+      units = results[3] as List<Unit>;
+      vehicles = results[4] as List<VehicleType>;
+
       setState(() {
-        selectedCountry = countries.firstWhere(
+        selectedCountry = countries.firstWhereOrNull(
           (e) => e.CountryID.toString() == widget.item.countryID.toString(),
-          orElse: () => countries.first,
         );
-        selectedManufacturer = manufacturers.firstWhere(
+        selectedManufacturer = manufacturers.firstWhereOrNull(
           (e) =>
               e.ManufacturerID.toString() ==
               widget.item.manufacturerID.toString(),
-          orElse: () => manufacturers.first,
         );
-        selectedSupplier = suppliers.firstWhere(
+        selectedSupplier = suppliers.firstWhereOrNull(
           (e) => e.SupplierID.toString() == widget.item.supplierID.toString(),
-          orElse: () => suppliers.first,
         );
-        selectedUnit = units.firstWhere(
+        selectedSupplierActual = supplierActuals.firstWhereOrNull(
+          (e) =>
+              e.SupplierID.toString() ==
+              widget.item.supplierActualID.toString(),
+        );
+        selectedUnit = units.firstWhereOrNull(
           (e) => e.UnitID.toString() == widget.item.unitID.toString(),
-          orElse: () => units.first,
         );
-        selectedVehicleType = vehicles.firstWhere(
+        selectedVehicleType = vehicles.firstWhereOrNull(
           (e) =>
               e.VehicleTypeID.toString() ==
               widget.item.vehicleTypeID.toString(),
-          orElse: () => vehicles.first,
         );
+
         loading = false;
       });
     } catch (e) {
+      print("============11");
+
       print("❌ Lỗi load dữ liệu: $e");
       setState(() => loading = false);
     }
@@ -610,17 +623,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               readOnly: widget.readOnly,
             ),
             const SizedBox(height: 10),
-
-            //DÒNG XE
-            CustomTextField(
-              label: "Dòng xe:",
-              controller: vehicleDetailController,
-              hintText: "Nhập dòng xe",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
-
-            // ======= DROPDOWN =======
             //LOẠI XE
             CustomDropdownField(
               label: "Loại xe",
@@ -642,6 +644,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               },
             ),
             const SizedBox(height: 10),
+            //DÒNG XE
+            CustomTextField(
+              label: "Dòng xe:",
+              controller: vehicleDetailController,
+              hintText: "Nhập dòng xe",
+              readOnly: widget.readOnly,
+            ),
+            const SizedBox(height: 10),
             //NHÀ SẢN XUẤT
             CustomDropdownField(
               label: "Nhà sản xuất",
@@ -656,6 +666,27 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               functionCreate: () async {
                 // 👇 Tắt dropdown tự động, mở dialog thêm mới
                 final result = await showAddDialogDynamic(context, model: 4);
+                if (result != null) {
+                  await _loadAllData(); // reload danh sách
+                  setState(() {}); // cập nhật lại UI
+                }
+              },
+            ),
+            const SizedBox(height: 15),
+            //NHÀ PHÂN KHỐI THỰC TẾ
+            CustomDropdownField(
+              label: "Nhà phân phối thực tế",
+              selectedValue: selectedSupplierActual,
+              items: supplierActuals,
+              getLabel: (i) => i.Name.toString(),
+              onChanged: (v) => setState(() => selectedSupplierActual = v),
+              readOnly: widget.readOnly,
+              isCreate: StatusCreate,
+              isSearch: true,
+              textCreate: "Thêm mới nhà phân phối",
+              functionCreate: () async {
+                // 👇 Tắt dropdown tự động, mở dialog thêm mới
+                final result = await showAddDialogDynamic(context, model: 5);
                 if (result != null) {
                   await _loadAllData(); // reload danh sách
                   setState(() {}); // cập nhật lại UI

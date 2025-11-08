@@ -22,6 +22,7 @@ import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
+import 'package:collection/collection.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product item;
@@ -49,6 +50,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   List<Country> countries = [];
   List<Manufacturer> manufacturers = [];
   List<Supplier> suppliers = [];
+  List<Supplier> supplierActuals = [];
   List<Supplier> suppliersHistory = [];
   //1 là nhà cung cấp; 2 là nhập khẩu; 3 là khách hàng
   List<Unit> units = [];
@@ -58,6 +60,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Country? selectedCountry;
   Manufacturer? selectedManufacturer;
   Supplier? selectedSupplier;
+  Supplier? selectedSupplierActual;
   Unit? selectedUnit;
   VehicleType? selectedVehicleType;
 
@@ -114,55 +117,56 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _loadAllData() async {
+    setState(() => loading = true);
     try {
-      countries = await InfoService.LoadDtataCountry();
-      manufacturers = await InfoService.LoadDtataManufacturer();
-      suppliers =
-          await InfoService.LoadDtataSupplier(); //1 là nhà cung cấp; 2 là nhập khẩu; 3 là khách hàng
-      units = await InfoService.LoadDtataUnit();
-      vehicles = await InfoService.LoadDtataVehicleType();
+      // ✅ Chạy tất cả API song song
+      final results = await Future.wait([
+        InfoService.LoadDtataCountry(),
+        InfoService.LoadDtataManufacturer(),
+        InfoService.LoadDtataSupplier(),
+        InfoService.LoadDtataUnit(),
+        InfoService.LoadDtataVehicleType(),
+      ]);
+
+      countries = results[0] as List<Country>;
+      manufacturers = results[1] as List<Manufacturer>;
+      suppliers = results[2] as List<Supplier>;
+      supplierActuals = results[2] as List<Supplier>;
+      units = results[3] as List<Unit>;
+      vehicles = results[4] as List<VehicleType>;
+
       setState(() {
-        selectedCountry = countries.firstWhere(
+        selectedCountry = countries.firstWhereOrNull(
           (e) => e.CountryID.toString() == widget.item.countryID.toString(),
-          orElse: () => countries.first,
         );
-        selectedManufacturer = manufacturers.firstWhere(
+        selectedManufacturer = manufacturers.firstWhereOrNull(
           (e) =>
               e.ManufacturerID.toString() ==
               widget.item.manufacturerID.toString(),
-          orElse: () => manufacturers.first,
         );
-        selectedSupplier = suppliers.firstWhere(
+        selectedSupplier = suppliers.firstWhereOrNull(
           (e) => e.SupplierID.toString() == widget.item.supplierID.toString(),
-          orElse: () => suppliers.first,
         );
-        selectedUnit = units.firstWhere(
+        selectedSupplierActual = supplierActuals.firstWhereOrNull(
+          (e) =>
+              e.SupplierID.toString() ==
+              widget.item.supplierActualID.toString(),
+        );
+        selectedUnit = units.firstWhereOrNull(
           (e) => e.UnitID.toString() == widget.item.unitID.toString(),
-          orElse: () => units.first,
         );
-
-        selectedVehicleType = vehicles.firstWhere(
+        selectedVehicleType = vehicles.firstWhereOrNull(
           (e) =>
               e.VehicleTypeID.toString() ==
               widget.item.vehicleTypeID.toString(),
-          orElse: () => vehicles.first,
         );
+
         loading = false;
       });
     } catch (e) {
       print("❌ Lỗi load dữ liệu: $e");
       setState(() => loading = false);
     }
-  }
-
-  void _saveChanges() async {
-    print("✅ Dữ liệu cập nhật:");
-    print(" - Country: ${selectedCountry?.Name}");
-    print(" - Manufacturer: ${selectedManufacturer?.Name}");
-    print(" - Supplier: ${selectedSupplier?.Name}");
-    print(" - Remark: ${remarkController.text}");
-    print(" - FullName: ${await getFullname()}");
-    print(" - Location: ");
   }
 
   Future<String?> getFullname() async {
@@ -175,7 +179,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   void _upDateWareHouse() async {
-    _saveChanges();
     try {
       // final api = const ApiClient();
       final helper = ImagePickerHelper();
@@ -225,6 +228,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         manufacturerID: selectedManufacturer?.ManufacturerID ?? 0,
         countryID: selectedCountry?.CountryID ?? 0,
         supplierID: selectedSupplier?.SupplierID ?? 0,
+        supplierActualID: selectedSupplierActual?.SupplierID ?? 0,
         unitID: selectedUnit?.UnitID ?? 0,
         remark: remarkController.text.trim(),
         img1: image1Controller.text.trim(),
@@ -248,6 +252,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         manufacturerID: selectedManufacturer?.ManufacturerID ?? 0,
         countryID: selectedCountry?.CountryID ?? 0,
         supplierID: selectedSupplier?.SupplierID ?? 0,
+        supplierActualID: selectedSupplierActual?.SupplierID ?? 0,
         unitID: selectedUnit?.UnitID ?? 0,
         remark: remarkController.text.trim(),
         img1: image1Controller.text.trim(),
@@ -264,7 +269,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       if (widget.isCreate) {
         // final response = await api.post("dynamic/insert/Product", bodyCreate);
-        debugPrint(jsonEncode(productCreate));
         final response = await Warehouseservice.addWarehouseRow(
           "Product",
           jsonEncode(jsonProduct),
@@ -416,14 +420,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               readOnly: widget.readOnly,
             ),
             const SizedBox(height: 10),
-            //DÒNG XE
-            CustomTextField(
-              label: "Dòng xe:",
-              controller: vehicleDetailController,
-              hintText: "Nhập dòng xe",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
 
             // ======= DROPDOWN =======
             //LOẠI XE
@@ -445,6 +441,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   setState(() {}); // cập nhật lại UI
                 }
               },
+            ),
+            const SizedBox(height: 10),
+            //DÒNG XE
+            CustomTextField(
+              label: "Dòng xe:",
+              controller: vehicleDetailController,
+              hintText: "Nhập dòng xe",
+              readOnly: widget.readOnly,
             ),
             const SizedBox(height: 10),
             //NHÀ SẢN XUẤT
@@ -489,13 +493,34 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               },
             ),
             const SizedBox(height: 15),
-            //NHÀ PHÂN KHỐI
+            //NHÀ PHÂN KHỐI GIẤY TỜ
             CustomDropdownField(
-              label: "Nhà phân phối",
+              label: "Nhà phân phối giấy tờ",
               selectedValue: selectedSupplier,
               items: suppliers,
               getLabel: (i) => i.Name.toString(),
               onChanged: (v) => setState(() => selectedSupplier = v),
+              readOnly: widget.readOnly,
+              isCreate: StatusCreate,
+              isSearch: true,
+              textCreate: "Thêm mới nhà phân phối",
+              functionCreate: () async {
+                // 👇 Tắt dropdown tự động, mở dialog thêm mới
+                final result = await showAddDialogDynamic(context, model: 5);
+                if (result != null) {
+                  await _loadAllData(); // reload danh sách
+                  setState(() {}); // cập nhật lại UI
+                }
+              },
+            ),
+            const SizedBox(height: 15),
+            //NHÀ PHÂN KHỐI THỰC TẾ
+            CustomDropdownField(
+              label: "Nhà phân phối thực tế",
+              selectedValue: selectedSupplierActual,
+              items: supplierActuals,
+              getLabel: (i) => i.Name.toString(),
+              onChanged: (v) => setState(() => selectedSupplierActual = v),
               readOnly: widget.readOnly,
               isCreate: StatusCreate,
               isSearch: true,

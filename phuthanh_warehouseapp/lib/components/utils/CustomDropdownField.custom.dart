@@ -142,12 +142,9 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                                 itemBuilder: (context, index) {
                                   final item = _filteredItems[index];
                                   final label = widget.getLabel(item);
-                                  print("==============================>>>");
-                                  print(label.toString());
                                   final isSelected =
                                       widget.selectedValue != null &&
                                       widget.getLabel(widget.selectedValue as T,) == label;
-                                  print(isSelected);
                                   return ListTile(
                                     title: Text(
                                       label,

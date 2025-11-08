@@ -28,11 +28,14 @@ class _LoginscreenState extends State<Loginscreen> {
   }
 
   Future<void> _loadSavedInfo() async {
-    final remember = await MySharedPreferences.getDataBool('rememberMe') ?? false;
+    final remember =
+        await MySharedPreferences.getDataBool('rememberMe') ?? false;
 
     if (remember) {
-      final savedUsername = await MySharedPreferences.getDataString('username') ?? '';
-      final savedPassword = await MySharedPreferences.getDataString('password') ?? '';
+      final savedUsername =
+          await MySharedPreferences.getDataString('username') ?? '';
+      final savedPassword =
+          await MySharedPreferences.getDataString('password') ?? '';
 
       setState(() {
         _rememberMe = true;
@@ -47,40 +50,79 @@ class _LoginscreenState extends State<Loginscreen> {
   }
 
   Future<void> _handleLogin(String username, String password) async {
+    if (username.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     final api = const ApiClient();
 
     try {
-      final response = await api.post('dynamic/login', jsonEncode({
-        'username': username,
-        'password': password,
-      }));
+      final response = await api.post(
+        'dynamic/login',
+        jsonEncode({'username': username, 'password': password}),
+      );
 
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
+
+        // Nếu API trả lỗi dạng {"error": "..."} thì xử lý tại đây
+        if (jsonResponse is Map && jsonResponse.containsKey('error')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Đăng nhập thất bại: ${jsonResponse['error']}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          return;
+        }
+
         final account = Account.fromJson(jsonResponse);
 
         await MySharedPreferences.setDataObject('account', account.toJson());
         await MySharedPreferences.setDataString('username', username);
         await MySharedPreferences.setDataString('password', password);
-        if (_rememberMe) {
-          await MySharedPreferences.setDataBool('rememberMe', true);
-        }
+        await MySharedPreferences.setDataBool('rememberMe', _rememberMe);
 
         arrStatus = await StatusSystemService.GetAllStatusSystem();
         AppState.instance.set("StatusSystem", arrStatus);
-        AppState.instance.set("CreateAppendix", arrStatus[0].getBool(arrStatus[0].typeStatus));
+        AppState.instance.set(
+          "CreateAppendix",
+          arrStatus[0].getBool(arrStatus[0].typeStatus),
+        );
 
         // ✅ Không cho quay lại login
         Navigator.pushReplacementNamed(context, '/home');
       } else {
+        // Nếu server trả mã lỗi (400, 401, 500, v.v.)
+        String message = "Đăng nhập thất bại (${response.statusCode})";
+
+        try {
+          final body = jsonDecode(response.body);
+          if (body is Map && body.containsKey('message')) {
+            message = body['message'];
+          } else if (body is Map && body.containsKey('error')) {
+            message = body['error'];
+          }
+        } catch (_) {}
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đăng nhập thất bại: ${response.statusCode}')),
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
-      print("Lỗi login: $e");
+      // ❌ Bắt lỗi mạng, JSON hoặc server không phản hồi
+      debugPrint("Lỗi login: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lỗi kết nối server')),
+        SnackBar(
+          content: Text('Không thể kết nối tới server: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }

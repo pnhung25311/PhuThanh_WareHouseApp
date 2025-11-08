@@ -88,7 +88,6 @@ class InfoService {
     }
   }
 
-  
   static Future<List<VehicleType>> LoadDtataVehicleType() async {
     try {
       const apiClient = ApiClient();
@@ -280,5 +279,17 @@ class InfoService {
       print(e);
       return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
+  }
+
+  static Future<Map<String, dynamic>> getAllPages(int pages, int size) async {
+    const apiClient = ApiClient();
+    final response = await apiClient.get(
+      "dynamic/get-all/pages/Product?page=${pages}&size=$size"
+    );
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
   }
 }

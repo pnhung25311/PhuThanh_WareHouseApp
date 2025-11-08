@@ -14,6 +14,7 @@ class Product {
   final int manufacturerID;
   final int countryID;
   final int supplierID;
+  final int supplierActualID;
   final int unitID;
   final String? img1;
   final String? img2;
@@ -37,6 +38,7 @@ class Product {
     required this.manufacturerID,
     required this.countryID,
     required this.supplierID,
+    required this.supplierActualID,
     required this.unitID,
     this.img1,
     this.img2,
@@ -63,6 +65,7 @@ class Product {
       manufacturerID: 0,
       countryID: 0,
       supplierID: 0,
+      supplierActualID: 0,
       unitID: 0,
       img1: null,
       img2: null,
@@ -89,6 +92,7 @@ class Product {
       manufacturerID: json['ManufacturerID'] ?? 0,
       countryID: json['CountryID'] ?? 0,
       supplierID: json['SupplierID'] ?? 0,
+      supplierActualID: json['SupplierActualID'] ?? 0,
       unitID: json['UnitID'] ?? 0,
       img1: json['Img1'],
       img2: json['Img2'],
@@ -117,6 +121,7 @@ class Product {
       'ManufacturerID': manufacturerID,
       'CountryID': countryID,
       'SupplierID': supplierID,
+      'SupplierActualID': supplierActualID,
       'UnitID': unitID,
       'Img1': img1,
       'Img2': img2,
@@ -142,6 +147,7 @@ class Product {
     int? manufacturerID,
     int? countryID,
     int? supplierID,
+    int? supplierActualID,
     int? unitID,
     String? img1,
     String? img2,
@@ -165,6 +171,7 @@ class Product {
       manufacturerID: manufacturerID ?? this.manufacturerID,
       countryID: countryID ?? this.countryID,
       supplierID: supplierID ?? this.supplierID,
+      supplierActualID: supplierActualID ?? this.supplierActualID,
       unitID: unitID ?? this.unitID,
       img1: img1 ?? this.img1,
       img2: img2 ?? this.img2,
