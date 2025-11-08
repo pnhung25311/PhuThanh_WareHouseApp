@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ViewImgProduct.screen.dart';
@@ -40,11 +41,8 @@ class ProductLongClick {
             leading: const Icon(Icons.image, color: Colors.blue),
             title: const Text('Xem ảnh'),
             onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => ViewImageScreen(item: item)),
-              );
+              NavigationHelper.pop(context);
+              NavigationHelper.push(context, ViewImageScreen(item: item));
             },
           ),
           //SAO CHÉP
@@ -72,7 +70,7 @@ class ProductLongClick {
               );
 
               // 4️⃣ Đóng modal
-              Navigator.pop(context);
+              NavigationHelper.pop(context);
             },
           ),
           //CHỈNH SỬA THÔNG TIN
@@ -80,10 +78,23 @@ class ProductLongClick {
             leading: const Icon(Icons.update, color: Colors.green),
             title: const Text('Chỉnh sửa thông tin '),
             onTap: () async {
-              Navigator.pop(context);
+              NavigationHelper.pop(context);
               NavigationHelper.push(
                 context,
                 ProductDetailScreen(item: item, isUpDate: true),
+              );
+            },
+          ),
+          //CÀI ĐẶT HIỂN THỊ
+          ListTile(
+            leading: const Icon(Icons.settings, color: Colors.green),
+            title: const Text('Cài đặt hiển thị '),
+            onTap: () async {
+              NavigationHelper.pop(context); // Đóng bottom sheet
+              showDialog(
+                context: context,
+                builder: (_) =>
+                    DisplaySettingsDialog(),
               );
             },
           ),
