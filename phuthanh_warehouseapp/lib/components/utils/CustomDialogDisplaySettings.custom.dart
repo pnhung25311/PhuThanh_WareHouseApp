@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+// import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 
 class DisplaySettingsDialog extends StatefulWidget {
-  const DisplaySettingsDialog({Key? key}) : super(key: key);
+  final String condition;
+  const DisplaySettingsDialog({Key? key, required this.condition})
+    : super(key: key);
 
   @override
   State<DisplaySettingsDialog> createState() => _DisplaySettingsDialogState();
 }
 
 class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
-  // bool showProductID = true;
   bool showID_Keeton = true;
   bool showIndustrial = true;
   bool showID_PartNo = true;
@@ -20,6 +21,13 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
   bool showRemark = true;
   bool showVehicleDetails = true;
 
+  bool showVehicleTypeName = true;
+  bool showUnitName = true;
+  bool showCountryName = true;
+  bool showManufacturerName = true;
+  bool showSupplierName = true;
+  bool showSupplierActualName = true;
+
   @override
   void initState() {
     super.initState();
@@ -27,10 +35,9 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
   }
 
   Future<void> _loadSettings() async {
-    final settings = await MySharedPreferences.getDataObject("showhideProduct");
+    final settings = await MySharedPreferences.getDataObject(widget.condition);
     if (settings != null) {
       setState(() {
-        // showProductID = settings["showProductID"] ?? true;
         showID_Keeton = settings["showID_Keeton"] ?? true;
         showIndustrial = settings["showIndustrial"] ?? true;
         showID_PartNo = settings["showID_PartNo"] ?? true;
@@ -39,13 +46,18 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
         showParameter = settings["showParameter"] ?? true;
         showVehicleDetails = settings["showVehicleDetails"] ?? true;
         showRemark = settings["showRemark"] ?? true;
+        showUnitName = settings["showUnitName"] ?? true;
+        showVehicleTypeName = settings["showVehicleTypeName"] ?? true;
+        showCountryName = settings["showCountryName"] ?? true;
+        showManufacturerName = settings["showManufacturerName"] ?? true;
+        showSupplierName = settings["showSupplierName"] ?? true;
+        showSupplierActualName = settings["showSupplierActualName"] ?? true;
       });
     }
   }
 
-  void _saveSettings() async{
-    await MySharedPreferences.setDataObject("showhideProduct", {
-      // "showProductID": showProductID,
+  Future<void> _saveSettings() async {
+    await MySharedPreferences.setDataObject(widget.condition, {
       "showID_Keeton": showID_Keeton,
       "showIndustrial": showIndustrial,
       "showID_PartNo": showID_PartNo,
@@ -54,78 +66,172 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
       "showParameter": showParameter,
       "showVehicleDetails": showVehicleDetails,
       "showRemark": showRemark,
+      "showUnitName": showUnitName,
+      "showVehicleTypeName": showVehicleTypeName,
+      "showCountryName": showCountryName,
+      "showManufacturerName": showManufacturerName,
+      "showSupplierName": showSupplierName,
+      "showSupplierActualName": showSupplierActualName,
     });
-    NavigationHelper.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("✅ Lưu cài đặt hiển thị thành công")),
-    );
+
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("✅ Lưu cài đặt hiển thị thành công")),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text("Cài đặt hiển thị"),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // CheckboxListTile(
-            //   title: const Text("Mã sản phẩm"),
-            //   value: showProductID,
-            //   onChanged: (val) => setState(() => showProductID = val ?? true),
-            // ),
-            CheckboxListTile(
-              title: const Text("Mã keeton"),
-              value: showID_Keeton,
-              onChanged: (val) => setState(() => showID_Keeton = val ?? true),
-            ),
-            CheckboxListTile(
-              title: const Text("Mã công nghiệp"),
-              value: showIndustrial,
-              onChanged: (val) => setState(() => showIndustrial = val ?? true),
-            ),
-            CheckboxListTile(
-              title: const Text("Danh điểm"),
-              value: showID_PartNo,
-              onChanged: (val) => setState(() => showID_PartNo = val ?? true),
-            ),
-            CheckboxListTile(
-              title: const Text("Danh điểm tương đương"),
-              value: showID_ReplacedPartNo,
-              onChanged: (val) =>
-                  setState(() => showID_ReplacedPartNo = val ?? true),
-            ),
-            // CheckboxListTile(
-            //   title: const Text("Tên sản phẩm"),
-            //   value: showNameProduct,
-            //   onChanged: (val) => setState(() => showNameProduct = val ?? true),
-            // ),
-            CheckboxListTile(
-              title: const Text("Thông số"),
-              value: showParameter,
-              onChanged: (val) => setState(() => showParameter = val ?? true),
-            ),
-            CheckboxListTile(
-              title: const Text("Dòng xe"),
-              value: showVehicleDetails,
-              onChanged: (val) =>
-                  setState(() => showVehicleDetails = val ?? true),
-            ),
-            CheckboxListTile(
-              title: const Text("Ghi chú"),
-              value: showRemark,
-              onChanged: (val) => setState(() => showRemark = val ?? true),
-            ),
-          ],
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.8,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Material(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 50,
+                    height: 5,
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[400],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  const Text(
+                    "⚙️ Cài đặt hiển thị",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const Divider(),
+                  Expanded(
+                    child: ListView(
+                      controller: scrollController,
+                      children: [
+                        CheckboxListTile(
+                          title: const Text("Mã keeton"),
+                          value: showID_Keeton,
+                          onChanged: (val) =>
+                              setState(() => showID_Keeton = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Mã công nghiệp"),
+                          value: showIndustrial,
+                          onChanged: (val) =>
+                              setState(() => showIndustrial = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Danh điểm"),
+                          value: showID_PartNo,
+                          onChanged: (val) =>
+                              setState(() => showID_PartNo = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Danh điểm tương đương"),
+                          value: showID_ReplacedPartNo,
+                          onChanged: (val) => setState(
+                            () => showID_ReplacedPartNo = val ?? true,
+                          ),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Thông số"),
+                          value: showParameter,
+                          onChanged: (val) =>
+                              setState(() => showParameter = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Dòng xe"),
+                          value: showVehicleDetails,
+                          onChanged: (val) =>
+                              setState(() => showVehicleDetails = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Ghi chú"),
+                          value: showRemark,
+                          onChanged: (val) =>
+                              setState(() => showRemark = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Nhà cung cấp thực tế"),
+                          value: showSupplierActualName,
+                          onChanged: (val) => setState(
+                            () => showSupplierActualName = val ?? true,
+                          ),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Nhà cung cấp giấy tờ"),
+                          value: showSupplierName,
+                          onChanged: (val) =>
+                              setState(() => showSupplierName = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("ĐVT"),
+                          value: showUnitName,
+                          onChanged: (val) =>
+                              setState(() => showUnitName = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Nước sản xuất"),
+                          value: showCountryName,
+                          onChanged: (val) =>
+                              setState(() => showCountryName = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Nhà sản xuất"),
+                          value: showManufacturerName,
+                          onChanged: (val) => setState(
+                            () => showManufacturerName = val ?? true,
+                          ),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Loại xe"),
+                          value: showVehicleTypeName,
+                          onChanged: (val) =>
+                              setState(() => showVehicleTypeName = val ?? true),
+                        ),
+                        CheckboxListTile(
+                          title: const Text("Loại xe"),
+                          value: showVehicleTypeName,
+                          onChanged: (val) =>
+                              setState(() => showVehicleTypeName = val ?? true),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Hủy"),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: _saveSettings,
+                          child: const Text("Lưu"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Hủy"),
-        ),
-        ElevatedButton(onPressed: _saveSettings, child: const Text("Lưu")),
-      ],
     );
   }
 }

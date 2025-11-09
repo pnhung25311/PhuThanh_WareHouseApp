@@ -18,6 +18,12 @@ class WareHouse {
   final int? supplierID;
   final int? supplierActualID;
   final int? unitID;
+  final String? manufacturerName;
+  final String? vehicleTypeName;
+  final String? countryName;
+  final String? supplierActualName;
+  final String? supplierName;
+  final String? unitName;
   final String? locationID;
   final String? img1;
   final String? img2;
@@ -48,6 +54,12 @@ class WareHouse {
     this.supplierActualID,
     this.unitID,
     this.locationID,
+    this.vehicleTypeName,
+    this.manufacturerName,
+    this.countryName,
+    this.supplierName,
+    this.supplierActualName,
+    this.unitName,
     this.img1,
     this.img2,
     this.img3,
@@ -82,6 +94,12 @@ class WareHouse {
       supplierActualID: (json['SupplierActualID'] as num?)?.toInt(),
       unitID: (json['UnitID'] as num?)?.toInt(),
       locationID: json['LocationID'] ?? "",
+      unitName: json['UnitName'] ?? '',
+      countryName: json['CountryName'] ?? '',
+      manufacturerName: json['ManufacturerName'] ?? '',
+      vehicleTypeName: json['VehicleTypeName'] ?? '',
+      supplierName: json['SupplierName'] ?? '',
+      supplierActualName: json['SupplierActualName'] ?? '',
       img1: json['Img1'] ?? '',
       img2: json['Img2'] ?? '',
       img3: json['Img3'] ?? '',
@@ -116,6 +134,12 @@ class WareHouse {
       'SupplierActualID': supplierActualID,
       'UnitID': unitID,
       'LocationID': locationID,
+      // 'ManufacturerName': manufacturerName,
+      // 'CountryName': countryName,
+      // 'VehicleTypeName': vehicleTypeName,
+      // 'SupplierActualName': supplierActualName,
+      // 'SupplierName': supplierName,
+      // 'UnitName': unitName,
       'Img1': img1,
       'Img2': img2,
       'Img3': img3,
@@ -148,13 +172,19 @@ class WareHouse {
     int? supplierActualID,
     int? unitID,
     String? locationID,
+    String? manufacturerName,
+    String? vehicleTypeName,
+    String? countryName,
+    String? supplierActualName,
+    String? supplierName,
+    String? unitName,
     String? img1,
     String? img2,
     String? img3,
     String? remarkOfProduct,
     DateTime? lastTime,
     String? remarkOfDataWarehouse,
-    String? lastUser
+    String? lastUser,
   }) {
     return WareHouse(
       dataWareHouseAID: dataWareHouseAID ?? this.dataWareHouseAID,
@@ -174,9 +204,16 @@ class WareHouse {
       manufacturerID: (manufacturerID as num?)?.toInt() ?? this.manufacturerID,
       countryID: (countryID as num?)?.toInt() ?? this.countryID,
       supplierID: (supplierID as num?)?.toInt() ?? this.supplierID,
-      supplierActualID: (supplierActualID as num?)?.toInt() ?? this.supplierActualID,
+      supplierActualID:
+          (supplierActualID as num?)?.toInt() ?? this.supplierActualID,
       unitID: (unitID as num?)?.toInt() ?? this.unitID,
       locationID: locationID ?? this.locationID,
+      supplierActualName: supplierActualName ?? this.supplierActualName,
+      supplierName: supplierName ?? this.supplierName,
+      countryName: countryName ?? this.countryName,
+      manufacturerName: manufacturerName ?? this.manufacturerName,
+      vehicleTypeName: vehicleTypeName ?? this.vehicleTypeName,
+      unitName: unitName ?? this.unitName,
       img1: img1 ?? this.img1,
       img2: img2 ?? this.img2,
       img3: img3 ?? this.img3,
@@ -184,7 +221,7 @@ class WareHouse {
       lastTime: lastTime ?? this.lastTime,
       remarkOfDataWarehouse:
           remarkOfDataWarehouse ?? this.remarkOfDataWarehouse,
-          lastUser: lastUser??this.lastUser
+      lastUser: lastUser ?? this.lastUser,
     );
   }
 
@@ -236,13 +273,19 @@ class WareHouse {
       supplierActualID: null, // hoặc 0
       unitID: null, // hoặc 0
       locationID: null, // hoặc 0
+      vehicleTypeName: '',
+      manufacturerName: '',
+      countryName: '',
+      supplierName: '',
+      supplierActualName: '',
+      unitName: '',
       img1: '',
       img2: '',
       img3: '',
       remarkOfProduct: '',
       lastTime: null,
       remarkOfDataWarehouse: '',
-      lastUser:'',
+      lastUser: '',
     );
   }
 }

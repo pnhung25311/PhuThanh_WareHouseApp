@@ -145,8 +145,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildProductList() {
     final items = _filteredProducts;
+    if (_isLoading) return _buildLoading();
 
-    if (!_isLoading && items.isEmpty) return _buildEmptyState();
+    if (items.isEmpty) return _buildEmptyState();
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -166,8 +167,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildWarehouseList() {
     final items = _filteredWarehouses;
+    if (_isLoading) return _buildLoading();
 
-    if (!_isLoading && items.isEmpty) return _buildEmptyState();
+    if (items.isEmpty) return _buildEmptyState();
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -218,23 +220,20 @@ class _SearchScreenState extends State<SearchScreen> {
             fontSize: 13,
             borderRadius: 8,
             backgroundColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 4,
+            ),
             onChanged: _onSearchChanged,
           ),
         ),
       ),
       drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
-      body: Stack(
-        children: [
-          RefreshIndicator(
-            onRefresh: _loadData,
-            child: _statusHome == "Product"
-                ? _buildProductList()
-                : _buildWarehouseList(),
-          ),
-          // Overlay loading
-          if (_isLoading) _buildLoading(),
-        ],
+      body: RefreshIndicator(
+        onRefresh: _loadData,
+        child: _statusHome == "Product"
+            ? _buildProductList()
+            : _buildWarehouseList(),
       ),
     );
   }

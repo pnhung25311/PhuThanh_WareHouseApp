@@ -31,6 +31,13 @@ class _ProductItemState extends State<ProductItem> {
   bool showRemark = true;
   bool showVehicleDetails = true;
 
+  bool showVehicleTypeName = true;
+  bool showUnitName = true;
+  bool showCountryName = true;
+  bool showManufacturerName = true;
+  bool showSupplierName = true;
+  bool showSupplierActualName = true;
+
   @override
   void initState() {
     super.initState();
@@ -50,6 +57,12 @@ class _ProductItemState extends State<ProductItem> {
         showParameter = settings["showParameter"] ?? true;
         showRemark = settings["showRemark"] ?? true;
         showVehicleDetails = settings["showVehicleDetails"] ?? true;
+        showUnitName = settings["showUnitName"] ?? true;
+        showVehicleTypeName = settings["showVehicleTypeName"] ?? true;
+        showCountryName = settings["showCountryName"] ?? true;
+        showManufacturerName = settings["showManufacturerName"] ?? true;
+        showSupplierName = settings["showSupplierName"] ?? true;
+        showSupplierActualName = settings["showSupplierActualName"] ?? true;
       });
     }
   }
@@ -94,7 +107,7 @@ class _ProductItemState extends State<ProductItem> {
               ),
             if (showID_ReplacedPartNo)
               Text(
-                "Danh Điểm: ${widget.item.idReplacedPartNo}",
+                "Danh Điểm tương đương: ${widget.item.idReplacedPartNo}",
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -110,9 +123,45 @@ class _ProductItemState extends State<ProductItem> {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
+            if (showUnitName)
+              Text(
+                "ĐVT: ${widget.item.unitName}",
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            if (showManufacturerName)
+              Text(
+                "Nhà sản xuất: ${widget.item.manufacturerName}",
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
             if (showVehicleDetails)
               Text(
                 "Dòng xe: ${widget.item.vehicleDetail}",
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            if (showVehicleTypeName)
+              Text(
+                "Loại xe: ${widget.item.vehicleTypeName}",
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            if (showCountryName)
+              Text(
+                "Nước sản xuất: ${widget.item.countryName}",
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            if (showSupplierActualName)
+              Text(
+                "Nhà cung cấp thực tế: ${widget.item.supplierActualName}",
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            if (showSupplierName)
+              Text(
+                "Nhà cung cấp giấy tờ: ${widget.item.supplierName}",
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
@@ -126,11 +175,10 @@ class _ProductItemState extends State<ProductItem> {
         ),
         isThreeLine: true,
         onTap:
-            // widget.onTap ??
             () {
               NavigationHelper.push(
                 context,
-                ProductDetailScreen(item: widget.item, readOnly: true),
+                ProductDetailScreen(item: widget.item, readOnly: false, isUpDate: true,),
               );
             },
         onLongPress: widget.onLongPress,

@@ -124,6 +124,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
               borderRadius: BorderRadius.circular(8),
             ),
             onTap: () {
+              Navigator.pop(context, true);
+
               AppState.instance.set("StatusHome", "Product");
               setState(() {
                 _selectedWarehouse = "Product";
@@ -134,10 +136,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
               Navigator.pop(context, true);
               showDialog(
                 context: context,
-                builder: (context) => const DisplaySettingsDialog(),
+                builder: (context) => const DisplaySettingsDialog(condition: "showhideProduct",),
               );
               widget.onWarehouseSelected?.call();
-              
             },
           ),
 
@@ -215,6 +216,19 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       );
 
                       widget.onWarehouseSelected?.call();
+                    },
+                    onLongPress: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        backgroundColor: Colors.white,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
+                        builder: (context) => const DisplaySettingsDialog(condition: "showhideWareHouse",),
+                      );
                     },
                   );
                 }),
