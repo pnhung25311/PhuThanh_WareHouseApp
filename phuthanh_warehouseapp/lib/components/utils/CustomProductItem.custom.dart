@@ -126,7 +126,7 @@ class _ProductItemState extends State<ProductItem> {
         ),
         isThreeLine: true,
         onTap:
-            widget.onTap ??
+            // widget.onTap ??
             () {
               NavigationHelper.push(
                 context,
