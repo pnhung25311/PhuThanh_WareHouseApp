@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
+// import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ViewImgProduct.screen.dart';
@@ -86,18 +86,18 @@ class ProductLongClick {
             },
           ),
           //CÀI ĐẶT HIỂN THỊ
-          ListTile(
-            leading: const Icon(Icons.settings, color: Colors.green),
-            title: const Text('Cài đặt hiển thị '),
-            onTap: () async {
-              NavigationHelper.pop(context); // Đóng bottom sheet
-              showDialog(
-                context: context,
-                builder: (_) =>
-                    DisplaySettingsDialog(),
-              );
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.settings, color: Colors.green),
+          //   title: const Text('Cài đặt hiển thị '),
+          //   onTap: () async {
+          //     // NavigationHelper.pop(context); // Đóng bottom sheet
+          //     // showDialog(
+          //     //   context: context,
+          //     //   builder: (_) =>
+          //     //       DisplaySettingsDialog(),
+          //     // );
+          //   },
+          // ),
         ],
       ),
     );

@@ -11,11 +11,17 @@ class Product {
   final String parameter;
   final String vehicleDetail;
   final int vehicleTypeID;
+  // final String? vehicleTypeName;
   final int manufacturerID;
+  // final String? manufacturerName;
   final int countryID;
+  // final String? countryName;
   final int supplierID;
+  // final String? supplierName;
   final int supplierActualID;
+  // final String? supplierActualName;
   final int unitID;
+  // final String? unitName;
   final String? img1;
   final String? img2;
   final String? img3;
@@ -40,6 +46,12 @@ class Product {
     required this.supplierID,
     required this.supplierActualID,
     required this.unitID,
+    // this.vehicleTypeName,
+    // this.manufacturerName,
+    // this.countryName,
+    // this.supplierName,
+    // this.supplierActualName,
+    // this.unitName,
     this.img1,
     this.img2,
     this.img3,
@@ -67,6 +79,12 @@ class Product {
       supplierID: 0,
       supplierActualID: 0,
       unitID: 0,
+      // vehicleTypeName: '',
+      // manufacturerName: '',
+      // countryName: '',
+      // supplierName: '',
+      // supplierActualName: '',
+      // unitName: '',
       img1: null,
       img2: null,
       img3: null,
@@ -94,6 +112,12 @@ class Product {
       supplierID: json['SupplierID'] ?? 0,
       supplierActualID: json['SupplierActualID'] ?? 0,
       unitID: json['UnitID'] ?? 0,
+      // unitName: json['UnitName'] ?? '',
+      // countryName: json['CountryName'] ?? ''
+      // manufacturerName: json['ManufacturerName'] ?? '',
+      // vehicleTypeName: json['VehicleTypeName'] ?? '',
+      // supplierName: json['SupplierName'] ?? '',
+      // supplierActualName: json['SupplierActualName'] ?? '',
       img1: json['Img1'],
       img2: json['Img2'],
       img3: json['Img3'],
@@ -123,6 +147,12 @@ class Product {
       'SupplierID': supplierID,
       'SupplierActualID': supplierActualID,
       'UnitID': unitID,
+      // 'ManufacturerName': manufacturerName,
+      // 'CountryName': countryName,
+      // 'VehicleTypeName': vehicleTypeName,
+      // 'SupplierActualName': supplierActualName,
+      // 'SupplierName': supplierName,
+      // 'UnitName': unitName,
       'Img1': img1,
       'Img2': img2,
       'Img3': img3,
@@ -149,6 +179,12 @@ class Product {
     int? supplierID,
     int? supplierActualID,
     int? unitID,
+    // String? manufacturerName,
+    // String? vehicleTypeName,
+    // String? countryName,
+    // String? supplierActualName,
+    // String? supplierName,
+    // String? unitName,
     String? img1,
     String? img2,
     String? img3,
@@ -173,6 +209,12 @@ class Product {
       supplierID: supplierID ?? this.supplierID,
       supplierActualID: supplierActualID ?? this.supplierActualID,
       unitID: unitID ?? this.unitID,
+      // supplierActualName: supplierActualName ?? this.supplierActualName,
+      // supplierName: supplierName ?? this.supplierName,
+      // countryName: countryName ?? this.countryName,
+      // manufacturerName: manufacturerName ?? this.manufacturerName,
+      // vehicleTypeName: vehicleTypeName ?? this.vehicleTypeName,
+      // unitName: unitName ?? this.unitName,
       img1: img1 ?? this.img1,
       img2: img2 ?? this.img2,
       img3: img3 ?? this.img3,

@@ -120,7 +120,7 @@ class _LoginscreenState extends State<Loginscreen> {
       debugPrint("Lỗi login: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không thể kết nối tới server: $e'),
+          content: Text('Không thể kết nối tới server'),
           backgroundColor: Colors.red,
         ),
       );

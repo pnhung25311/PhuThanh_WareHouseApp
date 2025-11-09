@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
@@ -128,7 +129,15 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 _selectedWarehouse = "Product";
               });
               widget.onWarehouseSelected?.call();
+            },
+            onLongPress: () {
               Navigator.pop(context, true);
+              showDialog(
+                context: context,
+                builder: (context) => const DisplaySettingsDialog(),
+              );
+              widget.onWarehouseSelected?.call();
+              
             },
           ),
 

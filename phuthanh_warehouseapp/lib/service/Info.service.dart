@@ -204,6 +204,7 @@ class InfoService {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+        print(data);
         return data.map((e) => Product.fromJson(e)).toList();
       } else {
         print("=======>" + response.statusCode.toString());
