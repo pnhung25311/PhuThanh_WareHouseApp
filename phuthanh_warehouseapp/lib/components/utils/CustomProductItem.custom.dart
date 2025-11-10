@@ -8,12 +8,14 @@ class ProductItem extends StatefulWidget {
   final Product item;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final int? index;
 
   const ProductItem({
     Key? key,
     required this.item,
     this.onTap,
     this.onLongPress,
+    this.index
   }) : super(key: key);
 
   @override
@@ -73,8 +75,7 @@ class _ProductItemState extends State<ProductItem> {
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       elevation: 3,
       child: ListTile(
-        title: Text(
-          widget.item.nameProduct.toString(),
+        title: Text(widget.item.nameProduct.toString(),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),

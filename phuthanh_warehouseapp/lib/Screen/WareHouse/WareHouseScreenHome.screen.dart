@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDrawer.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomListViewProduct.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomListViewWareHouse.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomProductItem.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomProductLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseItem.custom.dart';
@@ -160,12 +162,9 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
         backgroundColor: Colors.blue,
       ),
       drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        child: _statusHome == "Product"
-            ? _buildProductList()
-            : _buildWarehouseList(),
-      ),
+      body: _statusHome == "Product"
+          ? ProductListView(products: _products, onRefresh: _loadData)
+          : WarehouseListView(warehouses: _warehouses, onRefresh: _loadData),
       floatingActionButton: _statusHome == "Product"
           ? FloatingActionButton(
               onPressed: () async {

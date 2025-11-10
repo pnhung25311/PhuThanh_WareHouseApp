@@ -282,15 +282,26 @@ class InfoService {
     }
   }
 
-  static Future<Map<String, dynamic>> getAllPages(int pages, int size) async {
+  static Future<List<Product>> getAllPages(int pages, int size) async {
     const apiClient = ApiClient();
-    final response = await apiClient.get(
-      "dynamic/get-all/pages/Product?page=${pages}&size=$size"
+    try {
+          final response = await apiClient.get(
+      // "dynamic/get-all/pages/vwProduct?page=${pages}&size=$size"
+      "dynamic/get-all/pages/vwProduct?page=${pages}&size=50"
     );
-      return {
-        "isSuccess": response.statusCode == 200,
-        "statusCode": response.statusCode,
-        "body": response.body,
-      };
+    if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        // print(data);
+        return data.map((e) => Product.fromJson(e)).toList();
+      } else {
+        print("=======>" + response.statusCode.toString());
+        // throw Exception("Failed to load data (${response.statusCode})");
+        return [];
+      }
+    } catch (e) {
+            print(e);
+      return [];
+    }
+
   }
 }
