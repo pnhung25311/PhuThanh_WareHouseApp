@@ -81,6 +81,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final TextEditingController image3Controller = TextEditingController();
 
   bool loading = true;
+  bool isSaving = false; // ⚡ trạng thái loading khi lưu
   Key dropdownKey = UniqueKey();
   DateTime initialDate = DateTime.now(); // ⚡ biến state
 
@@ -179,6 +180,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   void _upDateWareHouse() async {
+    setState(() => isSaving = true);
     try {
       // final api = const ApiClient();
       final helper = ImagePickerHelper();
@@ -337,6 +339,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('⚠️ Lỗi kết nối: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => isSaving = false);
+      }
     }
   }
 
@@ -679,14 +685,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         vertical: 12,
                       ),
                     ),
-                    onPressed:
-                        widget.isUpDate ||
+                    onPressed: (widget.isUpDate ||
                             widget.isCreate ||
-                            widget.isCreateHistory
+                            widget.isCreateHistory) &&
+                        !isSaving
                         ? _upDateWareHouse
                         : null,
-                    icon: const Icon(Icons.save),
-                    label: const Text("Lưu thay đổi"),
+                    icon: isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(Icons.save),
+                    label: Text(isSaving ? "Đang lưu..." : "Lưu thay đổi"),
                   ),
                   const SizedBox(width: 20), // khoảng cách giữa 2 nút
                   ElevatedButton.icon(

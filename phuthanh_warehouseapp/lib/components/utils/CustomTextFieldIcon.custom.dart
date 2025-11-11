@@ -57,6 +57,7 @@ class CustomTextFieldIcon extends StatefulWidget {
 
 class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
   bool _isIconActive = false;
+  
 
   void _toggleIcon() => setState(() => _isIconActive = !_isIconActive);
 
