@@ -182,32 +182,37 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     try {
       // final api = const ApiClient();
       final helper = ImagePickerHelper();
-      // String? fullName = await getFullname();
+      final files = [
+        AppState.instance.get<File?>('img1'),
+        AppState.instance.get<File?>('img2'),
+        AppState.instance.get<File?>('img3'),
+      ];
 
-      final file1 = AppState.instance.get<File?>('img1');
-      final file2 = AppState.instance.get<File?>('img2');
-      final file3 = AppState.instance.get<File?>('img3');
+      final controllers = [
+        image1Controller,
+        image2Controller,
+        image3Controller,
+      ];
+      final keys = ['img1', 'img2', 'img3'];
 
-      String? linkUpload1;
-      String? linkUpload2;
-      String? linkUpload3;
+      final uploads = <Future<String?>>[];
 
-      if (file1 != null) {
-        linkUpload1 = await helper.uploadImage(file1, productIDController.text);
-        AppState.instance.remove('img1');
-        image1Controller.text = linkUpload1 ?? "";
+      for (var file in files) {
+        if (file != null) {
+          uploads.add(helper.uploadImage(file, productIDController.text));
+        } else {
+          uploads.add(Future.value(null)); // giữ vị trí null
+        }
       }
 
-      if (file2 != null) {
-        linkUpload2 = await helper.uploadImage(file2, productIDController.text);
-        AppState.instance.remove('img2');
-        image2Controller.text = linkUpload2 ?? "";
-      }
+      final results = await Future.wait(uploads);
 
-      if (file3 != null) {
-        linkUpload3 = await helper.uploadImage(file3, productIDController.text);
-        AppState.instance.remove('img3');
-        image3Controller.text = linkUpload3 ?? "";
+      for (int i = 0; i < results.length; i++) {
+        final link = results[i];
+        if (link != null) {
+          controllers[i].text = link;
+          AppState.instance.remove(keys[i]);
+        }
       }
 
       final product = Product.empty();
@@ -263,32 +268,45 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
       final jsonProduct = productCreate.toJson();
       final jsonProductUpdate = productUpdate.toJson();
+      final idProductID = jsonEncode({
+        "ProductID": productIDController.text.trim(),
+      });
 
       // 🔹 Gọi API PUT (sử dụng hàm put bạn đã thêm trong ApiClient)
       // final tableName = await _loadData();
 
       if (widget.isCreate) {
-        // final response = await api.post("dynamic/insert/Product", bodyCreate);
-        final response = await Warehouseservice.addWarehouseRow(
+        final checkProductID = await InfoService.checkProductID(
           "Product",
-          jsonEncode(jsonProduct),
+          idProductID,
         );
-
-        if (response["isSuccess"]) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Thêm mới thành công')),
-          );
-          AppState.instance.set("ListProduct", null);
-          AppState.instance.set("DataWareHouseLimit", null);
-          NavigationHelper.pushAndRemoveUntil(
-            context,
-            HomeScreen(),
-          ); // quay lại và báo màn trước refresh
-        } else {
+        if (checkProductID) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('❌ Lỗi thêm mới: ')));
+          ).showSnackBar(SnackBar(content: Text('❌ Mã sản phẩm đã tồn tại ')));
+        } else {
+          // final response = await api.post("dynamic/insert/Product", bodyCreate);
+          final response = await Warehouseservice.addWarehouseRow(
+            "Product",
+            jsonEncode(jsonProduct),
+          );
+
+          if (response["isSuccess"]) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('✅ Thêm mới thành công')),
+            );
+            AppState.instance.set("ListProduct", null);
+            AppState.instance.set("DataWareHouseLimit", null);
+            NavigationHelper.pushAndRemoveUntil(
+              context,
+              HomeScreen(),
+            ); // quay lại và báo màn trước refresh
+          } else {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('❌ Lỗi thêm mới: ')));
+          }
         }
       }
 
@@ -492,14 +510,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 }
               },
             ),
+
             const SizedBox(height: 15),
-            //NHÀ PHÂN KHỐI GIẤY TỜ
+            //NHÀ PHÂN KHỐI THỰC TẾ
             CustomDropdownField(
-              label: "Nhà phân phối giấy tờ",
-              selectedValue: selectedSupplier,
-              items: suppliers,
+              label: "Nhà phân phối thực tế",
+              selectedValue: selectedSupplierActual,
+              items: supplierActuals,
               getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedSupplier = v),
+              onChanged: (v) => setState(() => selectedSupplierActual = v),
               readOnly: widget.readOnly,
               isCreate: StatusCreate,
               isSearch: true,
@@ -514,13 +533,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               },
             ),
             const SizedBox(height: 15),
-            //NHÀ PHÂN KHỐI THỰC TẾ
+            //NHÀ PHÂN KHỐI GIẤY TỜ
             CustomDropdownField(
-              label: "Nhà phân phối thực tế",
-              selectedValue: selectedSupplierActual,
-              items: supplierActuals,
+              label: "Nhà phân phối giấy tờ",
+              selectedValue: selectedSupplier,
+              items: suppliers,
               getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedSupplierActual = v),
+              onChanged: (v) => setState(() => selectedSupplier = v),
               readOnly: widget.readOnly,
               isCreate: StatusCreate,
               isSearch: true,

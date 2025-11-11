@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class ProductItem extends StatefulWidget {
   final Product item;
@@ -15,7 +15,7 @@ class ProductItem extends StatefulWidget {
     required this.item,
     this.onTap,
     this.onLongPress,
-    this.index
+    this.index,
   }) : super(key: key);
 
   @override
@@ -43,39 +43,38 @@ class _ProductItemState extends State<ProductItem> {
   @override
   void initState() {
     super.initState();
-    _loadDisplaySettings();
+    _init();
   }
 
-  Future<void> _loadDisplaySettings() async {
-    final settings = await MySharedPreferences.getDataObject("showhideProduct");
-    if (settings != null) {
-      setState(() {
-        showProductID = settings["showProductID"] ?? true;
-        showID_Keeton = settings["showID_Keeton"] ?? true;
-        showIndustrial = settings["showIndustrial"] ?? true;
-        showID_PartNo = settings["showID_PartNo"] ?? true;
-        showID_ReplacedPartNo = settings["showID_ReplacedPartNo"] ?? true;
-        showNameProduct = settings["showNameProduct"] ?? true;
-        showParameter = settings["showParameter"] ?? true;
-        showRemark = settings["showRemark"] ?? true;
-        showVehicleDetails = settings["showVehicleDetails"] ?? true;
-        showUnitName = settings["showUnitName"] ?? true;
-        showVehicleTypeName = settings["showVehicleTypeName"] ?? true;
-        showCountryName = settings["showCountryName"] ?? true;
-        showManufacturerName = settings["showManufacturerName"] ?? true;
-        showSupplierName = settings["showSupplierName"] ?? true;
-        showSupplierActualName = settings["showSupplierActualName"] ?? true;
-      });
-    }
+  Future<void> _init() async {
+    // await _loadDisplaySettings();
+    showID_PartNo = AppState.instance.get("showID_PartNoP");
+    showID_ReplacedPartNo = AppState.instance.get("showID_ReplacedPartNoP");
+    showID_Keeton = AppState.instance.get("showID_KeetonP");    
+    showIndustrial = AppState.instance.get("showIndustrialP");    
+    showParameter = AppState.instance.get("showParameterP");    
+    showRemark = AppState.instance.get("showRemarkP");    
+    showVehicleDetails = AppState.instance.get("showVehicleDetailsP");
+    showVehicleTypeName = AppState.instance.get("showVehicleTypeNameP");
+    showUnitName = AppState.instance.get("showUnitNameP");
+    showCountryName = AppState.instance.get("showCountryNameP");
+    showManufacturerName = AppState.instance.get("showManufacturerNameP");
+    showSupplierName = AppState.instance.get("showSupplierNameP");
+    showSupplierActualName = AppState.instance.get("showSupplierActualNameP");
+
+
   }
+
 
   @override
   Widget build(BuildContext context) {
+    // print(AppState.instance.get("showhideProduct")?["showID_PartNo"]);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       elevation: 3,
       child: ListTile(
-        title: Text(widget.item.nameProduct.toString(),
+        title: Text(
+          widget.item.nameProduct.toString(),
           overflow: TextOverflow.ellipsis,
           maxLines: 1,
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -83,6 +82,7 @@ class _ProductItemState extends State<ProductItem> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // print("object"),
             Text(
               "Mã sản phẩm: ${widget.item.productID}",
               overflow: TextOverflow.ellipsis,
@@ -95,12 +95,15 @@ class _ProductItemState extends State<ProductItem> {
                 maxLines: 1,
               ),
             if (showIndustrial)
+            // if (AppState.instance.get("showhideProduct")?["showIndustrial"]==true)
               Text(
                 "Mã công nghiệp: ${widget.item.idIndustrial}",
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
             if (showID_PartNo)
+            // if (AppState.instance.get("showhideProduct")?["showID_PartNo"]==true)
+
               Text(
                 "Danh Điểm: ${widget.item.idPartNo}",
                 overflow: TextOverflow.ellipsis,
@@ -175,13 +178,16 @@ class _ProductItemState extends State<ProductItem> {
           ],
         ),
         isThreeLine: true,
-        onTap:
-            () {
-              NavigationHelper.push(
-                context,
-                ProductDetailScreen(item: widget.item, readOnly: false, isUpDate: true,),
-              );
-            },
+        onTap: () {
+          NavigationHelper.push(
+            context,
+            ProductDetailScreen(
+              item: widget.item,
+              readOnly: true,
+              isUpDate: false,
+            ),
+          );
+        },
         onLongPress: widget.onLongPress,
       ),
     );

@@ -3,10 +3,6 @@ import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.d
 import 'package:phuthanh_warehouseapp/components/utils/CustomDrawer.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomListViewProduct.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomListViewWareHouse.custom.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomProductItem.custom.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomProductLongClick.custom.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseItem.custom.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
@@ -112,20 +108,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
       return const Center(child: Text("Không có sản phẩm."));
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _products.length,
-        itemBuilder: (context, index) => ProductItem(
-          item: _products[index],
-          onTap: () {},
-          onLongPress: () {
-            ProductLongClick.show(context, _products[index]);
-          },
-        ),
-      ),
-    );
+    return ProductListView(products: _products, onRefresh: _loadData);
   }
 
   /// ✅ List kho
@@ -135,19 +118,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
       return const Center(child: Text("Không có dữ liệu kho hàng."));
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadData,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: _warehouses.length,
-        itemBuilder: (context, index) => WarehouseItem(
-          item: _warehouses[index],
-          onLongPress: () {
-            WarehouseLongClick.show(context, _warehouses[index]);
-          },
-        ),
-      ),
-    );
+    return WarehouseListView(warehouses: _warehouses, onRefresh: _loadData);
   }
 
   @override
@@ -163,8 +134,8 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
       ),
       drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
       body: _statusHome == "Product"
-          ? ProductListView(products: _products, onRefresh: _loadData)
-          : WarehouseListView(warehouses: _warehouses, onRefresh: _loadData),
+          ? _buildProductList()
+          : _buildWarehouseList(),
       floatingActionButton: _statusHome == "Product"
           ? FloatingActionButton(
               onPressed: () async {

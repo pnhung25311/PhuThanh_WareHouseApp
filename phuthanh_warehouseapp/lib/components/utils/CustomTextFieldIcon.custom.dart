@@ -22,6 +22,7 @@ class CustomTextFieldIcon extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onSubmitted;
+  final Widget? suffixWidget;
 
   const CustomTextFieldIcon({
     super.key,
@@ -47,6 +48,7 @@ class CustomTextFieldIcon extends StatefulWidget {
     this.onChanged,
     this.inputFormatters,
     this.onSubmitted, // 🔹 Thêm dòng này
+    this.suffixWidget,
   });
 
   @override
@@ -66,7 +68,10 @@ class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
       prefixIcon: widget.prefixIcon != null
           ? Icon(widget.prefixIcon, color: iconColor)
           : null,
-      suffixIcon: widget.suffixIcon != null
+      // ✅ Nếu có suffixWidget thì hiển thị nó, ngược lại mới dùng suffixIcon
+      suffixIcon: widget.suffixWidget != null
+          ? widget.suffixWidget
+          : widget.suffixIcon != null
           ? IconButton(
               icon: Icon(widget.suffixIcon, color: iconColor),
               onPressed: () {

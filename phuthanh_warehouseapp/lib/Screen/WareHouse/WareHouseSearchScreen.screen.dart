@@ -62,8 +62,29 @@ class _SearchScreenState extends State<SearchScreen> {
           _allProducts = cached;
         } else {
           final data = await InfoService.LoadProduct();
-          AppState.instance.set("ListProduct", data);
+          // DateTime start = DateTime.now(); // thời điểm bắt đầu
+          // final datas = await InfoService.fetchAllProducts(size: 2000);
+          // DateTime end = DateTime.now(); // thời điểm kết thúc
+
+          // Duration duration = end.difference(start);
+          // print("========================================>>>>>>>");
+          // print(
+          //   "Loaded ${datas.length} products in ${duration.inMilliseconds} ms",
+          // );
+
+          // DateTime startA = DateTime.now(); // thời điểm bắt đầu
+          // final data = await InfoService.getAllPages(2000, 4);
+          // DateTime endA = DateTime.now(); // thời điểm kết thúc
+
+          // Duration durationA = endA.difference(startA);
+
+          // print(
+          //   "Loaded cũ ${data.length} products in ${durationA.inMilliseconds} ms",
+          // );
+
+          // AppState.instance.set("ListProduct", data);
           _allProducts = data;
+          // _allProducts = datas;
         }
         _filteredProducts = _allProducts;
       } else {

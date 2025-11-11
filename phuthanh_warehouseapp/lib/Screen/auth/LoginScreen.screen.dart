@@ -49,6 +49,77 @@ class _LoginscreenState extends State<Loginscreen> {
     }
   }
 
+  Future<void> _saveSetting() async {
+    final settingsWH = await MySharedPreferences.getDataObject(
+      "showhideWareHouse",
+    );
+    AppState.instance.set("showID_PartNoWH", settingsWH?["showID_PartNo"]);
+    AppState.instance.set("showID_KeetonWH", settingsWH?["showID_Keeton"]);
+    AppState.instance.set("showIndustrialWH", settingsWH?["showIndustrial"]);
+    // AppState.instance.set("showID_PartNo", showID_PartNo);
+    AppState.instance.set(
+      "showID_ReplacedPartNoWH",
+      settingsWH?["showID_ReplacedPartNo"],
+    );
+    AppState.instance.set("showParameterWH", settingsWH?["showParameter"]);
+    AppState.instance.set(
+      "showVehicleDetailsWH",
+      settingsWH?["showVehicleDetails"],
+    );
+    AppState.instance.set("showRemarkWH", settingsWH?["showRemark"]);
+    AppState.instance.set("showUnitNameWH", settingsWH?["showUnitName"]);
+    AppState.instance.set(
+      "showVehicleTypeNameWH",
+      settingsWH?["showVehicleTypeName"],
+    );
+    AppState.instance.set("showCountryNameWH", settingsWH?["showCountryName"]);
+    AppState.instance.set(
+      "showManufacturerNameWH",
+      settingsWH?["showManufacturerName"],
+    );
+    AppState.instance.set("showSupplierNameWH", settingsWH?["showSupplierName"]);
+    AppState.instance.set(
+      "showSupplierActualNameWH",
+      settingsWH?["showSupplierActualName"],
+    );
+
+    //==========================PRODUCT=================================
+
+    final settingsP = await MySharedPreferences.getDataObject(
+      "showhideProduct",
+    );
+
+    AppState.instance.set("showID_PartNoP", settingsP?["showID_PartNo"]);
+    AppState.instance.set("showID_KeetonP", settingsP?["showID_Keeton"]);
+    AppState.instance.set("showIndustrialP", settingsP?["showIndustrial"]);
+    // AppState.instance.set("showID_PartNo", showID_PartNo);
+    AppState.instance.set(
+      "showID_ReplacedPartNoP",
+      settingsP?["showID_ReplacedPartNo"],
+    );
+    AppState.instance.set("showParameterP", settingsP?["showParameter"]);
+    AppState.instance.set(
+      "showVehicleDetailsP",
+      settingsP?["showVehicleDetails"],
+    );
+    AppState.instance.set("showRemarkP", settingsP?["showRemark"]);
+    AppState.instance.set("showUnitNameP", settingsP?["showUnitName"]);
+    AppState.instance.set(
+      "showVehicleTypeNameP",
+      settingsP?["showVehicleTypeName"],
+    );
+    AppState.instance.set("showCountryNameP", settingsP?["showCountryName"]);
+    AppState.instance.set(
+      "showManufacturerNameP",
+      settingsP?["showManufacturerName"],
+    );
+    AppState.instance.set("showSupplierNameP", settingsP?["showSupplierName"]);
+    AppState.instance.set(
+      "showSupplierActualNameP",
+      settingsP?["showSupplierActualName"],
+    );
+  }
+
   Future<void> _handleLogin(String username, String password) async {
     if (username.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -95,7 +166,7 @@ class _LoginscreenState extends State<Loginscreen> {
           "CreateAppendix",
           arrStatus[0].getBool(arrStatus[0].typeStatus),
         );
-
+        _saveSetting();
         // ✅ Không cho quay lại login
         Navigator.pushReplacementNamed(context, '/home');
       } else {

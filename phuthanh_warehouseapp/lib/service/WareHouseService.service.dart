@@ -61,6 +61,10 @@ class Warehouseservice {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
+      if (data.isEmpty) {
+        print("Không có dữ liệu trong API ({}).");
+        return null;
+      }
         return WareHouse.fromJson(data);
       } else {
         print("=======>" + response.statusCode.toString());

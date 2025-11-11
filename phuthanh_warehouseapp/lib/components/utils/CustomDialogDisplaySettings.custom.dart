@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 // import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class DisplaySettingsDialog extends StatefulWidget {
   final String condition;
@@ -74,6 +75,35 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
       "showSupplierActualName": showSupplierActualName,
     });
 
+    if (widget.condition == "showhideProduct") {
+      AppState.instance.set("showID_KeetonP", showID_Keeton);
+      AppState.instance.set("showIndustrialP", showIndustrial);
+      AppState.instance.set("showID_PartNoP", showID_PartNo);
+      AppState.instance.set("showID_ReplacedPartNoP", showID_ReplacedPartNo);
+      AppState.instance.set("showParameterP", showParameter);
+      AppState.instance.set("showVehicleDetailsP", showVehicleDetails);
+      AppState.instance.set("showRemarkP", showRemark);
+      AppState.instance.set("showUnitNameP", showUnitName);
+      AppState.instance.set("showVehicleTypeNameP", showVehicleTypeName);
+      AppState.instance.set("showCountryNameP", showCountryName);
+      AppState.instance.set("showManufacturerNameP", showManufacturerName);
+      AppState.instance.set("showSupplierNameP", showSupplierName);
+      AppState.instance.set("showSupplierActualNameP", showSupplierActualName);
+    } else {
+      AppState.instance.set("showID_KeetonWH", showID_Keeton);
+      AppState.instance.set("showIndustrialWH", showIndustrial);
+      AppState.instance.set("showID_PartNoWH", showID_PartNo);
+      AppState.instance.set("showID_ReplacedPartNoWH", showID_ReplacedPartNo);
+      AppState.instance.set("showParameterWH", showParameter);
+      AppState.instance.set("showVehicleDetailsWH", showVehicleDetails);
+      AppState.instance.set("showRemarkWH", showRemark);
+      AppState.instance.set("showUnitNameWH", showUnitName);
+      AppState.instance.set("showVehicleTypeNameWH", showVehicleTypeName);
+      AppState.instance.set("showCountryNameWH", showCountryName);
+      AppState.instance.set("showManufacturerNameWH", showManufacturerName);
+      AppState.instance.set("showSupplierNameWH", showSupplierName);
+      AppState.instance.set("showSupplierActualNameWH", showSupplierActualName);
+    }
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -200,12 +230,12 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
                           onChanged: (val) =>
                               setState(() => showVehicleTypeName = val ?? true),
                         ),
-                        CheckboxListTile(
-                          title: const Text("Loại xe"),
-                          value: showVehicleTypeName,
-                          onChanged: (val) =>
-                              setState(() => showVehicleTypeName = val ?? true),
-                        ),
+                        // CheckboxListTile(
+                        //   title: const Text("Loại xe"),
+                        //   value: showVehicleTypeName,
+                        //   onChanged: (val) =>
+                        //       setState(() => showVehicleTypeName = val ?? true),
+                        // ),
                       ],
                     ),
                   ),

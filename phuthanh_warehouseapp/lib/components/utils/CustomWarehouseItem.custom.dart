@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class WarehouseItem extends StatefulWidget {
   final WareHouse item;
@@ -20,7 +20,7 @@ class WarehouseItem extends StatefulWidget {
     this.onLongPress,
   });
 
-    @override
+  @override
   State<WarehouseItem> createState() => _WarehouseItemState();
 
   // @override
@@ -69,9 +69,8 @@ class WarehouseItem extends StatefulWidget {
   //     ),
   //   );
   // }
-
-
 }
+
 class _WarehouseItemState extends State<WarehouseItem> {
   bool showProductID = true;
   bool showID_Keeton = true;
@@ -90,33 +89,31 @@ class _WarehouseItemState extends State<WarehouseItem> {
   bool showSupplierName = true;
   bool showSupplierActualName = true;
 
-    @override
+  @override
   void initState() {
     super.initState();
-    _loadDisplaySettings();
+    // _loadDisplaySettings();
+    _init();
   }
 
-    Future<void> _loadDisplaySettings() async {
-    final settings = await MySharedPreferences.getDataObject("showhideWareHouse");
-    if (settings != null) {
-      setState(() {
-        showProductID = settings["showProductID"] ?? true;
-        showID_Keeton = settings["showID_Keeton"] ?? true;
-        showIndustrial = settings["showIndustrial"] ?? true;
-        showID_PartNo = settings["showID_PartNo"] ?? true;
-        showID_ReplacedPartNo = settings["showID_ReplacedPartNo"] ?? true;
-        showNameProduct = settings["showNameProduct"] ?? true;
-        showParameter = settings["showParameter"] ?? true;
-        showRemark = settings["showRemark"] ?? true;
-        showVehicleDetails = settings["showVehicleDetails"] ?? true;
-        showUnitName = settings["showUnitName"] ?? true;
-        showVehicleTypeName = settings["showVehicleTypeName"] ?? true;
-        showCountryName = settings["showCountryName"] ?? true;
-        showManufacturerName = settings["showManufacturerName"] ?? true;
-        showSupplierName = settings["showSupplierName"] ?? true;
-        showSupplierActualName = settings["showSupplierActualName"] ?? true;
-      });
-    }
+  
+  Future<void> _init() async {
+    // await _loadDisplaySettings();
+    showID_PartNo = AppState.instance.get("showID_PartNoWH");
+    showID_ReplacedPartNo = AppState.instance.get("showID_ReplacedPartNoWH");
+    showID_Keeton = AppState.instance.get("showID_KeetonWH");    
+    showIndustrial = AppState.instance.get("showIndustrialWH");    
+    showParameter = AppState.instance.get("showParameterWH");    
+    showRemark = AppState.instance.get("showRemarkWH");    
+    showVehicleDetails = AppState.instance.get("showVehicleDetailsWH");
+    showVehicleTypeName = AppState.instance.get("showVehicleTypeNameWH");
+    showUnitName = AppState.instance.get("showUnitNameWH");
+    showCountryName = AppState.instance.get("showCountryNameWH");
+    showManufacturerName = AppState.instance.get("showManufacturerNameWH");
+    showSupplierName = AppState.instance.get("showSupplierNameWH");
+    showSupplierActualName = AppState.instance.get("showSupplierActualNameWH");
+
+
   }
 
   @override
@@ -139,12 +136,12 @@ class _WarehouseItemState extends State<WarehouseItem> {
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
-                        Text(
+            Text(
               "SL tồn: ${widget.item.qty}",
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
             ),
-                        Text(
+            Text(
               "Mã hóa đơn: ${widget.item.idBill}",
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -236,13 +233,16 @@ class _WarehouseItemState extends State<WarehouseItem> {
           ],
         ),
         isThreeLine: true,
-        onTap:
-            () {
-              NavigationHelper.push(
-                context,
-                WarehouseDetailScreen(item: widget.item, readOnly: false, isUpDate: true,),
-              );
-            },
+        onTap: () {
+          NavigationHelper.push(
+            context,
+            WarehouseDetailScreen(
+              item: widget.item,
+              readOnly: true,
+              isUpDate: false,
+            ),
+          );
+        },
         onLongPress: widget.onLongPress,
       ),
     );

@@ -45,9 +45,9 @@ class _ProductListViewState extends State<ProductListView>
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
       child: ListView.builder(
-        key: const PageStorageKey('productList'),
-        controller: _controller,
-        physics: const AlwaysScrollableScrollPhysics(),
+        // key: const PageStorageKey('productList'),
+        // controller: _controller,
+        // physics: const AlwaysScrollableScrollPhysics(),
         itemCount: widget.products.length,
         itemBuilder: (context, index) {
           final product = widget.products[index];

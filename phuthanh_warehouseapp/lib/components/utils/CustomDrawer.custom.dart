@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
+// import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomDrawerLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
@@ -132,14 +133,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
               });
               widget.onWarehouseSelected?.call();
             },
-            onLongPress: () {
-              Navigator.pop(context, true);
-              showDialog(
-                context: context,
-                builder: (context) => const DisplaySettingsDialog(condition: "showhideProduct",),
-              );
-              widget.onWarehouseSelected?.call();
-            },
+            onLongPress: _selectedWarehouse == "Product"
+                ? () {
+                    // Navigator.pop(context, true);
+                    DrawerLongClick.show(context, "showhideProduct");
+                    // widget.onWarehouseSelected?.call();
+                  }
+                : null, // long press chỉ khi đã chọn
           ),
 
           const Divider(),
@@ -177,7 +177,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   final original = warehouses[index];
                   final display = converted[index];
                   final isSelected = original == _selectedWarehouse;
-
                   return ListTile(
                     leading: Icon(
                       Icons.warehouse,
@@ -217,19 +216,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
                       widget.onWarehouseSelected?.call();
                     },
-                    onLongPress: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.white,
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(20),
-                          ),
-                        ),
-                        builder: (context) => const DisplaySettingsDialog(condition: "showhideWareHouse",),
-                      );
-                    },
+                    onLongPress: isSelected
+                        ? () {
+                            // Navigator.pop(context, true);
+                            DrawerLongClick.show(context, "showhideWareHouse");
+                            // widget.onWarehouseSelected?.call();
+                          }
+                        : null, // nếu không chọn thì không cho long press
                   );
                 }),
               );

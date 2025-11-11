@@ -200,7 +200,7 @@ class InfoService {
   static Future<List<Product>> LoadProduct() async {
     try {
       const apiClient = ApiClient();
-      final response = await apiClient.get("dynamic/get-all/Product");
+      final response = await apiClient.get("dynamic/get-all/vwProduct");
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
@@ -235,6 +235,28 @@ class InfoService {
       // log nếu cần
       print(e);
       return "";
+    }
+  }
+
+  static Future<bool> checkProductID(String table, String body) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.post(
+        "dynamic/check-exists/" + table.toString(),
+        body,
+      );
+      if (response.body == "true") {
+        print("Mã đã tồn tại");
+        return true;
+      } else {
+        print("Mã chưa tồn tại");
+        return false;
+      }
+    } catch (e) {
+      // log nếu cần
+      print(e);
+      // return "";
+      return true;
     }
   }
 
@@ -282,26 +304,91 @@ class InfoService {
     }
   }
 
-  static Future<List<Product>> getAllPages(int pages, int size) async {
+  static Future<List<Product>> getAllPages(int size, int threads) async {
     const apiClient = ApiClient();
+
     try {
-          final response = await apiClient.get(
-      // "dynamic/get-all/pages/vwProduct?page=${pages}&size=$size"
-      "dynamic/get-all/pages/vwProduct?page=${pages}&size=50"
-    );
-    if (response.statusCode == 200) {
+      final response = await apiClient.get(
+        "dynamic/get-all/pages/vwProduct?size=$size&threads=$threads",
+      );
+
+      if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
-        // print(data);
         return data.map((e) => Product.fromJson(e)).toList();
       } else {
-        print("=======>" + response.statusCode.toString());
-        // throw Exception("Failed to load data (${response.statusCode})");
+        print("[API] ❌  failed: ${response.statusCode}");
         return [];
       }
     } catch (e) {
-            print(e);
+      print("[API] ⚠️ Exception at: $e");
       return [];
     }
+  }
 
+  static Future<List<Product>> fetchAllProducts({int size = 50}) async {
+    final stopwatchTotal = Stopwatch()..start();
+
+    List<Product> allProducts = [];
+    int page = 0;
+    bool hasMore = true;
+
+    print("===== 🟢 START FETCHING ALL PRODUCTS =====");
+
+    try {
+      // Gọi batch đầu tiên để biết tổng số trang
+      print("🔹 Fetching first batch (page $page)...");
+      List<Product> firstBatch = await getAllPages(page, size);
+      allProducts.addAll(firstBatch);
+
+      if (firstBatch.length < size) {
+        print("✅ Only one page found (${firstBatch.length} items)");
+        stopwatchTotal.stop();
+        print("⏱️ Total time: ${stopwatchTotal.elapsedMilliseconds} ms");
+        return allProducts;
+      }
+
+      page++;
+      int parallelBatch = 5; // bạn có thể đổi sang 10, 20, 50...
+
+      while (hasMore) {
+        print("🔸 Fetching pages $page → ${page + parallelBatch - 1}...");
+        final batchStopwatch = Stopwatch()..start();
+
+        List<Future<List<Product>>> batchFutures = [];
+        for (int i = 0; i < parallelBatch; i++) {
+          batchFutures.add(getAllPages(page + i, size));
+        }
+
+        // Chạy song song
+        List<List<Product>> results = await Future.wait(batchFutures);
+
+        batchStopwatch.stop();
+        print(
+          "✅ Batch ($page → ${page + parallelBatch - 1}) done in ${batchStopwatch.elapsedMilliseconds} ms",
+        );
+
+        // Gộp kết quả
+        for (var batch in results) {
+          allProducts.addAll(batch);
+          if (batch.length < size) {
+            hasMore = false;
+            print("🔚 Found last page with ${batch.length} items");
+            break;
+          }
+        }
+
+        page += parallelBatch;
+      }
+
+      stopwatchTotal.stop();
+      print("===== ✅ DONE FETCHING PRODUCTS =====");
+      print("📦 Total products: ${allProducts.length}");
+      print("⏱️ Total time: ${stopwatchTotal.elapsedMilliseconds} ms");
+
+      return allProducts;
+    } catch (e) {
+      print("❌ Error fetching all products: $e");
+      return allProducts;
+    }
   }
 }

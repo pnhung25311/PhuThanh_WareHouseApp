@@ -86,6 +86,7 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
                     ),
                     child: ListTile(
                       onTap: () async {
+                        print(h.qty);
                         NavigationHelper.push(
                           context,
                           HistoryDetailScreen(

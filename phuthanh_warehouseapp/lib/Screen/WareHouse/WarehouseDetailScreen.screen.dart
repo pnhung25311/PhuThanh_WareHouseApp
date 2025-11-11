@@ -673,27 +673,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               },
             ),
             const SizedBox(height: 15),
-            //NHÀ PHÂN KHỐI THỰC TẾ
-            CustomDropdownField(
-              label: "Nhà phân phối thực tế",
-              selectedValue: selectedSupplierActual,
-              items: supplierActuals,
-              getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedSupplierActual = v),
-              readOnly: widget.readOnly,
-              isCreate: StatusCreate,
-              isSearch: true,
-              textCreate: "Thêm mới nhà phân phối",
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 5);
-                if (result != null) {
-                  await _loadAllData(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-            ),
-            const SizedBox(height: 15),
             //QUỐC GIA
             CustomDropdownField(
               label: "Quốc gia",
@@ -714,6 +693,29 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 }
               },
             ),
+            const SizedBox(height: 15),
+
+            //NHÀ PHÂN KHỐI THỰC TẾ
+            CustomDropdownField(
+              label: "Nhà phân phối thực tế",
+              selectedValue: selectedSupplierActual,
+              items: supplierActuals,
+              getLabel: (i) => i.Name.toString(),
+              onChanged: (v) => setState(() => selectedSupplierActual = v),
+              readOnly: widget.readOnly,
+              isCreate: StatusCreate,
+              isSearch: true,
+              textCreate: "Thêm mới nhà phân phối",
+              functionCreate: () async {
+                // 👇 Tắt dropdown tự động, mở dialog thêm mới
+                final result = await showAddDialogDynamic(context, model: 5);
+                if (result != null) {
+                  await _loadAllData(); // reload danh sách
+                  setState(() {}); // cập nhật lại UI
+                }
+              },
+            ),
+
             const SizedBox(height: 15),
             //NHÀ CUNG CẤP
             CustomDropdownField(

@@ -65,6 +65,7 @@ class _ScanScreenState extends State<ScanScreen> {
           final scannedItem = await Warehouseservice.getWarehouseById(code);
           if (scannedItem != null) {
             // ✅ Tìm thấy sản phẩm -> nhảy trang
+            print("object=========================================");
             Future.delayed(const Duration(milliseconds: 100), () {
               NavigationHelper.pushReplacement(
                 context,
@@ -78,6 +79,8 @@ class _ScanScreenState extends State<ScanScreen> {
           } else {
             // ❌ Không tìm thấy sản phẩm -> hỏi có muốn thêm không
             final product = await InfoService.findProduct(code);
+            print("========================================");
+            print(product);
             if (product != null) {
               final dataWareHouseAID = await CodeHelper.generateCodeAID("WH");
 
@@ -104,6 +107,7 @@ class _ScanScreenState extends State<ScanScreen> {
                 remarkOfDataWarehouse: "",
                 qty: 0,
               );
+              print(item);
               NavigationHelper.pushReplacement(
                 context,
                 WarehouseDetailScreen(

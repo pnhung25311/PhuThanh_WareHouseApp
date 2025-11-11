@@ -22,7 +22,7 @@ import 'package:collection/collection.dart';
 
 class HistoryDetailScreen extends StatefulWidget {
   final WareHouse item;
-  final History itemHistory;
+  final History? itemHistory;
   final bool isUpDate;
   final bool isCreate;
   final bool isCreateHistory;
@@ -32,13 +32,13 @@ class HistoryDetailScreen extends StatefulWidget {
   HistoryDetailScreen({
     super.key,
     required this.item,
-    History? itemHistory, // ✅ đổi thành nullable
+    this.itemHistory, // ✅ đổi thành nullable
     this.isUpDate = false,
     this.isCreate = false,
     this.isCreateHistory = false,
     this.isReadOnlyHistory = false,
     this.readOnly = false,
-  }) : itemHistory = itemHistory ?? History.empty(); // ✅ gán mặc định ở đây
+  }); // ✅ gán mặc định ở đây
 
   @override
   State<HistoryDetailScreen> createState() => _HistoryDetailScreenState();
@@ -110,6 +110,8 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     remarkController.text = widget.item.remarkOfDataWarehouse.toString();
     productIDController.text = widget.item.productID.toString();
     qtyController.text = widget.item.qty.toString();
+    print("widget.item.qty.toString()");
+    print(widget.item.qty.toString());
     qtyExpectedController.text = widget.item.qtyExpected?.toString() ?? "";
     keetonController.text = widget.item.idKeeton ?? "";
     industrialController.text = widget.item.idIndustrial.toString();
@@ -124,14 +126,16 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     image2Controller.text = widget.item.img2.toString();
     image3Controller.text = widget.item.img3.toString();
 
-    if (widget.itemHistory.dataWareHouseAID.isNotEmpty) {
-      qtyHistoryController.text = widget.itemHistory.qty.toString();
-      remarkOfHistoryController.text = widget.itemHistory.remark;
-      timeController.text = widget.itemHistory.time.toString();
-      supplierHistoryController.text = widget.itemHistory.partner
-          .toString(); // ID hoặc tên tùy theo model
-      employeeHistoryController.text = widget.itemHistory.employeeId.toString();
+    if ((widget.itemHistory?.dataWareHouseAID ?? '').isNotEmpty) {
+      qtyHistoryController.text = widget.itemHistory?.qty.toString() ?? '';
+      remarkOfHistoryController.text = widget.itemHistory?.remark ?? '';
+      timeController.text = widget.itemHistory?.time.toString() ?? '';
+      supplierHistoryController.text =
+          widget.itemHistory?.partner.toString() ?? '';
+      employeeHistoryController.text =
+          widget.itemHistory?.employeeId.toString() ?? '';
     }
+
     // qtyHistoryController.addListener(() async {
     //   try {
     //     double query = double.tryParse(qtyHistoryController.text) ?? 0;
@@ -188,11 +192,12 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     //   AppState.instance.set("supplierAppStateHistory", suppliersHistory);
     // }
 
-    if (widget.itemHistory.partner.toString().isNotEmpty &&
+    if ((widget.itemHistory?.partner.toString().isNotEmpty ?? false) &&
         suppliersHistory.isNotEmpty) {
       selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
-        (s) => s.SupplierID.toString() == widget.itemHistory.partner.toString(),
-        // orElse: () => suppliersHistory.first,
+        (s) =>
+            s.SupplierID.toString() ==
+            (widget.itemHistory?.partner.toString() ?? ''),
       );
     }
 
@@ -204,19 +209,20 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     suppliersHistory = await InfoService.LoadDtataSupplier();
 
     // 2. Set selectedSupplier nếu có giá trị trong itemHistory
-    if (widget.itemHistory.partner.toString().isNotEmpty &&
+    if ((widget.itemHistory?.partner.toString().isNotEmpty ?? false) &&
         suppliersHistory.isNotEmpty) {
       selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
-        (s) => s.SupplierID.toString() == widget.itemHistory.partner.toString(),
+        (s) =>
+            s.SupplierID.toString() == widget.itemHistory?.partner.toString(),
         // orElse: () => suppliersHistory.first,
       );
     }
 
     // 3. Set initialDate nếu bạn muốn dùng itemHistory.time
-    if (widget.itemHistory.time.toString().isNotEmpty &&
-        widget.itemHistory.time.isNotEmpty) {
-      initialDate =
-          DateTime.tryParse(widget.itemHistory.time) ?? DateTime.now();
+    final timeString = widget.itemHistory?.time ?? '';
+
+    if (timeString.isNotEmpty) {
+      initialDate = DateTime.tryParse(timeString) ?? DateTime.now();
     } else {
       initialDate = DateTime.now();
     }
@@ -276,23 +282,23 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
       }
       // 2️⃣ Xác định employee được chọn theo thứ tự ưu tiên:
       // a) Employee đã ghim (pin)
-      final pinnedEmpId = AppState.instance.get("employee")?.toString();
-      if (pinnedEmpId != null && pinnedEmpId.isNotEmpty) {
-        selectedEmployee = emps.firstWhereOrNull(
-          (e) => e.EmployeeID.toString() == pinnedEmpId,
-          // orElse: () => emps.first,
-        );
-        return; // đã chọn xong, không cần tiếp tục
-      }
+      // final pinnedEmpId = AppState.instance.get("employee")?.toString();
+      // if (pinnedEmpId != null && pinnedEmpId.isNotEmpty) {
+      //   selectedEmployee = emps.firstWhereOrNull(
+      //     (e) => e.EmployeeID.toString() == pinnedEmpId,
+      //     // orElse: () => emps.first,
+      //   );
+      //   return; // đã chọn xong, không cần tiếp tục
+      // }
 
       // b) Employee từ lịch sử (itemHistory)
-      // if (widget.itemHistory.idEmployee != null) {
-      //   selectedEmployee = emps.firstWhere(
-      //     (e) => e.EmployeeID == widget.itemHistory.idEmployee,
-      //     orElse: () => emps.first,
-      //   );
-      //   return;
-      // }
+      if (widget.itemHistory?.employeeId.toString().isNotEmpty??false) {
+        selectedEmployee = emps.firstWhereOrNull(
+          (e) => e.EmployeeID == widget.itemHistory?.employeeId,
+          // orElse: () => emps.first,
+        );
+        return;
+      }
 
       // c) fallback: chọn employee đầu danh sách
     } catch (e) {
@@ -324,11 +330,11 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
           );
         }
         // Nếu không có pin thì dùng itemHistory
-        else if (widget.itemHistory.partner.toString().isNotEmpty) {
+        else if (widget.itemHistory?.partner.toString().isNotEmpty??false) {
           selectedSupplierHistory = suppliersHistory.firstWhereOrNull(
             (s) =>
                 s.SupplierID.toString() ==
-                widget.itemHistory.partner.toString(),
+                widget.itemHistory?.partner.toString(),
             // orElse: () => suppliersHistory.first,
           );
         }
@@ -551,27 +557,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
                 }
               },
             ),
-            const SizedBox(height: 15),
-            //NHÀ CUNG CẤP
-            CustomDropdownField(
-              label: "Nhà cung cấp: ",
-              selectedValue: selectedSupplier,
-              items: suppliers,
-              getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedSupplier = v),
-              readOnly: widget.readOnly,
-              isCreate: StatusCreate,
-              isSearch: true,
-              textCreate: "Thêm mới nhà cung cấp",
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 5);
-                if (result != null) {
-                  await _loadAllData(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-            ),
+
             const SizedBox(height: 15),
             //NHÀ PHÂN KHỐI THỰC TẾ
             CustomDropdownField(
@@ -584,6 +570,27 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
               isCreate: StatusCreate,
               isSearch: true,
               textCreate: "Thêm mới nhà phân phối",
+              functionCreate: () async {
+                // 👇 Tắt dropdown tự động, mở dialog thêm mới
+                final result = await showAddDialogDynamic(context, model: 5);
+                if (result != null) {
+                  await _loadAllData(); // reload danh sách
+                  setState(() {}); // cập nhật lại UI
+                }
+              },
+            ),
+            const SizedBox(height: 15),
+            //NHÀ CUNG CẤP
+            CustomDropdownField(
+              label: "Nhà cung cấp: ",
+              selectedValue: selectedSupplier,
+              items: suppliers,
+              getLabel: (i) => i.Name.toString(),
+              onChanged: (v) => setState(() => selectedSupplier = v),
+              readOnly: widget.readOnly,
+              isCreate: StatusCreate,
+              isSearch: true,
+              textCreate: "Thêm mới nhà cung cấp",
               functionCreate: () async {
                 // 👇 Tắt dropdown tự động, mở dialog thêm mới
                 final result = await showAddDialogDynamic(context, model: 5);
