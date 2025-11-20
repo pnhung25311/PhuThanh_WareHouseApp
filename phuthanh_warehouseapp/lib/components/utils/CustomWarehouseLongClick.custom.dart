@@ -110,7 +110,7 @@ class WarehouseLongClick {
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
-                      WarehouseDetailScreen(item: item, isUpDate: true, isReadOnlyHistory: false,),
+                      WarehouseDetailScreen(item: item, isUpDate: true, isReadOnlyHistory: false, readOnly: true,),
                 ),
               );
             },

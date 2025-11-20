@@ -2,7 +2,7 @@ import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class Formatdatehelper {
   // ========================
-  // 1️⃣ Parse chuỗi ISO 8601 hoặc yyyy-MM-dd -> DateTime local
+  // 1️⃣ Parse ISO 8601 hoặc yyyy-MM-dd -> DateTime local
   // ========================
   static DateTime parseDate(String dateStr) {
     try {
@@ -15,7 +15,7 @@ class Formatdatehelper {
   }
 
   // ========================
-  // 2️⃣ Parse chuỗi dd/MM/yyyy -> DateTime
+  // 2️⃣ Parse dd/MM/yyyy -> DateTime
   // ========================
   static DateTime parseDateDMY(String dateStr) {
     try {
@@ -34,37 +34,100 @@ class Formatdatehelper {
   }
 
   // ========================
-  // 3️⃣ Format DateTime -> String yyyy-MM-dd
+  // 3️⃣ Format DateTime -> yyyy-MM-dd
   // ========================
   static String formatYMD(DateTime dt) {
     return "${dt.year.toString().padLeft(4, '0')}-"
-           "${dt.month.toString().padLeft(2, '0')}-"
-           "${dt.day.toString().padLeft(2, '0')}";
+        "${dt.month.toString().padLeft(2, '0')}-"
+        "${dt.day.toString().padLeft(2, '0')}";
   }
 
   // ========================
-  // 4️⃣ Format DateTime -> String dd/MM/yyyy
+  // 4️⃣ Format DateTime -> dd/MM/yyyy
   // ========================
   static String formatDMY(DateTime dt) {
-    return "${dt.day.toString().padLeft(2,'0')}/"
-           "${dt.month.toString().padLeft(2,'0')}/"
-           "${dt.year.toString().padLeft(4,'0')}";
+    return "${dt.day.toString().padLeft(2, '0')}/"
+        "${dt.month.toString().padLeft(2, '0')}/"
+        "${dt.year.toString().padLeft(4, '0')}";
   }
 
   // ========================
-  // 5️⃣ Load pinned date từ AppState
+  // 🕓 5️⃣ Format DateTime -> dd/MM/yyyy HH:mm
+  // ========================
+  static String formatDMYHM(DateTime dt) {
+    return "${dt.day.toString().padLeft(2, '0')}/"
+        "${dt.month.toString().padLeft(2, '0')}/"
+        "${dt.year.toString().padLeft(4, '0')} "
+        "${dt.hour.toString().padLeft(2, '0')}:"
+        "${dt.minute.toString().padLeft(2, '0')}";
+  }
+
+  // ========================
+  // 🕓 6️⃣ Format DateTime -> yyyy-MM-dd HH:mm:ss
+  // ========================
+  static String formatYMDHMS(DateTime dt) {
+    return "${dt.year.toString().padLeft(4, '0')}-"
+        "${dt.month.toString().padLeft(2, '0')}-"
+        "${dt.day.toString().padLeft(2, '0')} "
+        "${dt.hour.toString().padLeft(2, '0')}:"
+        "${dt.minute.toString().padLeft(2, '0')}:"
+        "${dt.second.toString().padLeft(2, '0')}";
+  }
+
+  // ========================
+  // 🕓 7️⃣ Parse dd/MM/yyyy HH:mm -> DateTime
+  // ========================
+  static DateTime parseDateTimeDMYHM(String dateTimeStr) {
+    try {
+      final parts = dateTimeStr.split(' ');
+      if (parts.length == 2) {
+        final dateParts = parts[0].split('/');
+        final timeParts = parts[1].split(':');
+
+        final day = int.tryParse(dateParts[0]) ?? 1;
+        final month = int.tryParse(dateParts[1]) ?? 1;
+        final year = int.tryParse(dateParts[2]) ?? DateTime.now().year;
+        final hour = int.tryParse(timeParts[0]) ?? 0;
+        final minute = int.tryParse(timeParts[1]) ?? 0;
+
+        return DateTime(year, month, day, hour, minute);
+      }
+      return DateTime.now();
+    } catch (_) {
+      return DateTime.now();
+    }
+  }
+
+  static DateTime toSqlDateTime(DateTime dateTime) {
+    return DateTime(
+      dateTime.year,
+      dateTime.month,
+      dateTime.day,
+      dateTime.hour,
+      dateTime.minute,
+      dateTime.second,
+    );
+  }
+
+  // ========================
+  // 8️⃣ Load pinned date từ AppState
   // ========================
   static DateTime? loadPinnedDate() {
     final pinnedDateStr = AppState.instance.get("pinnedDate");
     if (pinnedDateStr != null && pinnedDateStr.isNotEmpty) {
       try {
-        final parts = pinnedDateStr.split('-');
-        if (parts.length == 3) {
-          return DateTime(
-            int.parse(parts[0]),
-            int.parse(parts[1]),
-            int.parse(parts[2]),
-          );
+        // Hỗ trợ cả yyyy-MM-dd và yyyy-MM-dd HH:mm:ss
+        if (pinnedDateStr.contains(' ')) {
+          return DateTime.parse(pinnedDateStr);
+        } else {
+          final parts = pinnedDateStr.split('-');
+          if (parts.length == 3) {
+            return DateTime(
+              int.parse(parts[0]),
+              int.parse(parts[1]),
+              int.parse(parts[2]),
+            );
+          }
         }
       } catch (_) {}
     }
@@ -72,18 +135,18 @@ class Formatdatehelper {
   }
 
   // ========================
-  // 6️⃣ Toggle pin date vào AppState
+  // 9️⃣ Toggle pin date vào AppState (có cả giờ)
   // ========================
-  static Future<void> togglePinDate(DateTime date) async {
+  static Future<void> togglePinDate(DateTime dateTime) async {
     bool isPinned = AppState.instance.get("isPinDate") == true;
 
     AppState.instance.set("isPinDate", !isPinned);
 
     if (!isPinned) {
-      // ghim ngày
-      AppState.instance.set("pinnedDate", formatYMD(date));
+      // Ghim ngày kèm giờ
+      AppState.instance.set("pinnedDate", formatYMDHMS(dateTime));
     } else {
-      // bỏ ghim
+      // Bỏ ghim
       AppState.instance.set("pinnedDate", null);
     }
   }

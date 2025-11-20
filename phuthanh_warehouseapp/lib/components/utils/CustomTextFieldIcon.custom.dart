@@ -24,6 +24,10 @@ class CustomTextFieldIcon extends StatefulWidget {
   final ValueChanged<String>? onSubmitted;
   final Widget? suffixWidget;
 
+  final BoxDecoration? suffixIconDecoration;
+  final EdgeInsetsGeometry? suffixIconPadding;
+  final double? suffixIconSize;
+
   const CustomTextFieldIcon({
     super.key,
     required this.label,
@@ -49,6 +53,9 @@ class CustomTextFieldIcon extends StatefulWidget {
     this.inputFormatters,
     this.onSubmitted, // 🔹 Thêm dòng này
     this.suffixWidget,
+    this.suffixIconDecoration,
+    this.suffixIconPadding,
+    this.suffixIconSize,
   });
 
   @override
@@ -57,7 +64,6 @@ class CustomTextFieldIcon extends StatefulWidget {
 
 class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
   bool _isIconActive = false;
-  
 
   void _toggleIcon() => setState(() => _isIconActive = !_isIconActive);
 
@@ -73,12 +79,20 @@ class _CustomTextFieldIconState extends State<CustomTextFieldIcon> {
       suffixIcon: widget.suffixWidget != null
           ? widget.suffixWidget
           : widget.suffixIcon != null
-          ? IconButton(
-              icon: Icon(widget.suffixIcon, color: iconColor),
-              onPressed: () {
+          ? GestureDetector(
+              onTap: () {
                 _toggleIcon();
                 widget.onSuffixIconPressed?.call();
               },
+              child: Container(
+                padding: widget.suffixIconPadding ?? const EdgeInsets.all(4),
+                decoration: widget.suffixIconDecoration,
+                child: Icon(
+                  widget.suffixIcon,
+                  size: widget.suffixIconSize ?? 24,
+                  color: _isIconActive ? Colors.grey : Colors.grey,
+                ),
+              ),
             )
           : null,
       contentPadding: widget.contentPadding,

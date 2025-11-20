@@ -722,15 +722,15 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
             //THỜI GIAN
             Visibility(
               visible: widget.isCreateHistory,
-              child: CustomDatePicker(
+              child: CustomDateTimePicker(
                 key: ValueKey(initialDate),
                 label: "Chọn ngày nhập/xuất:",
-                initialDate: widget.isCreateHistory
+                initialDateTime: widget.isCreateHistory
                     ? initialDate
                     : parseDateManual(timeController.text),
                 onChanged: (value) {
                   setState(() {
-                    selectedTimePicker = Formatdatehelper.formatYMD(value);
+                    selectedTimePicker = Formatdatehelper.formatYMDHMS(value);
                     initialDate = value;
                   });
                 },

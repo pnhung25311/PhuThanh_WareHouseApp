@@ -1,43 +1,50 @@
 import 'package:flutter/material.dart';
 
-class CustomDatePicker extends StatefulWidget {
+class CustomDateTimePicker extends StatefulWidget {
   final String label;
-  final DateTime? initialDate;
+  final DateTime? initialDateTime;
   final ValueChanged<DateTime> onChanged;
-  final bool readOnly; // ✅ thay cho enabled
+  final bool readOnly;
 
   final IconData? rightIcon;
   final VoidCallback? onRightIconTap;
   final Color? rightIconColor;
   final String? rightIconTooltip;
 
-  const CustomDatePicker({
+  final BoxDecoration? rightIconDecoration;
+  final EdgeInsetsGeometry? rightIconPadding;
+  final double? rightIconSize;
+
+  const CustomDateTimePicker({
     Key? key,
     required this.label,
     required this.onChanged,
-    this.initialDate,
-    this.readOnly = false, // ✅ mặc định có thể chọn
+    this.initialDateTime,
+    this.readOnly = false,
     this.rightIcon,
     this.onRightIconTap,
     this.rightIconColor,
     this.rightIconTooltip,
+    this.rightIconDecoration,
+    this.rightIconPadding,
+    this.rightIconSize,
   }) : super(key: key);
 
   @override
-  State<CustomDatePicker> createState() => _CustomDatePickerState();
+  State<CustomDateTimePicker> createState() => _CustomDateTimePickerState();
 }
 
-class _CustomDatePickerState extends State<CustomDatePicker> {
+class _CustomDateTimePickerState extends State<CustomDateTimePicker> {
   late TextEditingController _controller;
-  DateTime? selectedDate;
+  DateTime? selectedDateTime;
 
   @override
   void initState() {
     super.initState();
-    selectedDate = widget.initialDate;
+    selectedDateTime = widget.initialDateTime;
     _controller = TextEditingController(
-      text: selectedDate != null
-          ? "${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}"
+      text: selectedDateTime != null
+          ? _formatDateTime(selectedDateTime!)
           : '',
     );
   }
@@ -48,13 +55,21 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
     super.dispose();
   }
 
-  Future<void> _pickDate() async {
+  static String _formatDateTime(DateTime dt) {
+    return "${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year} "
+        "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+  }
+
+  Future<void> _pickDateTime() async {
     if (widget.readOnly) return;
 
     final DateTime now = DateTime.now();
-    final DateTime? picked = await showDatePicker(
+    final DateTime initial = selectedDateTime ?? now;
+
+    // Bước 1: chọn ngày
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? now,
+      initialDate: initial,
       firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       builder: (context, child) {
@@ -71,13 +86,42 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
       },
     );
 
-    if (picked != null) {
-      setState(() {
-        selectedDate = picked;
-        _controller.text = "${picked.day}/${picked.month}/${picked.year}";
-      });
-      widget.onChanged(picked);
-    }
+    if (pickedDate == null) return;
+
+    // Bước 2: chọn giờ
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Colors.blue,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (pickedTime == null) return;
+
+    final DateTime fullDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+
+    setState(() {
+      selectedDateTime = fullDateTime;
+      _controller.text = _formatDateTime(fullDateTime);
+    });
+
+    widget.onChanged(fullDateTime);
   }
 
   @override
@@ -94,7 +138,7 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
         const SizedBox(height: 6),
         TextField(
           controller: _controller,
-          readOnly: true, // luôn không cho nhập bàn phím
+          readOnly: true,
           decoration: InputDecoration(
             filled: true,
             fillColor: isReadOnly ? Colors.grey.shade200 : Colors.white,
@@ -103,24 +147,27 @@ class _CustomDatePickerState extends State<CustomDatePicker> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
-                  onTap: isReadOnly ? null : _pickDate,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Icon(
-                      Icons.calendar_today,
-                      color: isReadOnly ? Colors.grey : Colors.blue,
-                    ),
+                  onTap: isReadOnly ? null : _pickDateTime,
+                  child: const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Icon(Icons.calendar_today, color: Colors.blue),
                   ),
                 ),
                 if (widget.rightIcon != null)
-                  IconButton(
-                    icon: Icon(
-                      widget.rightIcon,
-                      color:
-                          isReadOnly ? Colors.grey : (widget.rightIconColor ?? Colors.black),
+                  GestureDetector(
+                    onTap: isReadOnly ? null : widget.onRightIconTap,
+                    child: Container(
+                      padding:
+                          widget.rightIconPadding ?? const EdgeInsets.all(4),
+                      decoration: widget.rightIconDecoration,
+                      child: Icon(
+                        widget.rightIcon,
+                        size: widget.rightIconSize ?? 24,
+                        color: isReadOnly
+                            ? Colors.grey
+                            : (widget.rightIconColor ?? Colors.grey),
+                      ),
                     ),
-                    tooltip: widget.rightIconTooltip,
-                    onPressed: isReadOnly ? null : widget.onRightIconTap,
                   ),
               ],
             ),

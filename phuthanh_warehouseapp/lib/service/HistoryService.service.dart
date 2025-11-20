@@ -8,7 +8,7 @@ class HistoryService {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/find/History"+AppState.instance.get("StatusHome")+"/DataWareHouseAID/" + condition,
+        "dynamic/find-history/History"+AppState.instance.get("StatusHome")+"/DataWareHouseAID/" + condition,
       );
 
       if (response.statusCode == 200) {

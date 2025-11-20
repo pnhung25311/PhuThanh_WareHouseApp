@@ -22,6 +22,10 @@ class CustomDropdownField<T> extends StatefulWidget {
   final Color? rightIconColor;
   final String? rightIconTooltip;
 
+  final BoxDecoration? rightIconDecoration;
+  final EdgeInsetsGeometry? rightIconPadding;
+  final double? rightIconSize;
+
   const CustomDropdownField({
     super.key,
     this.label,
@@ -40,6 +44,9 @@ class CustomDropdownField<T> extends StatefulWidget {
     this.rightIconColor,
     this.rightIconTooltip,
     this.readOnly = false,
+    this.rightIconDecoration,
+    this.rightIconPadding,
+    this.rightIconSize,
   });
 
   @override
@@ -144,7 +151,10 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                                   final label = widget.getLabel(item);
                                   final isSelected =
                                       widget.selectedValue != null &&
-                                      widget.getLabel(widget.selectedValue as T,) == label;
+                                      widget.getLabel(
+                                            widget.selectedValue as T,
+                                          ) ==
+                                          label;
                                   return ListTile(
                                     title: Text(
                                       label,
@@ -206,7 +216,7 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                 widget.label!,
                 style: TextStyle(
                   fontSize: 14,
-                  color: widget.enabled ? Colors.black87 : Colors.grey.shade600,
+                  color: widget.enabled ? Colors.black87 : Colors.grey,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -246,15 +256,19 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                     children: [
                       if (!widget.readOnly) const Icon(Icons.arrow_drop_down),
                       if (widget.rightIcon != null)
-                        IconButton(
-                          icon: Icon(
-                            widget.rightIcon,
-                            color: widget.rightIconColor ?? Colors.blueGrey,
+                        GestureDetector(
+                          onTap: widget.readOnly ? null : widget.onRightIconTap,
+                          child: Container(
+                            padding:
+                                widget.rightIconPadding ??
+                                const EdgeInsets.all(4),
+                            decoration: widget.rightIconDecoration,
+                            child: Icon(
+                              widget.rightIcon,
+                              size: widget.rightIconSize ?? 24,
+                              color: widget.rightIconColor ?? Colors.grey,
+                            ),
                           ),
-                          tooltip: widget.rightIconTooltip,
-                          onPressed: widget.readOnly
-                              ? null
-                              : widget.onRightIconTap,
                         ),
                     ],
                   ),

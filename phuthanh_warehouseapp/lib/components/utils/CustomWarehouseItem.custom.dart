@@ -240,6 +240,7 @@ class _WarehouseItemState extends State<WarehouseItem> {
               item: widget.item,
               readOnly: true,
               isUpDate: false,
+              isReadOnlyHistory: true
             ),
           );
         },

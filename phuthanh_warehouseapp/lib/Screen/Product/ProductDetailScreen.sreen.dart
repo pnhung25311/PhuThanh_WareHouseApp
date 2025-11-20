@@ -218,6 +218,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
 
       final product = Product.empty();
+      print(DateTime.now());
 
       final productCreate = Product(
         productAID: await CodeHelper.generateCodeAID("SP"),
@@ -241,7 +242,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         img1: image1Controller.text.trim(),
         img2: image2Controller.text.trim(),
         img3: image3Controller.text.trim(),
-        lastTime: DateTime.now(),
+        lastTime: Formatdatehelper.toSqlDateTime(DateTime.now()),
       );
 
       final productUpdate = product.copyWith(
@@ -265,7 +266,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         img1: image1Controller.text.trim(),
         img2: image2Controller.text.trim(),
         img3: image3Controller.text.trim(),
-        lastTime: DateTime.now(),
+        lastTime: Formatdatehelper.toSqlDateTime(DateTime.now()),
       );
 
       final jsonProduct = productCreate.toJson();
@@ -320,7 +321,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         if (response["isSuccess"]) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Cỉnh sửa thành công')),
+            const SnackBar(content: Text('✅ Chỉnh sửa thành công')),
           );
           AppState.instance.set("ListProduct", null);
           AppState.instance.set("DataWareHouseLimit", null);
@@ -448,7 +449,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             // ======= DROPDOWN =======
             //LOẠI XE
             CustomDropdownField(
-              label: "Loại xe",
+              label: "Hãng xe",
               selectedValue: selectedVehicleType,
               items: vehicles,
               getLabel: (i) => i.VehicleTypeName.toString(),
@@ -603,7 +604,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   context: context,
                   currentImageUrl: image1Controller.text,
                   productID: productIDController.text,
-                  isUpdate: widget.isUpDate,
+                  isUpdate: widget.isUpDate||widget.isCreate,
                   nameImg: "img1",
                   // wh: ,
                   onImageChanged: (url) {

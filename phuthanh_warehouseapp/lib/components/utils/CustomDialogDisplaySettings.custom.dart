@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/Screen/HomeScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 // import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
@@ -105,11 +107,11 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
       AppState.instance.set("showSupplierActualNameWH", showSupplierActualName);
     }
     if (mounted) {
-      Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ Lưu cài đặt hiển thị thành công")),
       );
     }
+    NavigationHelper.pushReplacement(context, HomeScreen());
   }
 
   @override

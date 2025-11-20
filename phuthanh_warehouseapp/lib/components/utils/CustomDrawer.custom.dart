@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 // import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDrawerLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
@@ -62,7 +63,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
     if (confirm == true) {
       await MySharedPreferences.clearAll();
       NavigationHelper.pop(context); // đóng drawer
-      NavigationHelper.pushReplacementNamed(context, '/login');
+      NavigationHelper.pushAndRemoveUntil(context, Loginscreen());
     }
   }
 

@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/model/system/StatusSystem.model.dart';
@@ -168,7 +170,7 @@ class _LoginscreenState extends State<Loginscreen> {
         );
         _saveSetting();
         // ✅ Không cho quay lại login
-        Navigator.pushReplacementNamed(context, '/home');
+        NavigationHelper.pushAndRemoveUntil(context, HomeScreen());
       } else {
         // Nếu server trả mã lỗi (400, 401, 500, v.v.)
         String message = "Đăng nhập thất bại (${response.statusCode})";
@@ -201,7 +203,7 @@ class _LoginscreenState extends State<Loginscreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async => false, // ⛔ Chặn nút back
+      onWillPop: () async => true, // ⛔ Chặn nút back
       child: Scaffold(
         body: Center(
           child: Padding(

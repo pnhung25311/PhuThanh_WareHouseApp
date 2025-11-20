@@ -55,8 +55,9 @@ class _ScanScreenState extends State<ScanScreen> {
               ProductDetailScreen(
                 item: product,
                 isCreateHistory: true,
-                isCreate: true,
-                readOnly: true,
+                isCreate: false,
+                readOnly: false,
+                isUpDate: true,
                 isReadOnlyHistory: false,
               ),
             );

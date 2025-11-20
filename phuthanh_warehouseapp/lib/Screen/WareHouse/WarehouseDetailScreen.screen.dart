@@ -148,6 +148,8 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           suppliersHistory = await InfoService.LoadDtataSupplierCategory("2");
         } else if (query < 0) {
           suppliersHistory = await InfoService.LoadDtataSupplierCategory("3");
+        } else if (query.toString().isEmpty) {
+          suppliersHistory = await InfoService.LoadDtataSupplier();
         } else {
           suppliersHistory = await InfoService.LoadDtataSupplier();
         }
@@ -356,7 +358,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
     setState(() {
       initialDate = pinnedDate ?? DateTime.now();
-      selectedTimePicker = Formatdatehelper.formatYMD(initialDate);
+      selectedTimePicker = Formatdatehelper.formatYMDHMS(initialDate);
     });
   }
 
@@ -449,9 +451,9 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         remark: remarkOfHistoryController.text.trim(),
         time:
             selectedTimePicker ??
-            Formatdatehelper.formatYMD(DateTime.now()).trim(),
+            Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
         lastUser: await fullName.toString().trim(),
-        lastTime: Formatdatehelper.formatYMD(DateTime.now()).trim(),
+        lastTime: Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
       );
 
       if (widget.isCreate) {
@@ -466,7 +468,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             "Qty_Expected":
                 double.tryParse(qtyExpectedController.text.trim()) ?? 0,
             "ID_Bill": idBillController.text.trim(),
-            "LastTime": DateTime.now().toIso8601String().trim(),
+            "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
             "LastUser": await fullName.toString().trim(),
           }),
         );
@@ -488,7 +490,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             "Qty_Expected":
                 double.tryParse(qtyExpectedController.text.trim()) ?? 0,
             "ID_Bill": idBillController.text.trim(),
-            "LastTime": DateTime.now().toIso8601String().trim(),
+            "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
             "LastUser": await fullName.toString().trim(),
           }),
         );
@@ -908,21 +910,22 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             //THỜI GIAN
             Visibility(
               visible: widget.isCreateHistory,
-              child: CustomDatePicker(
+              child: CustomDateTimePicker(
                 key: ValueKey(initialDate),
                 label: "Chọn ngày nhập/xuất:",
-                initialDate: widget.isCreateHistory
+                initialDateTime: widget.isCreateHistory
                     ? initialDate
                     : parseDateManual(timeController.text),
                 onChanged: (value) {
                   setState(() {
-                    selectedTimePicker = Formatdatehelper.formatYMD(value);
+                    selectedTimePicker = Formatdatehelper.formatYMDHMS(value);
                     initialDate = value;
                   });
                 },
                 rightIcon: AppState.instance.get("isPinDate") == true
                     ? Icons.push_pin
                     : Icons.push_pin_outlined,
+                rightIconPadding: const EdgeInsets.only(right: 22),
                 onRightIconTap: () async {
                   await togglePinDate(initialDate);
                   setState(() {});
@@ -941,6 +944,9 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 suffixIcon: AppState.instance.get("isPinRemark") == true
                     ? Icons.push_pin
                     : Icons.push_pin_outlined,
+                suffixIconPadding: const EdgeInsets.only(
+                  right: 22,
+                ), 
                 onSuffixIconPressed: () async {
                   final newPinState =
                       (AppState.instance.get("PinRemark") ?? "");
@@ -964,10 +970,11 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                         vertical: 12,
                       ),
                     ),
-                    onPressed: (widget.isUpDate ||
-                            widget.isCreate ||
-                            widget.isCreateHistory) &&
-                        !isSaving
+                    onPressed:
+                        (widget.isUpDate ||
+                                widget.isCreate ||
+                                widget.isCreateHistory) &&
+                            !isSaving
                         ? _upDateWareHouse
                         : null,
                     icon: isSaving
@@ -976,7 +983,9 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : const Icon(Icons.save),
@@ -1024,10 +1033,13 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
   Future<void> togglePartnerPin(bool isPinned) async {
     if (isPinned) {
-      if (selectedSupplier == null) return;
+      if (selectedSupplierHistory == null) return;
 
       // Lưu employee và trạng thái pin
-      AppState.instance.set("partner", selectedSupplier!.SupplierID.toString());
+      AppState.instance.set(
+        "partner",
+        selectedSupplierHistory!.SupplierID.toString(),
+      );
       AppState.instance.set("isPinPartner", true);
     } else {
       // Bỏ ghim: xóa dữ liệu
@@ -1036,7 +1048,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
       if (!mounted) return; // đảm bảo widget còn tồn tại
       setState(() {
-        selectedSupplier = null;
+        selectedSupplierHistory = null;
         partnerController.clear();
       });
     }
