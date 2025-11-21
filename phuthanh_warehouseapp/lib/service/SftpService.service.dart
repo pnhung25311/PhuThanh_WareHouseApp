@@ -23,7 +23,8 @@ class SftpService {
   /// 🗑️ Xóa file (gọi ApiClient.delete)
   Future<bool> deleteFile(String imageUrl, String productID) async {
     final fileName = imageUrl.split('/').last.split('.').first;
-
+    print("======================fileName");
+    print(fileName);
     final response = await api.delete(
       "delete/$productID?fileName=$fileName",
     );

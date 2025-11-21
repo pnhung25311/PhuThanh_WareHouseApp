@@ -150,4 +150,21 @@ class Formatdatehelper {
       AppState.instance.set("pinnedDate", null);
     }
   }
+
+  static String formatDateTimeString(String input) {
+    // Chuyển string thành DateTime
+    DateTime dt = DateTime.parse(input);
+    DateTime now = DateTime.now();
+
+    // Lấy các phần và ghép lại theo format mong muốn
+    String formatted =
+        "${dt.year.toString().padLeft(4, '0')}-"
+        "${dt.month.toString().padLeft(2, '0')}-"
+        "${dt.day.toString().padLeft(2, '0')}"
+        " ${now.hour.toString().padLeft(2, '0')}:"
+        "${now.minute.toString().padLeft(2, '0')}:"
+        "${now.second.toString().padLeft(2, '0')}";
+
+    return formatted;
+  }
 }

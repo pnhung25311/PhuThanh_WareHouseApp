@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 // import 'package:phuthanh_warehouseapp/Screen/WareHouse/ViewImgWareHouse.screen.dart';
 // import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/service/SftpService.service.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class ImagePickerHelper {
   final SftpService _sftpService = SftpService();
-
+  ApiClient api = new ApiClient();
+  Future<bool> get statusConnect async {
+    return await api.isInternalNetwork();
+  }
   // Chọn ảnh từ camera hoặc gallery
 
   Future<File?> pickImage(
@@ -108,7 +113,10 @@ class ImagePickerHelper {
               child: file != null
                   ? Image.file(file, fit: BoxFit.contain)
                   : Image.network(
-                      imageUrl!,
+                      // imageUrl!,
+                      statusConnect == true
+                          ? imageUrl!
+                          : FunctionConvertHelper.convertToPublicIP(imageUrl!),
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
@@ -172,7 +180,8 @@ class ImagePickerHelper {
       context: context,
       builder: (ctx) => SafeArea(
         child: Wrap(
-          children: currentImageUrl != null && currentImageUrl.isNotEmpty || !isUpdate
+          children:
+              currentImageUrl != null && currentImageUrl.isNotEmpty || !isUpdate
               ? [
                   // Đã có ảnh → chỉ hiện xem và xóa
                   ListTile(
@@ -217,11 +226,11 @@ class ImagePickerHelper {
                           ),
                         );
                         if (confirm == true) {
-                          final success = await deleteImage(
-                            currentImageUrl.toString(),
-                            productID,
-                          );
-                          if (success)
+                          // final success = await deleteImage(
+                          //   currentImageUrl.toString(),
+                          //   productID,
+                          // );
+                          // if (success) 
                           onImageChanged(null);
                         }
                       },
@@ -240,8 +249,10 @@ class ImagePickerHelper {
                           nameImg: nameImg,
                         );
                         if (file != null) {
-                          final url = await uploadImage(file, productID);
-                          if (url != null) onImageChanged(url);
+                          AppState.instance.set(nameImg, file);
+                          // final url = await uploadImage(file, productID);
+                          // if (url != null) onImageChanged(url);
+                          onImageChanged(file.path);
                         }
                         Navigator.pop(ctx);
                       },
@@ -256,12 +267,7 @@ class ImagePickerHelper {
                           fromCamera: true,
                           nameImg: nameImg,
                         );
-                        print("==============================================");
-                        print(file);
                         if (file != null) {
-                          // final url = await uploadImage(file, productID);
-                          //
-                          print("đã vào");
                           AppState.instance.set(nameImg, file);
                           onImageChanged(file.path);
                         }

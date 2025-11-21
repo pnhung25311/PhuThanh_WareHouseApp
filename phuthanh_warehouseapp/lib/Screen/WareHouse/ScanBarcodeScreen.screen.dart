@@ -9,7 +9,6 @@ import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
-// import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class ScanScreen extends StatefulWidget {
   final bool isUpdate;
@@ -25,14 +24,30 @@ class _ScanScreenState extends State<ScanScreen> {
   final TextEditingController _manualController = TextEditingController();
   String _statusHome = "Product";
 
-  void _handleBarcode(BarcodeCapture barcodeCapture) async {
-    if (isProcessing) return;
-    if (barcodeCapture.barcodes.isEmpty) return;
+  // 🔥 Set để tránh quét trùng
+  Set<String> scannedCodes = {};
 
-    final barcode = barcodeCapture.barcodes.first;
+  // MobileScannerController để bật/tắt flash
+  final MobileScannerController _controller = MobileScannerController();
+
+  void _showToast(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _handleBarcode(BarcodeCapture capture) async {
+    if (isProcessing) return;
+    if (capture.barcodes.isEmpty) return;
+
+    final barcode = capture.barcodes.first;
     final code = barcode.rawValue ?? '';
 
     if (code.isEmpty) return;
+
+    if (scannedCodes.contains(code)) return;
+
+    scannedCodes.add(code);
     _processCode(code);
   }
 
@@ -47,9 +62,13 @@ class _ScanScreenState extends State<ScanScreen> {
     try {
       if (widget.isUpdate) {
         _statusHome = AppState.instance.get("StatusHome") ?? "Product";
+
         if (_statusHome == 'Product') {
           final product = await InfoService.findProduct(code);
+
           if (product != null) {
+            _showToast("✅ Đã tìm thấy sản phẩm $code");
+
             NavigationHelper.pushReplacement(
               context,
               ProductDetailScreen(
@@ -61,229 +80,207 @@ class _ScanScreenState extends State<ScanScreen> {
                 isReadOnlyHistory: false,
               ),
             );
-          }
-        } else {
-          final scannedItem = await Warehouseservice.getWarehouseById(code);
-          if (scannedItem != null) {
-            // ✅ Tìm thấy sản phẩm -> nhảy trang
-            print("object=========================================");
-            Future.delayed(const Duration(milliseconds: 100), () {
-              NavigationHelper.pushReplacement(
-                context,
-                WarehouseDetailScreen(
-                  item: scannedItem,
-                  isCreateHistory: true,
-                  isReadOnlyHistory: false,
-                ),
-              );
-            });
-          } else {
-            // ❌ Không tìm thấy sản phẩm -> hỏi có muốn thêm không
-            final product = await InfoService.findProduct(code);
-            print("========================================");
-            print(product);
-            if (product != null) {
-              final dataWareHouseAID = await CodeHelper.generateCodeAID("WH");
 
-              final item = WareHouse(
-                dataWareHouseAID: dataWareHouseAID,
-                productAID: product.productAID,
-                productID: product.productID,
-                idKeeton: product.idKeeton,
-                // idBill: product.idBill,
-                countryID: product.countryID,
-                idIndustrial: product.idIndustrial,
-                idPartNo: product.idPartNo,
-                idReplacedPartNo: product.idReplacedPartNo,
-                img1: product.img1,
-                img2: product.img2,
-                img3: product.img3,
-                lastTime: product.lastTime,
-                manufacturerID: product.manufacturerID,
-                nameProduct: product.nameProduct,
-                parameter: product.parameter,
-                // qtyExpected: product.qtyExpected,
-                supplierID: product.supplierID,
-                unitID: product.unitID,
-                remarkOfDataWarehouse: "",
-                qty: 0,
-              );
-              print(item);
-              NavigationHelper.pushReplacement(
-                context,
-                WarehouseDetailScreen(
-                  item: item,
-                  isCreateHistory: true,
-                  isCreate: true,
-                  readOnly: true,
-                  isReadOnlyHistory: false,
-                ),
-              );
-            } else {
-              _reloadScanPage();
-            }
-            setState(() => isProcessing = false);
+            scannedCodes.clear();
+            isProcessing = false;
+            return;
           }
         }
-      } else {
-        NavigationHelper.pop(context, scannedCode);
+
+        final scannedItem = await Warehouseservice.getWarehouseById(code);
+
+        if (scannedItem != null) {
+          _showToast("✅ Tìm thấy dữ liệu kho $code");
+
+          NavigationHelper.pushReplacement(
+            context,
+            WarehouseDetailScreen(
+              item: scannedItem,
+              isCreateHistory: true,
+              isReadOnlyHistory: false,
+            ),
+          );
+
+          scannedCodes.clear();
+          isProcessing = false;
+          return;
+        }
+
+        final product = await InfoService.findProduct(code);
+
+        if (product != null) {
+          final dataWareHouseAID = await CodeHelper.generateCodeAID("WH");
+
+          final item = WareHouse(
+            dataWareHouseAID: dataWareHouseAID,
+            productAID: product.productAID,
+            productID: product.productID,
+            idKeeton: product.idKeeton,
+            countryID: product.countryID,
+            idIndustrial: product.idIndustrial,
+            idPartNo: product.idPartNo,
+            idReplacedPartNo: product.idReplacedPartNo,
+            img1: product.img1,
+            img2: product.img2,
+            img3: product.img3,
+            lastTime: product.lastTime,
+            manufacturerID: product.manufacturerID,
+            nameProduct: product.nameProduct,
+            parameter: product.parameter,
+            supplierID: product.supplierID,
+            unitID: product.unitID,
+            remarkOfDataWarehouse: "",
+            qty: 0,
+          );
+
+          _showToast("⚠ Không có trong kho — sẽ tạo mới");
+
+          NavigationHelper.pushReplacement(
+            context,
+            WarehouseDetailScreen(
+              item: item,
+              isCreateHistory: true,
+              isCreate: true,
+              readOnly: true,
+              isReadOnlyHistory: false,
+            ),
+          );
+
+          scannedCodes.clear();
+          isProcessing = false;
+          return;
+        }
+
+        _showToast("❌ Không tìm thấy dữ liệu cho mã: $code");
+
+        setState(() {
+          isProcessing = false;
+          scannedCodes.clear();
+          scannedCode = "";
+          _manualController.clear();
+        });
+
+        return;
       }
+
+      NavigationHelper.pop(context, scannedCode);
     } catch (e) {
-      print('❌ Lỗi khi lấy sản phẩm: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Lỗi khi lấy sản phẩm')));
+      _showToast("❌ Lỗi khi lấy dữ liệu");
       setState(() => isProcessing = false);
     }
   }
 
-  // 🔹 Reload lại trang scan
-  void _reloadScanPage() {
-    setState(() {
-      scannedCode = '';
-      isProcessing = false;
-      _manualController.clear();
-    });
-  }
+@override
+Widget build(BuildContext context) {
+  final double rectWidth = 350;
+  final double rectHeight = 300;
 
-  @override
-  Widget build(BuildContext context) {
-    final double rectWidth = 350;
-    final double rectHeight = 300;
+  return Scaffold(
+    body: Stack(
+      children: [
+        // Camera scanner
+        MobileScanner(
+          controller: _controller,
+          onDetect: _handleBarcode,
+        ),
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Quét hoặc nhập Barcode')),
-      body: Stack(
-        children: [
-          // Camera
-          MobileScanner(onDetect: _handleBarcode),
+        // Overlay tối xung quanh khung quét
+        LayoutBuilder(builder: (context, constraints) {
+          final width = constraints.maxWidth;
+          final height = constraints.maxHeight;
 
-          // Overlay tối
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final double width = constraints.maxWidth;
-              final double height = constraints.maxHeight;
+          return Stack(
+            children: [
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: (height - rectHeight) / 2,
+                child: Container(color: Colors.black.withOpacity(0.5)),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: (height - rectHeight) / 2,
+                child: Container(color: Colors.black.withOpacity(0.5)),
+              ),
+              Positioned(
+                top: (height - rectHeight) / 2,
+                left: 0,
+                width: (width - rectWidth) / 2,
+                height: rectHeight,
+                child: Container(color: Colors.black.withOpacity(0.5)),
+              ),
+              Positioned(
+                top: (height - rectHeight) / 2,
+                right: 0,
+                width: (width - rectWidth) / 2,
+                height: rectHeight,
+                child: Container(color: Colors.black.withOpacity(0.5)),
+              ),
+            ],
+          );
+        }),
 
-              return Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: (height - rectHeight) / 2,
-                    child: Container(color: Colors.black.withOpacity(0.5)),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: (height - rectHeight) / 2,
-                    child: Container(color: Colors.black.withOpacity(0.5)),
-                  ),
-                  Positioned(
-                    top: (height - rectHeight) / 2,
-                    left: 0,
-                    width: (width - rectWidth) / 2,
-                    height: rectHeight,
-                    child: Container(color: Colors.black.withOpacity(0.5)),
-                  ),
-                  Positioned(
-                    top: (height - rectHeight) / 2,
-                    right: 0,
-                    width: (width - rectWidth) / 2,
-                    height: rectHeight,
-                    child: Container(color: Colors.black.withOpacity(0.5)),
-                  ),
-                ],
+        // Khung scan
+        Center(
+          child: Container(
+            width: rectWidth,
+            height: rectHeight,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.yellow, width: 2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+
+        // Nút flash
+        Positioned(
+          top: 40,
+          right: 20,
+          child: ValueListenableBuilder<MobileScannerState>(
+            valueListenable: _controller,
+            builder: (context, value, child) {
+              final state = value.torchState;
+              return IconButton(
+                icon: Icon(
+                  state == TorchState.on ? Icons.flash_on : Icons.flash_off,
+                  color: state == TorchState.on ? Colors.yellow : Colors.white,
+                  size: 30,
+                ),
+                onPressed: () => _controller.toggleTorch(),
               );
             },
           ),
+        ),
 
-          // Khung quét
-          Center(
-            child: Stack(
-              children: [
-                Container(
-                  width: rectWidth,
-                  height: rectHeight,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.yellow, width: 1),
-                    borderRadius: BorderRadius.circular(1),
-                  ),
-                ),
-                Positioned(
-                  top: rectHeight / 2,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    width: rectWidth,
-                    height: 2,
-                    color: Colors.redAccent,
-                  ),
-                ),
-              ],
-            ),
+        // Input barcode thủ công
+        Positioned(
+          bottom: 20,
+          left: 16,
+          right: 16,
+          child: CustomTextFieldIcon(
+            label: '',
+            controller: _manualController,
+            hintText: 'Nhập mã barcode thủ công',
+            suffixIcon: Icons.check_circle,
+            onSuffixIconPressed: () {
+              final code = _manualController.text.trim();
+              if (code.isNotEmpty) _processCode(code);
+            },
+            onSubmitted: (value) {
+              final code = value.trim();
+              if (code.isNotEmpty) _processCode(code);
+            },
+            backgroundColor: Colors.white,
+            borderColor: Colors.grey.shade400,
           ),
+        ),
+      ],
+    ),
+  );
+}
 
-          // Hiển thị kết quả + ô nhập barcode thủ công (dùng CustomTextFieldIcon)
-          Positioned(
-            bottom: 20,
-            left: 16,
-            right: 16,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Container(
-                //   padding: const EdgeInsets.symmetric(
-                //     horizontal: 16,
-                //     vertical: 8,
-                //   ),
-                //   color: Colors.black45,
-                //   child: Text(
-                //     'Kết quả: ${scannedCode.isEmpty ? 'Chưa có' : scannedCode}',
-                //     style: const TextStyle(color: Colors.white, fontSize: 18),
-                //   ),
-                // ),
-                const SizedBox(height: 16),
 
-                // 🔹 TextField nhập barcode thủ công
-                CustomTextFieldIcon(
-                  label: '',
-                  controller: _manualController,
-                  hintText: 'Nhập mã barcode thủ công',
-                  suffixIcon: Icons.check_circle,
-                  onSuffixIconPressed: () {
-                    final code = _manualController.text.trim();
-                    if (code.isNotEmpty) {
-                      _processCode(code);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Vui lòng nhập mã barcode'),
-                        ),
-                      );
-                    }
-                  },
-                  onSubmitted: (value) {
-                    final code = value.trim();
-                    if (code.isNotEmpty) {
-                      _processCode(code);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Vui lòng nhập mã barcode'),
-                        ),
-                      );
-                    }
-                  },
-                  backgroundColor: Colors.white,
-                  borderColor: Colors.grey.shade400,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -90,4 +90,21 @@ class ApiClient {
     final url = Uri.parse('$baseUrl$endpoint');
     return await http.delete(url);
   }
+
+
+// Nếu true → đang nội bộ, dùng IP LAN.
+// Nếu false → đang mạng ngoài, dùng IP public.
+  Future<bool> isInternalNetwork() async {
+    try {
+      final url = Uri.parse('http://checkip.amazonaws.com/');
+      final result = await http.get(url);
+      final publicIP = result.body.trim();
+
+      // Nếu IP public khác IP server public thì nghĩa là đang LAN
+      return publicIP != "14.224.207.115";
+    } catch (e) {
+      // Lỗi mạng, coi như nội bộ
+      return true;
+    }
+  }
 }

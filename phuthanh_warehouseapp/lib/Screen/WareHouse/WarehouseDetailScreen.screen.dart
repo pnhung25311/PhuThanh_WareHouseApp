@@ -442,6 +442,12 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
       String? fullName = await getFullname();
       print(fullName);
 
+      String convertTime =
+          selectedTimePicker ??
+          Formatdatehelper.formatYMDHMS(DateTime.now()).trim();
+      print("=============================================> convertTime");
+      print(Formatdatehelper.formatDateTimeString(convertTime));
+
       final historyCreate = History(
         historyAID: await CodeHelper.generateCodeAID("LS"),
         dataWareHouseAID: widget.item.dataWareHouseAID.trim(),
@@ -449,9 +455,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         employeeId: selectedEmployee?.EmployeeID ?? 0,
         partner: selectedSupplierHistory?.SupplierID ?? 0,
         remark: remarkOfHistoryController.text.trim(),
-        time:
-            selectedTimePicker ??
-            Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
+        time: Formatdatehelper.formatDateTimeString(convertTime),
         lastUser: await fullName.toString().trim(),
         lastTime: Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
       );
@@ -544,10 +548,31 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     }
   }
 
+  /// ✅ Widget loading
+  Widget _buildLoading() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 12),
+          Text(
+            "Đang lưu dữ liệu...",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (isSaving) {
+      return Scaffold(body: _buildLoading());
     }
 
     return Scaffold(
@@ -702,7 +727,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               },
             ),
             const SizedBox(height: 15),
-
             //NHÀ PHÂN KHỐI THỰC TẾ
             CustomDropdownField(
               label: "Nhà phân phối thực tế",
@@ -723,7 +747,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 }
               },
             ),
-
             const SizedBox(height: 15),
             //NHÀ CUNG CẤP
             CustomDropdownField(
@@ -913,12 +936,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               child: CustomDateTimePicker(
                 key: ValueKey(initialDate),
                 label: "Chọn ngày nhập/xuất:",
-                initialDateTime: widget.isCreateHistory
+                initialDate: widget.isCreateHistory
                     ? initialDate
                     : parseDateManual(timeController.text),
                 onChanged: (value) {
                   setState(() {
                     selectedTimePicker = Formatdatehelper.formatYMDHMS(value);
+                    print("selectedTimePicker");
+                    print(selectedTimePicker);
                     initialDate = value;
                   });
                 },
@@ -944,9 +969,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 suffixIcon: AppState.instance.get("isPinRemark") == true
                     ? Icons.push_pin
                     : Icons.push_pin_outlined,
-                suffixIconPadding: const EdgeInsets.only(
-                  right: 22,
-                ), 
+                suffixIconPadding: const EdgeInsets.only(right: 22),
                 onSuffixIconPressed: () async {
                   final newPinState =
                       (AppState.instance.get("PinRemark") ?? "");
@@ -981,12 +1004,12 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
+                            // child: CircularProgressIndicator(
+                            //   strokeWidth: 2,
+                            //   valueColor: AlwaysStoppedAnimation<Color>(
+                            //     Colors.white,
+                            //   ),
+                            // ),
                           )
                         : const Icon(Icons.save),
                     label: Text(isSaving ? "Đang lưu..." : "Lưu thay đổi"),

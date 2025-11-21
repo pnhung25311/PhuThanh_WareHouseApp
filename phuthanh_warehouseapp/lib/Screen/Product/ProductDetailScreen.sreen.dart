@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/HomeScreen.screen.dart';
-// import 'package:phuthanh_warehouseapp/components/formatters/DotToMinusFormatte.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDialogAppendix.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextField.custom.dart';
@@ -81,6 +80,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final TextEditingController image3Controller = TextEditingController();
 
   bool loading = true;
+
   bool isSaving = false; // ⚡ trạng thái loading khi lưu
   Key dropdownKey = UniqueKey();
   DateTime initialDate = DateTime.now(); // ⚡ biến state
@@ -347,12 +347,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  /// ✅ Widget loading
+  Widget _buildLoading() {
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          CircularProgressIndicator(),
+          SizedBox(height: 12),
+          Text(
+            "Đang lưu dữ liệu...",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
+    if (isSaving) {
+      return Scaffold(body: _buildLoading());
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -604,7 +623,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   context: context,
                   currentImageUrl: image1Controller.text,
                   productID: productIDController.text,
-                  isUpdate: widget.isUpDate||widget.isCreate,
+                  isUpdate: widget.isUpDate || widget.isCreate,
                   nameImg: "img1",
                   // wh: ,
                   onImageChanged: (url) {
@@ -686,20 +705,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         vertical: 12,
                       ),
                     ),
-                    onPressed: (widget.isUpDate ||
-                            widget.isCreate ||
-                            widget.isCreateHistory) &&
-                        !isSaving
+                    onPressed:
+                        (widget.isUpDate ||
+                                widget.isCreate ||
+                                widget.isCreateHistory) &&
+                            !isSaving
                         ? _upDateWareHouse
                         : null,
                     icon: isSaving
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
+                            // child: CircularProgressIndicator(
+                            //   strokeWidth: 2,
+                            //   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            // ),
+                            // child: _buildLoading(),
                           )
                         : const Icon(Icons.save),
                     label: Text(isSaving ? "Đang lưu..." : "Lưu thay đổi"),

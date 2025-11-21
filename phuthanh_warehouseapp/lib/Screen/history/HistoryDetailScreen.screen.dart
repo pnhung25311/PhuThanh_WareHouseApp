@@ -476,7 +476,6 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
               keyboardType: TextInputType.number,
               readOnly: true,
             ),
-
             const SizedBox(height: 10),
             //THÔNG SỐ
             CustomTextField(
@@ -725,7 +724,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
               child: CustomDateTimePicker(
                 key: ValueKey(initialDate),
                 label: "Chọn ngày nhập/xuất:",
-                initialDateTime: widget.isCreateHistory
+                initialDate: widget.isCreateHistory
                     ? initialDate
                     : parseDateManual(timeController.text),
                 onChanged: (value) {

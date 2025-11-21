@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 
 class ViewImageScreen extends StatelessWidget {
@@ -14,7 +16,8 @@ class ViewImageScreen extends StatelessWidget {
       item.img2,
       item.img3,
     ].whereType<String>().where((url) => url.isNotEmpty).toList();
-
+    ApiClient api = new ApiClient();
+    final statusConnect = api.isInternalNetwork();
     return Scaffold(
       appBar: AppBar(
         title: Text('Ảnh: ${item.nameProduct}'),
@@ -35,7 +38,11 @@ class ViewImageScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Image.network(
-                          imageUrl,
+                          statusConnect == true
+                              ? imageUrl
+                              : FunctionConvertHelper.convertToPublicIP(
+                                  imageUrl,
+                                ),
                           fit: BoxFit.contain,
                           width: double.infinity,
 
