@@ -200,7 +200,7 @@ class Warehouseservice {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/get-all/" + table + "/" + limit,
+        "dynamic/get-all/vw" + table + "/" + limit,
       );
 
       if (response.statusCode == 200) {

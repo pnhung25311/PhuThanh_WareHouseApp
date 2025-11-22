@@ -440,13 +440,10 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     try {
       String locaResult = selectedLocationIds.join(",");
       String? fullName = await getFullname();
-      print(fullName);
 
       String convertTime =
           selectedTimePicker ??
-          Formatdatehelper.formatYMDHMS(DateTime.now()).trim();
-      print("=============================================> convertTime");
-      print(Formatdatehelper.formatDateTimeString(convertTime));
+          Formatdatehelper.formatYMDHMS(DateTime.now());
 
       final historyCreate = History(
         historyAID: await CodeHelper.generateCodeAID("LS"),
@@ -457,7 +454,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         remark: remarkOfHistoryController.text.trim(),
         time: Formatdatehelper.formatDateTimeString(convertTime),
         lastUser: await fullName.toString().trim(),
-        lastTime: Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
+        lastTime: Formatdatehelper.formatYMDHMS(DateTime.now()),
       );
 
       if (widget.isCreate) {
@@ -472,7 +469,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             "Qty_Expected":
                 double.tryParse(qtyExpectedController.text.trim()) ?? 0,
             "ID_Bill": idBillController.text.trim(),
-            "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
+            "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()),
             "LastUser": await fullName.toString().trim(),
           }),
         );
@@ -494,7 +491,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             "Qty_Expected":
                 double.tryParse(qtyExpectedController.text.trim()) ?? 0,
             "ID_Bill": idBillController.text.trim(),
-            "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()).trim(),
+            "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()),
             "LastUser": await fullName.toString().trim(),
           }),
         );
@@ -523,6 +520,13 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('✅ Cập nhật thành công')),
+          );
+
+          await Warehouseservice.upDateWareHouse(
+            widget.item.dataWareHouseAID.toString(),
+            jsonEncode({
+              "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()),
+            }),
           );
           NavigationHelper.pushAndRemoveUntil(
             context,

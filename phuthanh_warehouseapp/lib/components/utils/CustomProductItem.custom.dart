@@ -69,6 +69,7 @@ class _ProductItemState extends State<ProductItem> {
   @override
   Widget build(BuildContext context) {
     // print(AppState.instance.get("showhideProduct")?["showID_PartNo"]);
+    print(widget.item.unitName);
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       elevation: 3,

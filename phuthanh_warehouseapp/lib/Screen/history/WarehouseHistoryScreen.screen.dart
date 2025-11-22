@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/history/HistoryDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/ViewHistory.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/HistoryService.service.dart';
 
@@ -17,7 +17,7 @@ class WarehouseHistoryScreen extends StatefulWidget {
 }
 
 class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
-  late Future<List<History>> _futureHistory;
+  late Future<List<ViewHistory>> _futureHistory;
 
   @override
   void initState() {
@@ -32,7 +32,7 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
         title: Text("Lịch sử nhập/xuất: ${widget.item.productID}"),
         centerTitle: true,
       ),
-      body: FutureBuilder<List<History>>(
+      body: FutureBuilder<List<ViewHistory>>(
         future: _futureHistory,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -117,6 +117,8 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
                             Text(
                               "Thời gian: ${Formatdatehelper.formatDMY(Formatdatehelper.parseDate(h.time.toString()))}",
                             ),
+                            Text("Nhân viên: ${h.nameEmployee}"),
+                            Text("Đối tác: ${h.nameSupplier}"),
                             // if (h.timeUpdate != null)
                             //   Text(
                             //       "Cập nhật: ${Formatdatehelper.formatDMY(Formatdatehelper.parseDate(h.timeUpdate!))}"),

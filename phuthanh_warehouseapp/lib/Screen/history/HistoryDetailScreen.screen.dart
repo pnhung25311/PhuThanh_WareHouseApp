@@ -10,7 +10,8 @@ import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Location.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
-import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
+// import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/ViewHistory.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
@@ -22,7 +23,7 @@ import 'package:collection/collection.dart';
 
 class HistoryDetailScreen extends StatefulWidget {
   final WareHouse item;
-  final History? itemHistory;
+  final ViewHistory? itemHistory;
   final bool isUpDate;
   final bool isCreate;
   final bool isCreateHistory;

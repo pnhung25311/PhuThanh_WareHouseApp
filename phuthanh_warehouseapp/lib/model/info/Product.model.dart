@@ -152,7 +152,7 @@ class Product {
       // 'VehicleTypeName': vehicleTypeName,
       // 'SupplierActualName': supplierActualName,
       // 'SupplierName': supplierName,
-      // 'UnitName': unitName,
+      'UnitName': unitName,
       'Img1': img1,
       'Img2': img2,
       'Img3': img3,
