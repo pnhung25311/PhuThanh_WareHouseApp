@@ -91,9 +91,8 @@ class ApiClient {
     return await http.delete(url);
   }
 
-
-// Nếu true → đang nội bộ, dùng IP LAN.
-// Nếu false → đang mạng ngoài, dùng IP public.
+  // Nếu true → đang nội bộ, dùng IP LAN.
+  // Nếu false → đang mạng ngoài, dùng IP public.
   Future<bool> isInternalNetwork() async {
     try {
       final url = Uri.parse('http://checkip.amazonaws.com/');
