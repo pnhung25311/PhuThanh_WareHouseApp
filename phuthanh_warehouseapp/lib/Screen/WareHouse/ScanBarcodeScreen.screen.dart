@@ -32,21 +32,6 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Lock ScanScreen ở portrait
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  }
-
-  @override
-  void dispose() {
-    // Reset orientation khi rời màn hình
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.portraitUp,
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.portraitDown,
-    ]);
-    super.dispose();
   }
 
   final MobileScannerController _controller = MobileScannerController();
@@ -194,16 +179,13 @@ class _ScanScreenState extends State<ScanScreen> {
               final left = (screenWidth - rectWidth) / 2;
               final top = (screenHeight - rectHeight) / 2;
 
-              return RotatedBox(
-                quarterTurns: 0, // 0 = portrait, 1 = 90 độ, 2 = 180, 3 = 270
-                child: MobileScanner(
-                  controller: _controller,
-                  onDetect: _handleBarcode,
-                  fit: BoxFit.cover, // full màn hình, cố định
-                  scanWindow: enableScanWindow
-                      ? Rect.fromLTWH(left, top, rectWidth, rectHeight)
-                      : null,
-                ),
+              return MobileScanner(
+                controller: _controller,
+                onDetect: _handleBarcode,
+                fit: BoxFit.cover, // full màn hình, cố định
+                scanWindow: enableScanWindow
+                    ? Rect.fromLTWH(left, top, rectWidth, rectHeight)
+                    : null,
               );
 
               // return MobileScanner(
@@ -361,6 +343,8 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
           ),
         ],
+
+        
       ),
     );
   }
