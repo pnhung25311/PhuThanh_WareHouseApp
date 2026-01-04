@@ -27,7 +27,6 @@ class _ScanScreenState extends State<ScanScreen> {
   InfoService infoService = InfoService();
   Warehouseservice warehouseservice = Warehouseservice();
   NavigationHelper navigationHelper = NavigationHelper();
-  DateTime? _lastScanTime;
 
   // 🔥 Set để tránh quét trùng
   Set<String> scannedCodes = {};
@@ -46,20 +45,13 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   void _handleBarcode(BarcodeCapture capture) async {
-    final now = DateTime.now();
-    if (_lastScanTime != null &&
-        now.difference(_lastScanTime!) < const Duration(milliseconds: 500)) {
-      return;
-    }
-    _lastScanTime = now;
-
     if (isProcessing || capture.barcodes.isEmpty) return;
 
     final code = capture.barcodes.first.rawValue ?? '';
     if (code.isEmpty) return;
+    if (scannedCodes.contains(code)) return;
+    scannedCodes.add(code);
 
-    setState(() => isProcessing = true);
-    await _controller.stop();
     await _processCode(code);
   }
 
