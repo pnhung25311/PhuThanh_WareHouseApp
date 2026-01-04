@@ -125,7 +125,8 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
   DateTime initialDate = DateTime.now(); // ⚡ biến state
 
-  bool StatusCreate = AppState.instance.get("CreateAppendix");
+  // bool StatusCreate = AppState.instance.get("CreateAppendix");
+  bool StatusCreate = true;
   final GlobalKey _targetKey = GlobalKey(); // key của ô muốn scroll tới
 
   @override

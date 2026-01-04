@@ -89,7 +89,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Key dropdownKey = UniqueKey();
   DateTime initialDate = DateTime.now(); // ⚡ biến state
 
-  bool StatusCreate = AppState.instance.get("CreateAppendix");
+  // bool StatusCreate = AppState.instance.get("CreateAppendix");
+  bool StatusCreate = true;
   InfoService infoService = InfoService();
   Warehouseservice warehouseservice = Warehouseservice();
   Formatdatehelper formatdatehelper = Formatdatehelper();

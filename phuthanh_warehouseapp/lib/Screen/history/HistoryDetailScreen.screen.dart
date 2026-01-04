@@ -105,7 +105,8 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     Formatdatehelper formatdatehelper = Formatdatehelper();
 
 
-  bool StatusCreate = AppState.instance.get("CreateAppendix");
+  // bool StatusCreate = AppState.instance.get("CreateAppendix");
+  bool StatusCreate = true;
   final GlobalKey _targetKey = GlobalKey(); // key của ô muốn scroll tới
 
   @override
