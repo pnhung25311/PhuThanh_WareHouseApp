@@ -6,6 +6,7 @@ import 'package:phuthanh_warehouseapp/components/utils/CustomProductLongClick.cu
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseItem.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseLongClick.custom.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
@@ -29,7 +30,13 @@ class _SearchScreenState extends State<SearchScreen> {
   List<WareHouse> _filteredWarehouses = [];
   List<Product> _filteredProducts = [];
 
-  String _statusHome = "Product";
+  bool isSearching = false;
+  ProductLongClick productLongClick = ProductLongClick();
+  InfoService infoService = InfoService();
+  Warehouseservice warehouseservice = Warehouseservice();
+  WarehouseLongClick warehouseLongClick = WarehouseLongClick();
+
+  // String _statusHome = "Product";
 
   @override
   void initState() {
@@ -37,10 +44,29 @@ class _SearchScreenState extends State<SearchScreen> {
     _init();
   }
 
+  void _startSearch() async {
+    setState(() => isSearching = true);
+  }
+
+  void _stopSearch() async {
+    setState(() {
+      isSearching = false;
+      searchController.clear();
+
+      final item = AppState.instance.get("itemDrawer");
+      if (item.wareHouseCategory == 0) {
+        _filteredProducts = _allProducts;
+      } else {
+        _filteredWarehouses = _allWarehouses;
+      }
+    });
+    // await _loadData();
+  }
+
   Future<void> _init() async {
     setState(() => _isLoading = true);
     try {
-      _statusHome = AppState.instance.get("StatusHome") ?? "Product";
+      // _statusHome = AppState.instance.get("StatusHome") ?? "Product";
       await _loadData();
     } catch (e) {
       debugPrint("Lỗi khi load dữ liệu: $e");
@@ -52,39 +78,21 @@ class _SearchScreenState extends State<SearchScreen> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
-    final table = AppState.instance.get("StatusHome") ?? "Product";
+    // final table = AppState.instance.get("StatusHome") ?? "Product";
+    // final DrawerItem item = AppState.instance.get("itemDrawer");
 
+    final DrawerItem item = AppState.instance.get("itemDrawer");
+
+    String table = item.wareHouseTable.toString();
     try {
-      if (table == "Product") {
+      if (item.wareHouseCategory == 0) {
         AppState.instance.set("ListProduct", null);
         final cached = AppState.instance.get("ListProduct");
         if (cached != null) {
           _allProducts = cached;
         } else {
-          final data = await InfoService.LoadProduct();
-          // DateTime start = DateTime.now(); // thời điểm bắt đầu
-          // final datas = await InfoService.fetchAllProducts(size: 2000);
-          // DateTime end = DateTime.now(); // thời điểm kết thúc
-
-          // Duration duration = end.difference(start);
-          // print("========================================>>>>>>>");
-          // print(
-          //   "Loaded ${datas.length} products in ${duration.inMilliseconds} ms",
-          // );
-
-          // DateTime startA = DateTime.now(); // thời điểm bắt đầu
-          // final data = await InfoService.getAllPages(2000, 4);
-          // DateTime endA = DateTime.now(); // thời điểm kết thúc
-
-          // Duration durationA = endA.difference(startA);
-
-          // print(
-          //   "Loaded cũ ${data.length} products in ${durationA.inMilliseconds} ms",
-          // );
-
-          // AppState.instance.set("ListProduct", data);
+          final data = await infoService.LoadProduct();
           _allProducts = data;
-          // _allProducts = datas;
         }
         _filteredProducts = _allProducts;
       } else {
@@ -93,7 +101,7 @@ class _SearchScreenState extends State<SearchScreen> {
         if (cached != null) {
           _allWarehouses = cached;
         } else {
-          final data = await Warehouseservice.LoadDtata("vw$table");
+          final data = await warehouseservice.LoadDtata(table);
           AppState.instance.set("DataWareHouse", data);
           _allWarehouses = data;
         }
@@ -108,8 +116,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   void _onSearchChanged(String value) {
     final keyword = value.toLowerCase().trim();
+    final DrawerItem item = AppState.instance.get("itemDrawer");
 
-    if (_statusHome == "Product") {
+    if (item.wareHouseCategory == 0) {
       _filteredProducts = _allProducts.where((item) {
         return (item.nameProduct).toLowerCase().contains(keyword) ||
             (item.productID).toLowerCase().contains(keyword) ||
@@ -129,9 +138,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void _onDrawerReload() async {
     searchController.clear();
 
-    setState(() {
-      _statusHome = AppState.instance.get("StatusHome") ?? "Product";
-    });
+    setState(() {});
 
     await _loadData();
   }
@@ -156,10 +163,12 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildEmptyState() {
+    final DrawerItem item = AppState.instance.get("itemDrawer");
+
     if (searchController.text.isNotEmpty) {
       return const Center(child: Text("Không tìm thấy kết quả."));
     }
-    return _statusHome == "Product"
+    return item.wareHouseCategory == 0
         ? const Center(child: Text("Không có sản phẩm."))
         : const Center(child: Text("Không có dữ liệu kho hàng."));
   }
@@ -179,8 +188,7 @@ class _SearchScreenState extends State<SearchScreen> {
         itemCount: items.length,
         itemBuilder: (context, index) => ProductItem(
           item: items[index],
-          onTap: () {},
-          onLongPress: () => ProductLongClick.show(context, items[index]),
+          onLongPress: () => productLongClick.show(context, items[index]),
         ),
       ),
     );
@@ -201,7 +209,7 @@ class _SearchScreenState extends State<SearchScreen> {
         itemCount: items.length,
         itemBuilder: (context, index) => WarehouseItem(
           item: items[index],
-          onLongPress: () => WarehouseLongClick.show(context, items[index]),
+          onLongPress: () => warehouseLongClick.show(context, items[index]),
         ),
       ),
     );
@@ -226,33 +234,55 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final DrawerItem item = AppState.instance.get("itemDrawer");
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: Padding(
-          padding: const EdgeInsets.only(bottom: 20.0),
-          child: CustomTextFieldIcon(
-            label: '',
-            controller: searchController,
-            hintText: "Tìm sản phẩm...",
-            suffixIcon: Icons.qr_code_scanner,
-            onSuffixIconPressed: _onItemTapped,
-            height: 36,
-            fontSize: 13,
-            borderRadius: 8,
-            backgroundColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 4,
-            ),
-            onChanged: _onSearchChanged,
-          ),
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: isSearching
+              ? Padding(
+                  key: const ValueKey('searchBar'),
+                  padding: const EdgeInsets.only(
+                    left: 12,
+                    right: 12,
+                    top: 6,
+                    bottom: 25,
+                  ),
+
+                  child: CustomTextFieldIcon(
+                    label: '',
+                    controller: searchController,
+                    hintText: "Tìm sản phẩm...",
+                    suffixIcon: Icons.qr_code_scanner,
+                    onSuffixIconPressed: _onItemTapped,
+                    height: 36,
+                    fontSize: 13,
+                    borderRadius: 8,
+                    backgroundColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    onChanged: _onSearchChanged,
+                  ),
+                )
+              : Text(item.nameWareHouse.toString()),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              isSearching ? Icons.close : Icons.search,
+              color: Colors.white,
+            ),
+            onPressed: isSearching ? _stopSearch : _startSearch,
+          ),
+        ],
       ),
       drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
       body: RefreshIndicator(
         onRefresh: _loadData,
-        child: _statusHome == "Product"
+        child: item.wareHouseCategory == 0
             ? _buildProductList()
             : _buildWarehouseList(),
       ),

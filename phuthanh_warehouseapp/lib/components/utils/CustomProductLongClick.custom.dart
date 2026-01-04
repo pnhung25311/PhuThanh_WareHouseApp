@@ -1,23 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
-// import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ViewImgProduct.screen.dart';
 import 'package:flutter/services.dart';
-import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 
 class ProductLongClick {
-  static Future<String?> getFullname() async {
-    Map<String, dynamic>? account = await MySharedPreferences.getDataObject(
-      "account",
-    );
-    // Kiểm tra null và lấy fullname
-    String? fullname = account?["FullName"];
-    return fullname;
-  }
+    NavigationHelper navigationHelper = NavigationHelper();
 
-  static void show(BuildContext context, Product item) {
+  void show(BuildContext context, Product item) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -41,8 +31,8 @@ class ProductLongClick {
             leading: const Icon(Icons.image, color: Colors.blue),
             title: const Text('Xem ảnh'),
             onTap: () {
-              NavigationHelper.pop(context);
-              NavigationHelper.push(context, ViewImageScreen(item: item));
+              navigationHelper.pop(context);
+              navigationHelper.push(context, ViewImageScreen(item: item));
             },
           ),
           //SAO CHÉP
@@ -70,21 +60,21 @@ class ProductLongClick {
               );
 
               // 4️⃣ Đóng modal
-              NavigationHelper.pop(context);
+              navigationHelper.pop(context);
             },
           ),
           //CHỈNH SỬA THÔNG TIN
-          ListTile(
-            leading: const Icon(Icons.update, color: Colors.green),
-            title: const Text('Chỉnh sửa thông tin '),
-            onTap: () async {
-              NavigationHelper.pop(context);
-              NavigationHelper.push(
-                context,
-                ProductDetailScreen(item: item, isUpDate: true),
-              );
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.update, color: Colors.green),
+          //   title: const Text('Chỉnh sửa thông tin '),
+          //   onTap: () async {
+          //     NavigationHelper.pop(context);
+          //     NavigationHelper.push(
+          //       context,
+          //       ProductDetailScreen(item: item, isUpDate: true),
+          //     );
+          //   },
+          // ),
           //CÀI ĐẶT HIỂN THỊ
           // ListTile(
           //   leading: const Icon(Icons.settings, color: Colors.green),

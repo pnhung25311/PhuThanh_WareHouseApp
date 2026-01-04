@@ -6,6 +6,7 @@ import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 class ProductListView extends StatefulWidget {
   final List<Product> products;
   final Future<void> Function() onRefresh;
+
   const ProductListView({
     super.key,
     required this.products,
@@ -16,18 +17,14 @@ class ProductListView extends StatefulWidget {
   State<ProductListView> createState() => _ProductListViewState();
 }
 
-class _ProductListViewState extends State<ProductListView>
-    with AutomaticKeepAliveClientMixin {
-  late final ScrollController _controller;
-
-  @override
-  bool get wantKeepAlive => true; // ✅ Giữ state scroll
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = ScrollController();
-  }
+class _ProductListViewState extends State<ProductListView> {
+  final ScrollController _controller = ScrollController();
+  ProductLongClick productLongClick = ProductLongClick();
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _controller = ScrollController();
+  // }
 
   @override
   void dispose() {
@@ -37,7 +34,6 @@ class _ProductListViewState extends State<ProductListView>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // ✅ bắt buộc khi dùng KeepAlive
     if (widget.products.isEmpty) {
       return const Center(child: Text("Không có sản phẩm."));
     }
@@ -45,17 +41,16 @@ class _ProductListViewState extends State<ProductListView>
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
       child: ListView.builder(
-        // key: const PageStorageKey('productList'),
-        // controller: _controller,
-        // physics: const AlwaysScrollableScrollPhysics(),
+        controller: _controller,
+        physics: const AlwaysScrollableScrollPhysics(),
         itemCount: widget.products.length,
         itemBuilder: (context, index) {
           final product = widget.products[index];
           return ProductItem(
+            key: ValueKey('${product.productAID ?? ''}-$index'),
             item: product,
-            onTap: () {},
             onLongPress: () {
-              ProductLongClick.show(context, product);
+              productLongClick.show(context, product);
             },
           );
         },

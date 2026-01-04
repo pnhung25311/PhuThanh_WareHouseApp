@@ -10,8 +10,8 @@ import 'package:phuthanh_warehouseapp/components/utils/CustomTextField.custom.da
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/GenerateCodeAID.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Location.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
@@ -76,6 +76,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   String? selectedTimePicker;
   VehicleType? selectedVehicleType;
 
+  List<VehicleType> selectVehicles = [];
+  List<int> selectedVehicelIds = [];
+
+  InfoService infoService = InfoService();
+  HistoryService historyService = HistoryService();
+  Warehouseservice warehouseservice = Warehouseservice();
+  NavigationHelper navigationHelper = NavigationHelper();
+
   final TextEditingController remarkController = TextEditingController();
   final TextEditingController productIDController = TextEditingController();
   final TextEditingController qtyController = TextEditingController();
@@ -98,6 +106,8 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   final TextEditingController partnerController = TextEditingController();
   final TextEditingController remarkOfHistoryController =
       TextEditingController();
+  final TextEditingController remarkOfWarehouseController =
+      TextEditingController();
   final TextEditingController timeController = TextEditingController();
   final TextEditingController supplierHistoryController =
       TextEditingController();
@@ -107,6 +117,12 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   bool loading = true;
   bool isSaving = false; // ⚡ trạng thái loading khi lưu
   Key dropdownKey = UniqueKey();
+  Key vehicleDropdownKey = UniqueKey();
+  Key locationDropdownKey = UniqueKey();
+  Formatdatehelper formatdatehelper = Formatdatehelper();
+          MySharedPreferences mySharedPreferences =MySharedPreferences();
+
+
   DateTime initialDate = DateTime.now(); // ⚡ biến state
 
   bool StatusCreate = AppState.instance.get("CreateAppendix");
@@ -132,7 +148,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     image2Controller.text = widget.item.img2.toString();
     image3Controller.text = widget.item.img3.toString();
 
-    if (widget.itemHistory.dataWareHouseAID.isNotEmpty) {
+    if (widget.itemHistory.dataWareHouseAID > 0) {
       qtyHistoryController.text = widget.itemHistory.qty.toString();
       remarkOfHistoryController.text = widget.itemHistory.remark;
       timeController.text = widget.itemHistory.time.toString();
@@ -142,17 +158,17 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     }
     qtyHistoryController.addListener(() async {
       try {
-        double query = double.tryParse(qtyHistoryController.text) ?? 0;
+        // double query = double.tryParse(qtyHistoryController.text) ?? 0;
 
-        if (query > 0) {
-          suppliersHistory = await InfoService.LoadDtataSupplierCategory("2");
-        } else if (query < 0) {
-          suppliersHistory = await InfoService.LoadDtataSupplierCategory("3");
-        } else if (query.toString().isEmpty) {
-          suppliersHistory = await InfoService.LoadDtataSupplier();
-        } else {
-          suppliersHistory = await InfoService.LoadDtataSupplier();
-        }
+        // if (query > 0) {
+        //   suppliersHistory = await InfoService.LoadDtataSupplierCategory("2");
+        // } else if (query < 0) {
+        //   suppliersHistory = await InfoService.LoadDtataSupplierCategory("1");
+        // } else if (query.toString().isEmpty) {
+        //   suppliersHistory = await InfoService.LoadDtataSupplier();
+        // } else {
+        suppliersHistory = await infoService.LoadDtataSupplier();
+        // }
         if (suppliersHistory.isNotEmpty && mounted) {
           setState(() {
             // selectedSupplierHistory = suppliersHistory.first;
@@ -187,6 +203,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     await _loadDataSupplier();
     await _loadPinnedDate();
     await _loadPinnedRemarkOfHistory();
+    await _loadDataVehicel();
   }
 
   Future<void> loadSuppliers() async {
@@ -213,7 +230,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
   Future<void> loadTime() async {
     // 1. Load danh sách suppliers
-    suppliersHistory = await InfoService.LoadDtataSupplier();
+    suppliersHistory = await infoService.LoadDtataSupplier();
 
     // 2. Set selectedSupplier nếu có giá trị trong itemHistory
     if (widget.itemHistory.partner.toString().isNotEmpty &&
@@ -237,7 +254,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   }
 
   DateTime parseDateManual(String dateStr) {
-    return Formatdatehelper.parseDate(dateStr);
+    return formatdatehelper.parseDate(dateStr);
   }
 
   Future<void> _loadDataLocation() async {
@@ -246,14 +263,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     if (locationAppState != null) {
       locations = locationAppState;
       setState(() {
-        dropdownKey = UniqueKey();
+        locationDropdownKey = UniqueKey();
       });
     } else {
-      final callLocation = await InfoService.fetchLocations();
+      final callLocation = await infoService.fetchLocations();
       locations = callLocation;
       AppState.instance.set("locationAppState", callLocation);
       setState(() {
-        dropdownKey = UniqueKey();
+        locationDropdownKey = UniqueKey();
       });
     }
     String location = widget.item.locationID.toString();
@@ -269,6 +286,35 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         .toList();
   }
 
+  Future<void> _loadDataVehicel() async {
+    // AppState.instance.set("vehicleAppState", null);
+    final vehicleAppState = await AppState.instance.get("vehicleAppState");
+    if (vehicleAppState != null) {
+      vehicles = vehicleAppState;
+      setState(() {
+        vehicleDropdownKey = UniqueKey();
+      });
+    } else {
+      final callVehicle = await infoService.LoadDtataVehicleType();
+      vehicles = callVehicle;
+      AppState.instance.set("vehicleAppState", callVehicle);
+      setState(() {
+        vehicleDropdownKey = UniqueKey();
+      });
+    }
+    String vehicle = widget.item.vehicleTypeID.toString();
+    selectedVehicelIds = vehicle
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => int.tryParse(e) != null)
+        .map((e) => int.parse(e))
+        .toList();
+
+    selectVehicles = vehicles
+        .where((loc) => selectedVehicelIds.contains(loc.VehicleTypeID))
+        .toList();
+  }
+
   Future<void> _loadDataEmployee() async {
     try {
       // 1️⃣ Load danh sách employee từ API
@@ -278,7 +324,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         emps = employeeAppState;
         setState(() {});
       } else {
-        final empRes = await InfoService.LoadDtataEmployee();
+        final empRes = await infoService.LoadDtataEmployee();
         AppState.instance.set("employeeAppState", empRes);
         emps = empRes;
         // if (emps.isNotEmpty) {
@@ -347,18 +393,17 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         // Fallback: chọn item đầu tiên
       });
     } catch (e) {
-      print("============1");
       print("❌ Lỗi load dữ liệu: $e");
       setState(() => loading = false);
     }
   }
 
   Future<void> _loadPinnedDate() async {
-    DateTime? pinnedDate = Formatdatehelper.loadPinnedDate();
+    DateTime? pinnedDate = formatdatehelper.loadPinnedDate();
 
     setState(() {
       initialDate = pinnedDate ?? DateTime.now();
-      selectedTimePicker = Formatdatehelper.formatYMDHMS(initialDate);
+      selectedTimePicker = formatdatehelper.formatYMDHMS(initialDate);
     });
   }
 
@@ -376,11 +421,11 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     try {
       // ✅ Chạy tất cả API song song
       final results = await Future.wait([
-        InfoService.LoadDtataCountry(),
-        InfoService.LoadDtataManufacturer(),
-        InfoService.LoadDtataSupplier(),
-        InfoService.LoadDtataUnit(),
-        InfoService.LoadDtataVehicleType(),
+        infoService.LoadDtataCountry(),
+        infoService.LoadDtataManufacturer(),
+        infoService.LoadDtataSupplier(),
+        infoService.LoadDtataUnit(),
+        infoService.LoadDtataVehicleType(),
       ]);
 
       countries = results[0] as List<Country>;
@@ -419,19 +464,17 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         loading = false;
       });
     } catch (e) {
-      print("============11");
-
       print("❌ Lỗi load dữ liệu: $e");
       setState(() => loading = false);
     }
   }
 
   Future<String?> getFullname() async {
-    Map<String, dynamic>? account = await MySharedPreferences.getDataObject(
+    Map<String, dynamic>? account = await mySharedPreferences.getDataObject(
       "account",
     );
     // Kiểm tra null và lấy fullname
-    String? fullname = account?["FullName"];
+    String? fullname = account?["UserName"];
     return fullname;
   }
 
@@ -442,34 +485,21 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
       String? fullName = await getFullname();
 
       String convertTime =
-          selectedTimePicker ??
-          Formatdatehelper.formatYMDHMS(DateTime.now());
-
-      final historyCreate = History(
-        historyAID: await CodeHelper.generateCodeAID("LS"),
-        dataWareHouseAID: widget.item.dataWareHouseAID.trim(),
-        qty: double.tryParse(qtyHistoryController.text.trim()) ?? 0,
-        employeeId: selectedEmployee?.EmployeeID ?? 0,
-        partner: selectedSupplierHistory?.SupplierID ?? 0,
-        remark: remarkOfHistoryController.text.trim(),
-        time: Formatdatehelper.formatDateTimeString(convertTime),
-        lastUser: await fullName.toString().trim(),
-        lastTime: Formatdatehelper.formatYMDHMS(DateTime.now()),
-      );
+          selectedTimePicker ?? formatdatehelper.formatYMDHMS(DateTime.now());
+      final DrawerItem item = AppState.instance.get("itemDrawer");
 
       if (widget.isCreate) {
-        final table = AppState.instance.get("StatusHome");
-
-        final response = await Warehouseservice.addWarehouseRow(
-          table,
+        final response = await warehouseservice.addWarehouseRow(
+          item.wareHouseDataBase.toString(),
           jsonEncode({
-            "dataWareHouseAID": widget.item.dataWareHouseAID.trim(),
-            "productAID": widget.item.productAID.trim(),
+            // "dataWareHouseAID": widget.item.dataWareHouseAID.toString().trim(),
+            "productAID": widget.item.productAID,
             "LocationID": locaResult.trim(),
             "Qty_Expected":
                 double.tryParse(qtyExpectedController.text.trim()) ?? 0,
             "ID_Bill": idBillController.text.trim(),
-            "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()),
+            "Remark": remarkOfWarehouseController.text.trim(),
+            "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
             "LastUser": await fullName.toString().trim(),
           }),
         );
@@ -478,20 +508,21 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Thêm sản phẩm thành công')),
           );
-          NavigationHelper.pushAndRemoveUntil(context, const HomeScreen());
+          // NavigationHelper.pushAndRemoveUntil(context, const HomeScreen());
         }
       }
 
       if (widget.isUpDate) {
-        final response = await Warehouseservice.upDateWareHouse(
+        final response = await warehouseservice.upDateWareHouse(
+          item.wareHouseDataBase.toString(),
           widget.item.dataWareHouseAID.toString(),
           jsonEncode({
-            "productAID": widget.item.productAID.trim(),
+            "productAID": widget.item.productAID,
             "LocationID": locaResult.trim(),
             "Qty_Expected":
                 double.tryParse(qtyExpectedController.text.trim()) ?? 0,
             "ID_Bill": idBillController.text.trim(),
-            "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()),
+            "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
             "LastUser": await fullName.toString().trim(),
           }),
         );
@@ -500,21 +531,51 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Cập nhật sản phẩm thành công')),
           );
-          NavigationHelper.pushAndRemoveUntil(context, const HomeScreen());
+          navigationHelper.pushAndRemoveUntil(context, const HomeScreen());
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Cập nhật sản phẩm thất bại')),
           );
-          print(response["body"]);
         }
       }
 
-      if (widget.isCreateHistory &&
+      if (widget.isCreateHistory == true &&
           qtyHistoryController.text.isNotEmpty &&
           qtyHistoryController.text != "0") {
-        final response = await HistoryService.AddHistory(
-          AppState.instance.get("StatusHome"),
+        final whAID = await infoService.reTurnAIDWhToAddHistory(
+          item.wareHouseDataBase.toString(),
+          "ProductAID",
+          widget.item.productAID.toString(),
+        );
+
+        final historyCreate = History(
+          // historyAID: await CodeHelper.generateCodeAID("LS"),
+          dataWareHouseAID: whAID,
+          qty: double.tryParse(qtyHistoryController.text.trim()) ?? 0,
+          employeeId: selectedEmployee?.EmployeeID ?? 0,
+          partner: selectedSupplierHistory?.SupplierID ?? 0,
+          remark: remarkOfHistoryController.text.trim(),
+          time: formatdatehelper.formatDateTimeString(convertTime),
+          lastUser: await fullName.toString().trim(),
+          lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
+        );
+
+        final response = await historyService.AddHistory(
+          item.wareHouseDataBaseHistory.toString(),
+          item.wareHouseDataBase.toString(),
           jsonEncode(historyCreate.toJson()),
+        );
+        final double QtyWh = await infoService.reTurnQtyWhToAddHistory(
+          item.wareHouseDataBaseHistory.toString(),
+          whAID,
+        );
+        await warehouseservice.upDateWareHouse(
+          item.wareHouseDataBase.toString(),
+          whAID.toString(),
+          jsonEncode({
+            "Qty": QtyWh,
+            "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
+          }),
         );
         if (response["isSuccess"]) {
           if (!mounted) return;
@@ -522,16 +583,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             const SnackBar(content: Text('✅ Cập nhật thành công')),
           );
 
-          await Warehouseservice.upDateWareHouse(
-            widget.item.dataWareHouseAID.toString(),
-            jsonEncode({
-              "LastTime": Formatdatehelper.formatYMDHMS(DateTime.now()),
-            }),
-          );
-          NavigationHelper.pushAndRemoveUntil(
-            context,
-            const HomeScreen(),
-          ); // quay lại và báo màn trước refresh
+          // quay lại và báo màn trước refresh
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -540,6 +592,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           );
         }
       }
+      navigationHelper.pushAndRemoveUntil(context, const HomeScreen());
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(
@@ -599,7 +652,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Mã sản phẩm:",
               controller: productIDController,
               hintText: "Nhập mã sản phẩm",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 15),
             //MÃ KEETON
@@ -607,7 +660,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Mã keeton:",
               controller: keetonController,
               hintText: "Nhập mã keeton",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 10),
             //MÃ CÔNG NGHIỆP
@@ -615,7 +668,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Mã công nghiệp:",
               controller: industrialController,
               hintText: "Nhập công nghiệp",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 10),
             //DANH ĐIỂM
@@ -623,7 +676,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Danh điểm:",
               controller: partNoController,
               hintText: "Nhập danh điểm",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 10),
             //DANH ĐIỂM TƯƠNG ĐƯƠNG
@@ -631,7 +684,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Danh điểm tương đương:",
               controller: replacedPartNoController,
               hintText: "Nhập danh điểm tương đương",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 10),
             //TÊN SẢN PHẨM
@@ -639,7 +692,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Tên sản phẩm:",
               controller: nameProductController,
               hintText: "Tên sản phẩm",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 10),
             //SỐ LƯỢNG
@@ -657,28 +710,39 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Thông số:",
               controller: parameterController,
               hintText: "Thông số",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 10),
             //LOẠI XE
-            CustomDropdownField(
-              label: "Loại xe",
-              selectedValue: selectedVehicleType,
+            Text(
+              "Hãng xe",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SmartDropdown<VehicleType>(
+              key: vehicleDropdownKey,
+              labelBuilder: (loc) => loc.VehicleTypeName,
               items: vehicles,
-              getLabel: (i) => i.VehicleTypeName.toString(),
-              onChanged: (v) => setState(() => selectedVehicleType = v),
-              readOnly: widget.readOnly,
+              hint: "Chọn hãng xe",
               isSearch: true,
-              isCreate: StatusCreate,
-              textCreate: "Thêm mới loại xe",
+              isMultiSelect: true,
+              readOnly: true,
+              initialValues: selectVehicles, // ✅ dùng plural
+              onChanged: (values) => setState(() {
+                selectVehicles = List<VehicleType>.from(values as List);
+                selectedVehicelIds = selectVehicles
+                    .map((e) => e.VehicleTypeID)
+                    .toList();
+                // print(selectedVehicelIds);
+              }),
               functionCreate: () async {
                 // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 4);
+                final result = await showAddDialogDynamic(context, model: 3);
                 if (result != null) {
-                  await _loadAllData(); // reload danh sách
+                  await _loadDataVehicel(); // reload danh sách
                   setState(() {}); // cập nhật lại UI
                 }
               },
+              dropdownMaxHeight: 300,
             ),
             const SizedBox(height: 10),
             //DÒNG XE
@@ -686,7 +750,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Dòng xe:",
               controller: vehicleDetailController,
               hintText: "Nhập dòng xe",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 10),
             //NHÀ SẢN XUẤT
@@ -696,7 +760,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               items: manufacturers,
               getLabel: (i) => i.Name.toString(),
               onChanged: (v) => setState(() => selectedManufacturer = v),
-              readOnly: widget.readOnly,
+              readOnly: true,
               isSearch: true,
               isCreate: StatusCreate,
               textCreate: "Thêm mới nhà sản xuất",
@@ -717,7 +781,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               items: countries,
               getLabel: (i) => i.Name.toString(),
               onChanged: (v) => setState(() => selectedCountry = v),
-              readOnly: widget.readOnly,
+              readOnly: true,
               isCreate: StatusCreate,
               isSearch: true,
               textCreate: "Thêm mới quốc gia",
@@ -738,7 +802,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               items: supplierActuals,
               getLabel: (i) => i.Name.toString(),
               onChanged: (v) => setState(() => selectedSupplierActual = v),
-              readOnly: widget.readOnly,
+              readOnly: true,
               isCreate: StatusCreate,
               isSearch: true,
               textCreate: "Thêm mới nhà phân phối",
@@ -759,7 +823,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               items: suppliers,
               getLabel: (i) => i.Name.toString(),
               onChanged: (v) => setState(() => selectedSupplier = v),
-              readOnly: widget.readOnly,
+              readOnly: true,
               isCreate: StatusCreate,
               isSearch: true,
               textCreate: "Thêm mới nhà cung cấp",
@@ -780,7 +844,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               items: units,
               getLabel: (i) => i.Name.toString(),
               onChanged: (v) => setState(() => selectedUnit = v),
-              readOnly: widget.readOnly,
+              readOnly: true,
               isCreate: StatusCreate,
               isSearch: true,
               textCreate: "Thêm mới đơn vị tính",
@@ -799,7 +863,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               label: "Ghi chú:",
               controller: remarkController,
               hintText: "Ghi chú",
-              readOnly: widget.readOnly,
+              readOnly: true,
             ),
             const SizedBox(height: 10),
             //SỐ LƯỢNG DỰ KIẾN
@@ -825,8 +889,9 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             const SizedBox(height: 10),
 
             // ======= LOCATION =======
+            Text("Vị trí", style: const TextStyle(fontWeight: FontWeight.bold)),
             SmartDropdown<Location>(
-              key: dropdownKey,
+              key: locationDropdownKey,
               labelBuilder: (loc) => loc.NameLocation,
               items: locations,
               hint: "Chọn vị trí",
@@ -849,6 +914,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 }
               },
               dropdownMaxHeight: 300,
+            ),
+            const SizedBox(height: 15),
+            //GHI CHÚ
+            CustomTextField(
+              label: "Ghi chú của kho:",
+              controller: remarkOfWarehouseController,
+              hintText: "Ghi chú",
+              readOnly: widget.isReadOnlyHistory,
             ),
             const Divider(),
             // ======= HISTORY =======
@@ -945,9 +1018,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                     : parseDateManual(timeController.text),
                 onChanged: (value) {
                   setState(() {
-                    selectedTimePicker = Formatdatehelper.formatYMDHMS(value);
-                    print("selectedTimePicker");
-                    print(selectedTimePicker);
+                    selectedTimePicker = formatdatehelper.formatYMDHMS(value);
                     initialDate = value;
                   });
                 },
@@ -1087,8 +1158,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     AppState.instance.set("isPinDate", !isPinned);
 
     if (!isPinned && date != null) {
-      AppState.instance.set("pinnedDate", Formatdatehelper.formatYMD(date));
-      print("đã pin date");
+      AppState.instance.set("pinnedDate", formatdatehelper.formatYMD(date));
     } else {
       AppState.instance.set("pinnedDate", null);
     }
@@ -1106,7 +1176,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     if (!isPinned && remark != null) {
       // Ghim: lưu ngày hiện tại
       AppState.instance.set("PinRemark", remarkOfHistoryController.text);
-      print("đã pin remark " + AppState.instance.get("PinRemark"));
     } else {
       // Bỏ ghim: xóa dữ liệu
       AppState.instance.set("PinRemark", null);

@@ -17,6 +17,9 @@ class ProductHome extends StatefulWidget {
 class _ProductHomeState extends State<ProductHome> {
   List<Product> _warehouses = [];
   bool _isLoading = true;
+  InfoService infoService = InfoService();
+    NavigationHelper navigationHelper = NavigationHelper();
+
 
   @override
   void initState() {
@@ -30,7 +33,7 @@ class _ProductHomeState extends State<ProductHome> {
     });
 
     try {
-      final data = await InfoService.LoadProduct();
+      final data = await infoService.LoadProduct();
       setState(() {
         _warehouses = data;
         _isLoading = false;
@@ -56,7 +59,7 @@ class _ProductHomeState extends State<ProductHome> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           // await để lấy kết quả trả về từ màn hình thêm sản phẩm
-          final result = await NavigationHelper.push(
+          final result = await navigationHelper.push(
             context,
             WarehouseDetailScreen(item: WareHouse.empty(), isCreate: true),
           );

@@ -10,8 +10,8 @@ class ApiClient {
   const ApiClient();
 
   Future<String> getBaseUrl() async {
-    String localIP = 'http://192.168.1.11:8080/api/';
-    String puclicIP = 'http://14.224.207.115:8080/api/';
+    String localIP = 'http://192.168.1.54:2010/api/';
+    String puclicIP = 'http://14.224.207.115:2010/api/';
     try {
       final url = Uri.parse('http://checkip.amazonaws.com/');
       final result = await http.get(url);
@@ -99,11 +99,14 @@ class ApiClient {
       final result = await http.get(url);
       final publicIP = result.body.trim();
 
+      print(publicIP=="14.224.207.115");
+      print(publicIP=="14.224.207.115");
+
       // Nếu IP public khác IP server public thì nghĩa là đang LAN
-      return publicIP != "14.224.207.115";
+      return publicIP == "14.224.207.115";
     } catch (e) {
       // Lỗi mạng, coi như nội bộ
-      return true;
+      return false;
     }
   }
 }

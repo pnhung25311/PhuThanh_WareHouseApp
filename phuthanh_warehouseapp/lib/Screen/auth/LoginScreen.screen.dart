@@ -6,6 +6,8 @@ import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
+import 'package:phuthanh_warehouseapp/model/system/DisplaySetting.model.dart';
 import 'package:phuthanh_warehouseapp/model/system/StatusSystem.model.dart';
 import 'package:phuthanh_warehouseapp/service/StatusSystem.service.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
@@ -22,6 +24,9 @@ class _LoginscreenState extends State<Loginscreen> {
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
   List<StatusSystem> arrStatus = [];
+  StatusSystemService statusSystemService = StatusSystemService();
+  NavigationHelper navigationHelper = NavigationHelper();
+  MySharedPreferences mySharedPreferences = MySharedPreferences();
 
   @override
   void initState() {
@@ -31,13 +36,13 @@ class _LoginscreenState extends State<Loginscreen> {
 
   Future<void> _loadSavedInfo() async {
     final remember =
-        await MySharedPreferences.getDataBool('rememberMe') ?? false;
+        await mySharedPreferences.getDataBool('rememberMe') ?? false;
 
     if (remember) {
       final savedUsername =
-          await MySharedPreferences.getDataString('username') ?? '';
+          await mySharedPreferences.getDataString('username') ?? '';
       final savedPassword =
-          await MySharedPreferences.getDataString('password') ?? '';
+          await mySharedPreferences.getDataString('password') ?? '';
 
       setState(() {
         _rememberMe = true;
@@ -52,74 +57,60 @@ class _LoginscreenState extends State<Loginscreen> {
   }
 
   Future<void> _saveSetting() async {
-    final settingsWH = await MySharedPreferences.getDataObject(
+    DrawerItem item = DrawerItem(
+      wareHouseID: 1,
+      nameWareHouse: "Danh mục sản phẩm",
+      wareHouseTable: "Product",
+      wareHouseHistory: "vwProduct",
+      wareHouseCategory: 0,
+      wareHouseDataBase: "",
+      wareHouseDataBaseHistory: "",
+      wareHouseRequest: "vwRequestProduct",
+      wareHouseRequestDataBase: "RequestProduct",
+      wareHouseUpdateHistoryDataBase: "",
+      wareHouseUpdateHistory: "",
+    );
+    AppState.instance.set("itemDrawer", item);
+
+    final settingsWH = await mySharedPreferences.getDataObject(
       "showhideWareHouse",
     );
-    AppState.instance.set("showID_PartNoWH", settingsWH?["showID_PartNo"]);
-    AppState.instance.set("showID_KeetonWH", settingsWH?["showID_Keeton"]);
-    AppState.instance.set("showIndustrialWH", settingsWH?["showIndustrial"]);
-    // AppState.instance.set("showID_PartNo", showID_PartNo);
-    AppState.instance.set(
-      "showID_ReplacedPartNoWH",
-      settingsWH?["showID_ReplacedPartNo"],
-    );
-    AppState.instance.set("showParameterWH", settingsWH?["showParameter"]);
-    AppState.instance.set(
-      "showVehicleDetailsWH",
-      settingsWH?["showVehicleDetails"],
-    );
-    AppState.instance.set("showRemarkWH", settingsWH?["showRemark"]);
-    AppState.instance.set("showUnitNameWH", settingsWH?["showUnitName"]);
-    AppState.instance.set(
-      "showVehicleTypeNameWH",
-      settingsWH?["showVehicleTypeName"],
-    );
-    AppState.instance.set("showCountryNameWH", settingsWH?["showCountryName"]);
-    AppState.instance.set(
-      "showManufacturerNameWH",
-      settingsWH?["showManufacturerName"],
-    );
-    AppState.instance.set("showSupplierNameWH", settingsWH?["showSupplierName"]);
-    AppState.instance.set(
-      "showSupplierActualNameWH",
-      settingsWH?["showSupplierActualName"],
-    );
 
-    //==========================PRODUCT=================================
+    if (settingsWH == null) {
+      final displaySetting = DisplaySetting();
+      await mySharedPreferences.setDataObject(
+        "showhideWareHouse",
+        displaySetting.toJson(),
+      );
+    } else {
+      AppState.instance.set("showhideWareHouse", settingsWH);
+    }
 
-    final settingsP = await MySharedPreferences.getDataObject(
+    final settingsP = await mySharedPreferences.getDataObject(
       "showhideProduct",
     );
 
-    AppState.instance.set("showID_PartNoP", settingsP?["showID_PartNo"]);
-    AppState.instance.set("showID_KeetonP", settingsP?["showID_Keeton"]);
-    AppState.instance.set("showIndustrialP", settingsP?["showIndustrial"]);
-    // AppState.instance.set("showID_PartNo", showID_PartNo);
-    AppState.instance.set(
-      "showID_ReplacedPartNoP",
-      settingsP?["showID_ReplacedPartNo"],
-    );
-    AppState.instance.set("showParameterP", settingsP?["showParameter"]);
-    AppState.instance.set(
-      "showVehicleDetailsP",
-      settingsP?["showVehicleDetails"],
-    );
-    AppState.instance.set("showRemarkP", settingsP?["showRemark"]);
-    AppState.instance.set("showUnitNameP", settingsP?["showUnitName"]);
-    AppState.instance.set(
-      "showVehicleTypeNameP",
-      settingsP?["showVehicleTypeName"],
-    );
-    AppState.instance.set("showCountryNameP", settingsP?["showCountryName"]);
-    AppState.instance.set(
-      "showManufacturerNameP",
-      settingsP?["showManufacturerName"],
-    );
-    AppState.instance.set("showSupplierNameP", settingsP?["showSupplierName"]);
-    AppState.instance.set(
-      "showSupplierActualNameP",
-      settingsP?["showSupplierActualName"],
-    );
+    if (settingsP == null) {
+      final displaySetting = DisplaySetting();
+      await mySharedPreferences.setDataObject(
+        "showhideProduct",
+        displaySetting.toJson(),
+      );
+    } else {
+      AppState.instance.set("showhideProduct", settingsP);
+    }
+  }
+
+  Future<void> _loadRole() async {
+    final acc = AppState.instance.get("account") as Account?;
+
+    if (!mounted || acc == null) return;
+
+    final roles = acc.Role == "ADMIN" || acc.Role == "WAREHOUSE";
+    AppState.instance.set("role", roles);
+
+    debugPrint("Role from account: ${acc.Role}");
+    debugPrint("roles bool: $roles");
   }
 
   Future<void> _handleLogin(String username, String password) async {
@@ -156,21 +147,23 @@ class _LoginscreenState extends State<Loginscreen> {
         }
 
         final account = Account.fromJson(jsonResponse);
+        AppState.instance.set("account", account);
 
-        await MySharedPreferences.setDataObject('account', account.toJson());
-        await MySharedPreferences.setDataString('username', username);
-        await MySharedPreferences.setDataString('password', password);
-        await MySharedPreferences.setDataBool('rememberMe', _rememberMe);
+        await mySharedPreferences.setDataObject('account', account.toJson());
+        await mySharedPreferences.setDataString('username', username);
+        await mySharedPreferences.setDataString('password', password);
+        await mySharedPreferences.setDataBool('rememberMe', _rememberMe);
+        _loadRole();
 
-        arrStatus = await StatusSystemService.GetAllStatusSystem();
-        AppState.instance.set("StatusSystem", arrStatus);
-        AppState.instance.set(
-          "CreateAppendix",
-          arrStatus[0].getBool(arrStatus[0].typeStatus),
-        );
+        // arrStatus = await statusSystemService.GetAllStatusSystem();
+        // AppState.instance.set("StatusSystem", arrStatus);
+        // AppState.instance.set(
+        //   "CreateAppendix",
+        //   arrStatus[0].getBool(arrStatus[0].typeStatus),
+        // );
         _saveSetting();
         // ✅ Không cho quay lại login
-        NavigationHelper.pushAndRemoveUntil(context, HomeScreen());
+        navigationHelper.pushAndRemoveUntil(context, HomeScreen());
       } else {
         // Nếu server trả mã lỗi (400, 401, 500, v.v.)
         String message = "Đăng nhập thất bại (${response.statusCode})";

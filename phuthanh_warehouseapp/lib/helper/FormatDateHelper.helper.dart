@@ -4,7 +4,7 @@ class Formatdatehelper {
   // ========================
   // 1️⃣ Parse ISO 8601 hoặc yyyy-MM-dd -> DateTime local
   // ========================
-  static DateTime parseDate(String dateStr) {
+  DateTime parseDate(String dateStr) {
     try {
       final dt = DateTime.parse(dateStr).toLocal();
       return DateTime(dt.year, dt.month, dt.day);
@@ -17,7 +17,7 @@ class Formatdatehelper {
   // ========================
   // 2️⃣ Parse dd/MM/yyyy -> DateTime
   // ========================
-  static DateTime parseDateDMY(String dateStr) {
+  DateTime parseDateDMY(String dateStr) {
     try {
       final parts = dateStr.split('/');
       if (parts.length == 3) {
@@ -36,7 +36,7 @@ class Formatdatehelper {
   // ========================
   // 3️⃣ Format DateTime -> yyyy-MM-dd
   // ========================
-  static String formatYMD(DateTime dt) {
+  String formatYMD(DateTime dt) {
     return "${dt.year.toString().padLeft(4, '0')}-"
         "${dt.month.toString().padLeft(2, '0')}-"
         "${dt.day.toString().padLeft(2, '0')}";
@@ -45,7 +45,7 @@ class Formatdatehelper {
   // ========================
   // 4️⃣ Format DateTime -> dd/MM/yyyy
   // ========================
-  static String formatDMY(DateTime dt) {
+  String formatDMY(DateTime dt) {
     return "${dt.day.toString().padLeft(2, '0')}/"
         "${dt.month.toString().padLeft(2, '0')}/"
         "${dt.year.toString().padLeft(4, '0')}";
@@ -54,7 +54,7 @@ class Formatdatehelper {
   // ========================
   // 🕓 5️⃣ Format DateTime -> dd/MM/yyyy HH:mm
   // ========================
-  static String formatDMYHM(DateTime dt) {
+  String formatDMYHM(DateTime dt) {
     return "${dt.day.toString().padLeft(2, '0')}/"
         "${dt.month.toString().padLeft(2, '0')}/"
         "${dt.year.toString().padLeft(4, '0')} "
@@ -65,7 +65,7 @@ class Formatdatehelper {
   // ========================
   // 🕓 6️⃣ Format DateTime -> yyyy-MM-dd HH:mm:ss
   // ========================
-  static String formatYMDHMS(DateTime dt) {
+  String formatYMDHMS(DateTime dt) {
     return "${dt.year.toString().padLeft(4, '0')}-"
         "${dt.month.toString().padLeft(2, '0')}-"
         "${dt.day.toString().padLeft(2, '0')} "
@@ -77,7 +77,7 @@ class Formatdatehelper {
   // ========================
   // 🕓 7️⃣ Parse dd/MM/yyyy HH:mm -> DateTime
   // ========================
-  static DateTime parseDateTimeDMYHM(String dateTimeStr) {
+  DateTime parseDateTimeDMYHM(String dateTimeStr) {
     try {
       final parts = dateTimeStr.split(' ');
       if (parts.length == 2) {
@@ -98,7 +98,7 @@ class Formatdatehelper {
     }
   }
 
-  static DateTime toSqlDateTime(DateTime dateTime) {
+  DateTime toSqlDateTime(DateTime dateTime) {
     return DateTime(
       dateTime.year,
       dateTime.month,
@@ -112,7 +112,7 @@ class Formatdatehelper {
   // ========================
   // 8️⃣ Load pinned date từ AppState
   // ========================
-  static DateTime? loadPinnedDate() {
+  DateTime? loadPinnedDate() {
     final pinnedDateStr = AppState.instance.get("pinnedDate");
     if (pinnedDateStr != null && pinnedDateStr.isNotEmpty) {
       try {
@@ -137,7 +137,7 @@ class Formatdatehelper {
   // ========================
   // 9️⃣ Toggle pin date vào AppState (có cả giờ)
   // ========================
-  static Future<void> togglePinDate(DateTime dateTime) async {
+  Future<void> togglePinDate(DateTime dateTime) async {
     bool isPinned = AppState.instance.get("isPinDate") == true;
 
     AppState.instance.set("isPinDate", !isPinned);
@@ -151,7 +151,7 @@ class Formatdatehelper {
     }
   }
 
-  static String formatDateTimeString(String input) {
+  String formatDateTimeString(String input) {
     // Chuyển string thành DateTime
     DateTime dt = DateTime.parse(input);
     DateTime now = DateTime.now();

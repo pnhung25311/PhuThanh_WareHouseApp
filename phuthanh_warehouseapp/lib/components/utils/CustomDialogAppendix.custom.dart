@@ -10,7 +10,7 @@ Future<bool?> showAddDialogDynamic(
   final TextEditingController controller = TextEditingController();
   Map<String, String> body = {};
   String table = "";
-
+InfoService infoService = InfoService();
   // 🧩 Biến dropdown (chỉ dùng khi model == 5)
   String? selectedCategory;
   final Map<String, String> categories = {
@@ -116,7 +116,7 @@ Future<bool?> showAddDialogDynamic(
                   }
 
                   setBody();
-                  await InfoService.addAppendix(table,jsonEncode( body));
+                  await infoService.addAppendix(table,jsonEncode( body));
                   Navigator.of(context).pop(true); // ✅ Báo thêm thành công
                 },
                 child: const Text('Lưu'),

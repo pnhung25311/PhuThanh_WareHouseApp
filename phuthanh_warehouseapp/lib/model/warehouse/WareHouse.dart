@@ -1,6 +1,6 @@
 class WareHouse {
-  final String dataWareHouseAID;
-  final String productAID;
+  final int? dataWareHouseAID;
+  final int? productAID;
   final String? productID;
   final String? idKeeton;
   final String? idIndustrial;
@@ -11,7 +11,8 @@ class WareHouse {
   final String? idBill;
   final String? parameter;
   final String? vehicleDetail;
-  final int? vehicleTypeID;
+  final String? vehicleCluster;
+  final String? vehicleTypeID;
   final double? qty;
   final int? manufacturerID;
   final int? countryID;
@@ -34,7 +35,7 @@ class WareHouse {
   final String? lastUser;
 
   const WareHouse({
-    required this.dataWareHouseAID,
+    this.dataWareHouseAID,
     required this.productAID,
     this.productID,
     this.idKeeton,
@@ -46,6 +47,7 @@ class WareHouse {
     this.idBill,
     this.parameter,
     this.vehicleDetail,
+    this.vehicleCluster,
     this.vehicleTypeID,
     this.qty,
     this.manufacturerID,
@@ -72,8 +74,8 @@ class WareHouse {
   /// ---- JSON serialization ----
   factory WareHouse.fromJson(Map<String, dynamic> json) {
     return WareHouse(
-      dataWareHouseAID: json['DataWareHouseAID'] ?? '',
-      productAID: json['ProductAID'] ?? '',
+      dataWareHouseAID: int.tryParse(json['DataWareHouseAID']?.toString() ?? '') ?? 0,
+      productAID: int.tryParse(json['ProductAID']?.toString() ?? '') ?? 0,      
       productID: json['ProductID'] ?? '',
       idKeeton: json['ID_Keeton'] ?? '',
       idIndustrial: json['ID_Industrial'] ?? '',
@@ -87,13 +89,14 @@ class WareHouse {
       idBill: json['ID_Bill'] ?? '',
       parameter: json['Parameter'] ?? '',
       vehicleDetail: json['VehicleDetail'] ?? '',
-      vehicleTypeID: (json['VehicleTypeID'] as num?)?.toInt(),
-      manufacturerID: (json['ManufacturerID'] as num?)?.toInt(),
-      countryID: (json['CountryID'] as num?)?.toInt(),
-      supplierID: (json['SupplierID'] as num?)?.toInt(),
-      supplierActualID: (json['SupplierActualID'] as num?)?.toInt(),
-      unitID: (json['UnitID'] as num?)?.toInt(),
-      locationID: json['LocationID'] ?? "",
+      vehicleCluster: json['VehicleCluster'] ?? '',
+      vehicleTypeID: json['VehicleTypeID'] ??'',
+      manufacturerID: (json['ManufacturerID'] as num?)?.toInt() ?? 0,
+      countryID: (json['CountryID'] as num?)?.toInt() ?? 0,
+      supplierID: (json['SupplierID'] as num?)?.toInt() ?? 0,
+      supplierActualID: (json['SupplierActualID'] as num?)?.toInt() ?? 0,
+      unitID: (json['UnitID'] as num?)?.toInt() ?? 0,
+      locationID: json['LocationID']?.toString() ?? "",
       unitName: json['UnitName'] ?? '',
       countryName: json['CountryName'] ?? '',
       manufacturerName: json['ManufacturerName'] ?? '',
@@ -114,7 +117,7 @@ class WareHouse {
 
   Map<String, dynamic> toJson() {
     return {
-      'DataWareHouseAID': dataWareHouseAID,
+      // 'DataWareHouseAID': dataWareHouseAID,
       'ProductAID': productAID,
       'ProductID': productID,
       'ID_Keeton': idKeeton,
@@ -126,6 +129,7 @@ class WareHouse {
       'ID_Bill': idBill,
       'Parameter': parameter,
       'VehicleDetail': vehicleDetail,
+      'VehicleCluster': vehicleCluster,
       'VehicleTypeID': vehicleTypeID,
       'Qty': qty,
       'ManufacturerID': manufacturerID,
@@ -152,8 +156,8 @@ class WareHouse {
 
   /// ---- copyWith (để update object dễ dàng) ----
   WareHouse copyWith({
-    String? dataWareHouseAID,
-    String? productAID,
+    int? dataWareHouseAID,
+    int? productAID,
     String? productID,
     String? idKeeton,
     String? idIndustrial,
@@ -164,8 +168,9 @@ class WareHouse {
     String? idBill,
     String? parameter,
     String? vehicleDetail,
-    int? vehicleTypeID,
-    int? qty,
+    String? vehicleCluster,
+    String? vehicleTypeID,
+    double? qty,
     int? manufacturerID,
     int? countryID,
     int? supplierID,
@@ -188,7 +193,7 @@ class WareHouse {
   }) {
     return WareHouse(
       dataWareHouseAID: dataWareHouseAID ?? this.dataWareHouseAID,
-      productAID: productAID ?? this.productAID,
+      productAID: (productAID as num?)?.toInt() ?? this.productAID,
       productID: productID ?? this.productID,
       idKeeton: idKeeton ?? this.idKeeton,
       idIndustrial: idIndustrial ?? this.idIndustrial,
@@ -199,7 +204,8 @@ class WareHouse {
       idBill: idBill ?? this.idBill,
       parameter: parameter ?? this.parameter,
       vehicleDetail: vehicleDetail ?? this.vehicleDetail,
-      vehicleTypeID: (vehicleTypeID as num?)?.toInt() ?? this.vehicleTypeID,
+      vehicleCluster: vehicleCluster ?? this.vehicleCluster,
+      vehicleTypeID: vehicleTypeID ?? this.vehicleTypeID,
       qty: qty?.toDouble() ?? this.qty,
       manufacturerID: (manufacturerID as num?)?.toInt() ?? this.manufacturerID,
       countryID: (countryID as num?)?.toInt() ?? this.countryID,
@@ -253,8 +259,8 @@ class WareHouse {
   /// ✅ Constructor rỗng
   factory WareHouse.empty() {
     return const WareHouse(
-      dataWareHouseAID: '',
-      productAID: '',
+      dataWareHouseAID: 0,
+      productAID: 0,
       productID: '',
       idKeeton: '',
       idIndustrial: '',
@@ -265,7 +271,8 @@ class WareHouse {
       idBill: '',
       parameter: '',
       vehicleDetail: '',
-      vehicleTypeID: 0,
+      vehicleCluster: '',
+      vehicleTypeID: '',
       qty: 0,
       manufacturerID: null, // hoặc 0
       countryID: null, // hoặc 0

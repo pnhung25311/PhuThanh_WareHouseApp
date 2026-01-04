@@ -3,19 +3,10 @@ import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.scr
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/Screen/history/WarehouseHistoryScreen.screen.dart';
 import 'package:flutter/services.dart'; 
-import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 
 class WarehouseLongClick {
-  static Future<String?> getFullname() async {
-    Map<String, dynamic>? account = await MySharedPreferences.getDataObject(
-      "account",
-    );
-    // Kiểm tra null và lấy fullname
-    String? fullname = account?["FullName"];
-    return fullname;
-  }
 
-  static void show(BuildContext context, WareHouse item) {
+  void show(BuildContext context, WareHouse item) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -101,20 +92,20 @@ class WarehouseLongClick {
             },
           ),
           //CHỈNH SỬA THÔNG TIN
-          ListTile(
-            leading: const Icon(Icons.update, color: Colors.green),
-            title: const Text('Chỉnh sửa thông tin '),
-            onTap: () async {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      WarehouseDetailScreen(item: item, isUpDate: true, isReadOnlyHistory: false, readOnly: true,),
-                ),
-              );
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.update, color: Colors.green),
+          //   title: const Text('Chỉnh sửa thông tin '),
+          //   onTap: () async {
+          //     Navigator.pop(context);
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (_) =>
+          //             WarehouseDetailScreen(item: item, isUpDate: true, isReadOnlyHistory: false, readOnly: true,),
+          //       ),
+          //     );
+          //   },
+          // ),
           //NHÂN BẢN
           // ListTile(
           //   leading: const Icon(Icons.update, color: Colors.green),

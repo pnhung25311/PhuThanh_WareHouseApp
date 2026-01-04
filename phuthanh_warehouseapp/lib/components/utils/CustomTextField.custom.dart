@@ -34,7 +34,8 @@ class CustomTextField extends StatelessWidget {
           controller: controller,
           decoration: InputDecoration(
             border: const OutlineInputBorder(),
-            hintText: hintText ?? label,
+            hintText: "",
+            // hintText: hintText ?? label,
           ),
           keyboardType: keyboardType,
           readOnly: readOnly,

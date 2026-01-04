@@ -69,6 +69,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   Employee? selectedEmployee;
   String? selectedTimePicker;
   VehicleType? selectedVehicleType;
+  InfoService infoService = InfoService();
 
   final TextEditingController remarkController = TextEditingController();
   final TextEditingController productIDController = TextEditingController();
@@ -101,6 +102,8 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   bool loading = true;
   Key dropdownKey = UniqueKey();
   DateTime initialDate = DateTime.now(); // ⚡ biến state
+    Formatdatehelper formatdatehelper = Formatdatehelper();
+
 
   bool StatusCreate = AppState.instance.get("CreateAppendix");
   final GlobalKey _targetKey = GlobalKey(); // key của ô muốn scroll tới
@@ -111,8 +114,6 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     remarkController.text = widget.item.remarkOfDataWarehouse.toString();
     productIDController.text = widget.item.productID.toString();
     qtyController.text = widget.item.qty.toString();
-    print("widget.item.qty.toString()");
-    print(widget.item.qty.toString());
     qtyExpectedController.text = widget.item.qtyExpected?.toString() ?? "";
     keetonController.text = widget.item.idKeeton ?? "";
     industrialController.text = widget.item.idIndustrial.toString();
@@ -127,7 +128,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     image2Controller.text = widget.item.img2.toString();
     image3Controller.text = widget.item.img3.toString();
 
-    if ((widget.itemHistory?.dataWareHouseAID ?? '').isNotEmpty) {
+    if (widget.itemHistory?.dataWareHouseAID!=null) {
       qtyHistoryController.text = widget.itemHistory?.qty.toString() ?? '';
       remarkOfHistoryController.text = widget.itemHistory?.remark ?? '';
       timeController.text = widget.itemHistory?.time.toString() ?? '';
@@ -137,26 +138,6 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
           widget.itemHistory?.employeeId.toString() ?? '';
     }
 
-    // qtyHistoryController.addListener(() async {
-    //   try {
-    //     double query = double.tryParse(qtyHistoryController.text) ?? 0;
-
-    //     if (query > 0) {
-    //       suppliersHistory = await InfoService.LoadDtataSupplierCategory("2");
-    //     } else if (query < 0) {
-    //       suppliersHistory = await InfoService.LoadDtataSupplierCategory("3");
-    //     } else {
-    //       suppliersHistory = await InfoService.LoadDtataSupplier();
-    //     }
-    //     if (suppliersHistory.isNotEmpty && mounted) {
-    //       setState(() {
-    //         selectedSupplierHistory = suppliersHistory.first;
-    //       });
-    //     }
-    //   } catch (e) {
-    //     print("❌ Lỗi load suppliers: $e");
-    //   }
-    // });
     _init().then((_) {
       // 💡 Chỉ cuộn khi đang ở chế độ tạo mới
       if (widget.isCreateHistory) {
@@ -207,7 +188,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
 
   Future<void> loadTime() async {
     // 1. Load danh sách suppliers
-    suppliersHistory = await InfoService.LoadDtataSupplier();
+    suppliersHistory = await infoService.LoadDtataSupplier();
 
     // 2. Set selectedSupplier nếu có giá trị trong itemHistory
     if ((widget.itemHistory?.partner.toString().isNotEmpty ?? false) &&
@@ -232,7 +213,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
   }
 
   DateTime parseDateManual(String dateStr) {
-    return Formatdatehelper.parseDate(dateStr);
+    return formatdatehelper.parseDate(dateStr);
   }
 
   Future<void> _loadDataLocation() async {
@@ -244,7 +225,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
         dropdownKey = UniqueKey();
       });
     } else {
-      final callLocation = await InfoService.fetchLocations();
+      final callLocation = await infoService.fetchLocations();
       locations = callLocation;
       AppState.instance.set("locationAppState", callLocation);
       setState(() {
@@ -273,7 +254,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
         emps = employeeAppState;
         setState(() {});
       } else {
-        final empRes = await InfoService.LoadDtataEmployee();
+        final empRes = await infoService.LoadDtataEmployee();
         AppState.instance.set("employeeAppState", empRes);
         emps = empRes;
         if (emps.isNotEmpty) {
@@ -352,11 +333,11 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
     try {
       // ✅ Chạy tất cả API song song
       final results = await Future.wait([
-        InfoService.LoadDtataCountry(),
-        InfoService.LoadDtataManufacturer(),
-        InfoService.LoadDtataSupplier(),
-        InfoService.LoadDtataUnit(),
-        InfoService.LoadDtataVehicleType(),
+        infoService.LoadDtataCountry(),
+        infoService.LoadDtataManufacturer(),
+        infoService.LoadDtataSupplier(),
+        infoService.LoadDtataUnit(),
+        infoService.LoadDtataVehicleType(),
       ]);
 
       countries = results[0] as List<Country>;
@@ -730,7 +711,7 @@ class _HistoryDetailScreenState extends State<HistoryDetailScreen> {
                     : parseDateManual(timeController.text),
                 onChanged: (value) {
                   setState(() {
-                    selectedTimePicker = Formatdatehelper.formatYMDHMS(value);
+                    selectedTimePicker = formatdatehelper.formatYMDHMS(value);
                     initialDate = value;
                   });
                 },

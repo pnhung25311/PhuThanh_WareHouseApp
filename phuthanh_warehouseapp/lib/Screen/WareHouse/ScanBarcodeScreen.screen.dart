@@ -4,7 +4,7 @@ import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.d
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/GenerateCodeAID.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
@@ -23,8 +23,11 @@ class _ScanScreenState extends State<ScanScreen> {
   String scannedCode = '';
   bool isProcessing = false;
   final TextEditingController _manualController = TextEditingController();
-  String _statusHome = "Product";
   bool enableScanWindow = true;
+  InfoService infoService = InfoService();
+  Warehouseservice warehouseservice = Warehouseservice();
+        NavigationHelper navigationHelper = NavigationHelper();
+
 
   // 🔥 Set để tránh quét trùng
   Set<String> scannedCodes = {};
@@ -55,29 +58,35 @@ class _ScanScreenState extends State<ScanScreen> {
 
   Future<void> _processCode(String code) async {
     if (isProcessing) return;
-
+    String result;
+    if (code.contains('-')) {
+      result = code.split('-').last.trim();
+    } else {
+      result = code.trim();
+    }
     setState(() {
       scannedCode = code;
       isProcessing = true;
     });
 
     try {
+      final roles = AppState.instance.get("role");
       if (widget.isUpdate) {
-        _statusHome = AppState.instance.get("StatusHome") ?? "Product";
+        final DrawerItem item = AppState.instance.get("itemDrawer");
 
-        if (_statusHome == 'Product') {
-          final product = await InfoService.findProduct(code);
+        if (item.wareHouseCategory == 0) {
+          final product = await infoService.findProduct(result);
           if (product != null) {
             _showToast("✅ Đã tìm thấy sản phẩm $code");
-            NavigationHelper.pushReplacement(
+            navigationHelper.pushReplacement(
               context,
               ProductDetailScreen(
                 item: product,
-                isCreateHistory: true,
-                isCreate: false,
-                readOnly: false,
-                isUpDate: true,
-                isReadOnlyHistory: false,
+                // isCreateHistory: true,
+                // isCreate: false,
+                readOnly: !roles,
+                isUpDate: roles,
+                // isReadOnlyHistory: false,
               ),
             );
             scannedCodes.clear();
@@ -86,15 +95,18 @@ class _ScanScreenState extends State<ScanScreen> {
           }
         }
 
-        final scannedItem = await Warehouseservice.getWarehouseById(code);
+        final scannedItem = await warehouseservice.getWarehouseById(
+          item.wareHouseTable ?? '',
+          code,
+        );
         if (scannedItem != null) {
           _showToast("✅ Tìm thấy dữ liệu kho $code");
-          NavigationHelper.pushReplacement(
+          navigationHelper.pushReplacement(
             context,
             WarehouseDetailScreen(
               item: scannedItem,
-              isCreateHistory: true,
-              isReadOnlyHistory: false,
+              isCreateHistory: roles,
+              isReadOnlyHistory: !roles,
             ),
           );
           scannedCodes.clear();
@@ -102,11 +114,10 @@ class _ScanScreenState extends State<ScanScreen> {
           return;
         }
 
-        final product = await InfoService.findProduct(code);
+        final product = await infoService.findProduct(result);
         if (product != null) {
-          final dataWareHouseAID = await CodeHelper.generateCodeAID("WH");
+          // final dataWareHouseAID = await CodeHelper.generateCodeAID("WH");
           final item = WareHouse(
-            dataWareHouseAID: dataWareHouseAID,
             productAID: product.productAID,
             productID: product.productID,
             idKeeton: product.idKeeton,
@@ -128,14 +139,14 @@ class _ScanScreenState extends State<ScanScreen> {
           );
 
           _showToast("⚠ Không có trong kho — sẽ tạo mới");
-          NavigationHelper.pushReplacement(
+          navigationHelper.pushReplacement(
             context,
             WarehouseDetailScreen(
               item: item,
-              isCreateHistory: true,
-              isCreate: true,
-              readOnly: true,
-              isReadOnlyHistory: false,
+              isCreateHistory: roles,
+              isCreate: roles,
+              readOnly: roles,
+              isReadOnlyHistory: !roles,
             ),
           );
 
@@ -155,7 +166,7 @@ class _ScanScreenState extends State<ScanScreen> {
         return;
       }
 
-      NavigationHelper.pop(context, scannedCode);
+      navigationHelper.pop(context, scannedCode);
     } catch (e) {
       _showToast("❌ Lỗi khi lấy dữ liệu");
       setState(() => isProcessing = false);
@@ -187,20 +198,6 @@ class _ScanScreenState extends State<ScanScreen> {
                     ? Rect.fromLTWH(left, top, rectWidth, rectHeight)
                     : null,
               );
-
-              // return MobileScanner(
-              //   controller: _controller,
-              //   onDetect: _handleBarcode,
-              //   scanWindow: enableScanWindow
-              //       ? Rect.fromLTWH(
-              //           left,
-              //           top,
-              //           rectWidth,
-              //           rectHeight,
-              //         ) // khung nhỏ
-              //       : null, // full màn hình
-              //   fit: BoxFit.cover, // video luôn cover toàn màn hình
-              // );
             },
           ),
 
@@ -343,8 +340,6 @@ class _ScanScreenState extends State<ScanScreen> {
             ),
           ),
         ],
-
-        
       ),
     );
   }

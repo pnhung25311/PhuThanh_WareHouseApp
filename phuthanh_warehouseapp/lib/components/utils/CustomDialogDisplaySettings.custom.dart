@@ -3,12 +3,13 @@ import 'package:phuthanh_warehouseapp/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 // import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
+import 'package:phuthanh_warehouseapp/model/system/DisplaySetting.model.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class DisplaySettingsDialog extends StatefulWidget {
-  final String condition;
-  const DisplaySettingsDialog({Key? key, required this.condition})
-    : super(key: key);
+  // final String condition;
+  const DisplaySettingsDialog({Key? key}) : super(key: key);
 
   @override
   State<DisplaySettingsDialog> createState() => _DisplaySettingsDialogState();
@@ -30,6 +31,9 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
   bool showManufacturerName = true;
   bool showSupplierName = true;
   bool showSupplierActualName = true;
+  DisplaySetting? displaySetting;
+  NavigationHelper navigationHelper = NavigationHelper();
+  MySharedPreferences mySharedPreferences =MySharedPreferences();
 
   @override
   void initState() {
@@ -38,80 +42,125 @@ class _DisplaySettingsDialogState extends State<DisplaySettingsDialog> {
   }
 
   Future<void> _loadSettings() async {
-    final settings = await MySharedPreferences.getDataObject(widget.condition);
-    if (settings != null) {
+    // final settings = await MySharedPreferences.getDataObject(
+    //   "widget.condition",
+    // );
+    final DrawerItem item = AppState.instance.get("itemDrawer");
+    if (item.wareHouseCategory == 0) {
+      final itemSetting = await mySharedPreferences.getDataObject(
+        "showhideProduct",
+      );
+      displaySetting = DisplaySetting.fromJson(itemSetting);
+    } else {
+      final itemSetting = await mySharedPreferences.getDataObject(
+        "showhideWareHouse",
+      );
+      displaySetting = DisplaySetting.fromJson(itemSetting);
+    }
+
+    if (displaySetting != null) {
       setState(() {
-        showID_Keeton = settings["showID_Keeton"] ?? true;
-        showIndustrial = settings["showIndustrial"] ?? true;
-        showID_PartNo = settings["showID_PartNo"] ?? true;
-        showID_ReplacedPartNo = settings["showID_ReplacedPartNo"] ?? true;
-        showNameProduct = settings["showNameProduct"] ?? true;
-        showParameter = settings["showParameter"] ?? true;
-        showVehicleDetails = settings["showVehicleDetails"] ?? true;
-        showRemark = settings["showRemark"] ?? true;
-        showUnitName = settings["showUnitName"] ?? true;
-        showVehicleTypeName = settings["showVehicleTypeName"] ?? true;
-        showCountryName = settings["showCountryName"] ?? true;
-        showManufacturerName = settings["showManufacturerName"] ?? true;
-        showSupplierName = settings["showSupplierName"] ?? true;
-        showSupplierActualName = settings["showSupplierActualName"] ?? true;
+        showID_Keeton = displaySetting!.showIDKeeton;
+        showID_PartNo = displaySetting!.showIDPartNo;
+        showID_ReplacedPartNo = displaySetting!.showIDReplacedPartNo;
+        showIndustrial = displaySetting!.showIndustrial;
+        showParameter = displaySetting!.showParameter;
+        showRemark = displaySetting!.showRemark;
+        showVehicleDetails = displaySetting!.showVehicleDetails;
+        showVehicleTypeName = displaySetting!.showVehicleTypeName;
+        showUnitName = displaySetting!.showUnitName;
+        showCountryName = displaySetting!.showCountryName;
+        showManufacturerName = displaySetting!.showManufacturerName;
+        showSupplierName = displaySetting!.showSupplierName;
+        showSupplierActualName = displaySetting!.showSupplierActualName;
       });
     }
   }
 
   Future<void> _saveSettings() async {
-    await MySharedPreferences.setDataObject(widget.condition, {
-      "showID_Keeton": showID_Keeton,
-      "showIndustrial": showIndustrial,
-      "showID_PartNo": showID_PartNo,
-      "showID_ReplacedPartNo": showID_ReplacedPartNo,
-      "showNameProduct": showNameProduct,
-      "showParameter": showParameter,
-      "showVehicleDetails": showVehicleDetails,
-      "showRemark": showRemark,
-      "showUnitName": showUnitName,
-      "showVehicleTypeName": showVehicleTypeName,
-      "showCountryName": showCountryName,
-      "showManufacturerName": showManufacturerName,
-      "showSupplierName": showSupplierName,
-      "showSupplierActualName": showSupplierActualName,
-    });
-
-    if (widget.condition == "showhideProduct") {
-      AppState.instance.set("showID_KeetonP", showID_Keeton);
-      AppState.instance.set("showIndustrialP", showIndustrial);
-      AppState.instance.set("showID_PartNoP", showID_PartNo);
-      AppState.instance.set("showID_ReplacedPartNoP", showID_ReplacedPartNo);
-      AppState.instance.set("showParameterP", showParameter);
-      AppState.instance.set("showVehicleDetailsP", showVehicleDetails);
-      AppState.instance.set("showRemarkP", showRemark);
-      AppState.instance.set("showUnitNameP", showUnitName);
-      AppState.instance.set("showVehicleTypeNameP", showVehicleTypeName);
-      AppState.instance.set("showCountryNameP", showCountryName);
-      AppState.instance.set("showManufacturerNameP", showManufacturerName);
-      AppState.instance.set("showSupplierNameP", showSupplierName);
-      AppState.instance.set("showSupplierActualNameP", showSupplierActualName);
+    final DrawerItem item = AppState.instance.get("itemDrawer");
+    final Setting = DisplaySetting(
+      showIDKeeton: showID_Keeton,
+      showIndustrial: showIndustrial,
+      showIDPartNo: showID_PartNo,
+      showIDReplacedPartNo: showID_ReplacedPartNo,
+      showNameProduct: showNameProduct,
+      showParameter: showParameter,
+      showVehicleDetails: showVehicleDetails,
+      showRemark: showRemark,
+      showUnitName: showUnitName,
+      showVehicleTypeName: showVehicleTypeName,
+      showCountryName: showCountryName,
+      showManufacturerName: showManufacturerName,
+      showSupplierName: showSupplierName,
+      showSupplierActualName: showSupplierActualName,
+    );
+    if (item.wareHouseCategory == 0) {
+      await mySharedPreferences.setDataObject(
+        "showhideProduct",
+        Setting.toJson(),
+      );
     } else {
-      AppState.instance.set("showID_KeetonWH", showID_Keeton);
-      AppState.instance.set("showIndustrialWH", showIndustrial);
-      AppState.instance.set("showID_PartNoWH", showID_PartNo);
-      AppState.instance.set("showID_ReplacedPartNoWH", showID_ReplacedPartNo);
-      AppState.instance.set("showParameterWH", showParameter);
-      AppState.instance.set("showVehicleDetailsWH", showVehicleDetails);
-      AppState.instance.set("showRemarkWH", showRemark);
-      AppState.instance.set("showUnitNameWH", showUnitName);
-      AppState.instance.set("showVehicleTypeNameWH", showVehicleTypeName);
-      AppState.instance.set("showCountryNameWH", showCountryName);
-      AppState.instance.set("showManufacturerNameWH", showManufacturerName);
-      AppState.instance.set("showSupplierNameWH", showSupplierName);
-      AppState.instance.set("showSupplierActualNameWH", showSupplierActualName);
+      await mySharedPreferences.setDataObject(
+        "showhideWareHouse",
+        Setting.toJson(),
+      );
     }
+
+
+    // await MySharedPreferences.setDataObject("widget.condition", {
+    //   "showID_Keeton": showID_Keeton,
+    //   "showIndustrial": showIndustrial,
+    //   "showID_PartNo": showID_PartNo,
+    //   "showID_ReplacedPartNo": showID_ReplacedPartNo,
+    //   "showNameProduct": showNameProduct,
+    //   "showParameter": showParameter,
+    //   "showVehicleDetails": showVehicleDetails,
+    //   "showRemark": showRemark,
+    //   "showUnitName": showUnitName,
+    //   "showVehicleTypeName": showVehicleTypeName,
+    //   "showCountryName": showCountryName,
+    //   "showManufacturerName": showManufacturerName,
+    //   "showSupplierName": showSupplierName,
+    //   "showSupplierActualName": showSupplierActualName,
+    // });
+
+    // if ("widget.condition" == "showhideProduct") {
+    //   AppState.instance.set("showID_KeetonP", showID_Keeton);
+    //   AppState.instance.set("showIndustrialP", showIndustrial);
+    //   AppState.instance.set("showID_PartNoP", showID_PartNo);
+    //   AppState.instance.set("showID_ReplacedPartNoP", showID_ReplacedPartNo);
+    //   AppState.instance.set("showParameterP", showParameter);
+    //   AppState.instance.set("showVehicleDetailsP", showVehicleDetails);
+    //   AppState.instance.set("showRemarkP", showRemark);
+    //   AppState.instance.set("showUnitNameP", showUnitName);
+    //   AppState.instance.set("showVehicleTypeNameP", showVehicleTypeName);
+    //   AppState.instance.set("showCountryNameP", showCountryName);
+    //   AppState.instance.set("showManufacturerNameP", showManufacturerName);
+    //   AppState.instance.set("showSupplierNameP", showSupplierName);
+    //   AppState.instance.set("showSupplierActualNameP", showSupplierActualName);
+    // } else {
+    //   AppState.instance.set("showID_KeetonWH", showID_Keeton);
+    //   AppState.instance.set("showIndustrialWH", showIndustrial);
+    //   AppState.instance.set("showID_PartNoWH", showID_PartNo);
+    //   AppState.instance.set("showID_ReplacedPartNoWH", showID_ReplacedPartNo);
+    //   AppState.instance.set("showParameterWH", showParameter);
+    //   AppState.instance.set("showVehicleDetailsWH", showVehicleDetails);
+    //   AppState.instance.set("showRemarkWH", showRemark);
+    //   AppState.instance.set("showUnitNameWH", showUnitName);
+    //   AppState.instance.set("showVehicleTypeNameWH", showVehicleTypeName);
+    //   AppState.instance.set("showCountryNameWH", showCountryName);
+    //   AppState.instance.set("showManufacturerNameWH", showManufacturerName);
+    //   AppState.instance.set("showSupplierNameWH", showSupplierName);
+    //   AppState.instance.set("showSupplierActualNameWH", showSupplierActualName);
+    // }
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ Lưu cài đặt hiển thị thành công")),
       );
     }
-    NavigationHelper.pushReplacement(context, HomeScreen());
+    navigationHelper.pushReplacement(context, HomeScreen());
   }
 
   @override

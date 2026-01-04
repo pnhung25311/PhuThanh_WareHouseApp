@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
+import 'package:phuthanh_warehouseapp/Screen/sheetckeck/HomeCheckListScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDrawer.custom.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomListViewProduct.custom.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomListViewWareHouse.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomProductItem.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomProductLongClick.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseItem.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
@@ -19,8 +23,13 @@ class WareHouseScreen extends StatefulWidget {
 class _WareHouseScreenState extends State<WareHouseScreen> {
   List<WareHouse> _warehouses = [];
   List<Product> _products = [];
-  String _statusHome = "Product";
+  ProductLongClick productLongClick = ProductLongClick();
+  // String _statusHome = "Product";
   bool _isLoading = true;
+  // DrawerItem? _selectedDrawerItem;
+  Warehouseservice warehouseservice = Warehouseservice();
+  NavigationHelper navigationHelper = NavigationHelper();
+  WarehouseLongClick warehouseLongClick = WarehouseLongClick();
 
   @override
   void initState() {
@@ -31,7 +40,6 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
   Future<void> _init() async {
     setState(() => _isLoading = true);
     try {
-      _statusHome = AppState.instance.get("StatusHome") ?? "Product";
       await _loadData();
     } catch (e) {
       print("Lỗi khi load dữ liệu: $e");
@@ -42,32 +50,23 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
+    final DrawerItem item = AppState.instance.get("itemDrawer");
+    String table = item.wareHouseTable.toString();
+    print(table);
 
-    final table = AppState.instance.get("StatusHome") ?? "Product";
     try {
-      if (table == "Product") {
-        AppState.instance.set("ListProductLimit", null);
-        final products = AppState.instance.get("ListProductLimit");
-        if (products != null) {
-          _products = products;
-        } else {
-          final data = await Warehouseservice.LoadDtataLimitProduct(
-            table,
-            "200",
-          );
-          AppState.instance.set("ListProductLimit", data);
-          _products = data;
-        }
+      if (item.wareHouseCategory == 0) {
+        final data = await warehouseservice.LoadDtataLimitProduct("200");
+        setState(() {
+          _products.clear();
+          _products.addAll(data);
+        });
       } else {
-        AppState.instance.set("DataWareHouseLimit", null);
-        final dataWareHouse = AppState.instance.get("DataWareHouseLimit");
-        if (dataWareHouse != null) {
-          _warehouses = dataWareHouse;
-        } else {
-          final data = await Warehouseservice.LoadDtataLimit("vw$table", "200");
-          AppState.instance.set("DataWareHouseLimit", data);
-          _warehouses = data;
-        }
+        final data = await warehouseservice.LoadDtataLimit(table, "200");
+        setState(() {
+          _warehouses.clear();
+          _warehouses.addAll(data);
+        });
       }
     } catch (e) {
       print("Lỗi load: $e");
@@ -79,7 +78,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
   /// ✅ Reload khi click Drawer
   void _onDrawerReload() async {
     setState(() {
-      _statusHome = AppState.instance.get("StatusHome") ?? "Product";
+      // _statusHome = AppState.instance.get("StatusHome") ?? "Product";
     });
     await _loadData();
   }
@@ -107,8 +106,21 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
     if (_products.isEmpty) {
       return const Center(child: Text("Không có sản phẩm."));
     }
-
-    return ProductListView(products: _products, onRefresh: _loadData);
+    final items = _products;
+    return RefreshIndicator(
+      onRefresh: () async {
+        // searchController.clear();
+        await _loadData();
+      },
+      child: ListView.builder(
+        itemCount: items.length,
+        itemBuilder: (context, index) => ProductItem(
+          item: items[index],
+          onLongPress: () => productLongClick.show(context, items[index]),
+        ),
+      ),
+    );
+    // return ProductListView(products: _products, onRefresh: _loadData);
   }
 
   /// ✅ List kho
@@ -117,29 +129,56 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
     if (_warehouses.isEmpty) {
       return const Center(child: Text("Không có dữ liệu kho hàng."));
     }
+    final items = _warehouses;
+    return RefreshIndicator(
+      onRefresh: () async {
+        // searchController.clear();
+        await _loadData();
+      },
+      child: ListView.builder(
+        itemCount: items.length,
+        itemBuilder: (context, index) => WarehouseItem(
+          item: items[index],
+          onLongPress: () => warehouseLongClick.show(context, items[index]),
+        ),
+      ),
+    );
 
-    return WarehouseListView(warehouses: _warehouses, onRefresh: _loadData);
+    // return WarehouseListView(warehouses: _warehouses, onRefresh: _loadData);
   }
 
   @override
   Widget build(BuildContext context) {
+    final DrawerItem item = AppState.instance.get("itemDrawer");
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _statusHome == "Product"
-              ? "Danh sách sản phẩm"
-              : "Danh sách kho hàng ${_statusHome.replaceFirst('DataWareHouse', '')}",
-        ),
+        title: Text(item.nameWareHouse ?? ''),
         backgroundColor: Colors.blue,
+        actions: [
+          if (item.wareHouseCategory != 0)
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: IconButton(
+                iconSize: 40,
+                icon: const Icon(Icons.checklist),
+                onPressed: () {
+                  navigationHelper.push(
+                    context,
+                    HomeCheckListScreen(initialTab: 0),
+                  );
+                },
+              ),
+            ),
+        ],
       ),
       drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
-      body: _statusHome == "Product"
+      body: item.wareHouseCategory == 0
           ? _buildProductList()
           : _buildWarehouseList(),
-      floatingActionButton: _statusHome == "Product"
+      floatingActionButton: item.wareHouseCategory == 0
           ? FloatingActionButton(
               onPressed: () async {
-                await NavigationHelper.push(
+                await navigationHelper.push(
                   context,
                   ProductDetailScreen(item: Product.empty(), isCreate: true),
                 );

@@ -3,24 +3,48 @@ import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 
-class ViewImageScreen extends StatelessWidget {
+class ViewImageScreen extends StatefulWidget {
   final Product item;
 
   const ViewImageScreen({super.key, required this.item});
 
   @override
+  State<ViewImageScreen> createState() => _ViewImageScreenState();
+}
+
+class _ViewImageScreenState extends State<ViewImageScreen> {
+  bool? statusConnect; // null = chưa load xong
+  FunctionConvertHelper functionConvertHelper = FunctionConvertHelper();
+  @override
+  void initState() {
+    super.initState();
+    checkNetwork();
+  }
+
+  void checkNetwork() async {
+    final api = ApiClient();
+    bool result = await api.isInternalNetwork();
+    setState(() {
+      statusConnect = result;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Danh sách ảnh từ item
     final images = [
-      item.img1,
-      item.img2,
-      item.img3,
+      widget.item.img1,
+      widget.item.img2,
+      widget.item.img3,
     ].whereType<String>().where((url) => url.isNotEmpty).toList();
-    ApiClient api = new ApiClient();
-    final statusConnect = api.isInternalNetwork();
+
+    // 🟡 Chưa load xong trạng thái mạng => show loading
+    if (statusConnect == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ảnh: ${item.nameProduct}'),
+        title: Text('Ảnh: ${widget.item.nameProduct}'),
         centerTitle: true,
       ),
       body: images.isEmpty
@@ -29,39 +53,34 @@ class ViewImageScreen extends StatelessWidget {
               scrollDirection: Axis.vertical,
               itemCount: images.length,
               itemBuilder: (context, index) {
-                final imageUrl = images[index];
+                final imageUrl = images[index].trim();
+
+                final finalUrl = statusConnect == true
+                    ? imageUrl
+                    : functionConvertHelper.convertToPublicIP(imageUrl);
+
                 return Stack(
                   alignment: Alignment.topCenter,
                   children: [
-                    // Hình ảnh có zoom + loader
                     InteractiveViewer(
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Image.network(
-                          statusConnect == true
-                              ? imageUrl
-                              : FunctionConvertHelper.convertToPublicIP(
-                                  imageUrl,
-                                ),
+                          finalUrl,
                           fit: BoxFit.contain,
                           width: double.infinity,
-
-                          // ✅ Loading indicator khi tải ảnh
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
+                          loadingBuilder: (_, child, progress) {
+                            if (progress == null) return child;
                             return const Center(
-                              child: CircularProgressIndicator(), // xoay vô hạn
+                              child: CircularProgressIndicator(),
                             );
                           },
-
-                          // ✅ Hiển thị lỗi nếu load ảnh fail
                           errorBuilder: (_, __, ___) =>
                               const Center(child: Text('Không tải được ảnh')),
                         ),
                       ),
                     ),
 
-                    // Tiêu đề "Ảnh 1", "Ảnh 2", ...
                     Positioned(
                       top: 16,
                       left: 0,

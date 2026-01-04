@@ -1,5 +1,5 @@
 class Product {
-  final String productAID;
+  final int? productAID;
   final String productID;
   final String idKeeton;
   final String idIndustrial;
@@ -10,7 +10,8 @@ class Product {
   // final String idBill;
   final String parameter;
   final String vehicleDetail;
-  final int vehicleTypeID;
+  final String? vehicleTypeID;
+  final String vehicleCluster;
   final String? vehicleTypeName;
   final int manufacturerID;
   final String? manufacturerName;
@@ -41,6 +42,7 @@ class Product {
     required this.parameter,
     required this.vehicleDetail,
     required this.vehicleTypeID,
+    required this.vehicleCluster,
     required this.manufacturerID,
     required this.countryID,
     required this.supplierID,
@@ -62,7 +64,7 @@ class Product {
   /// ✅ Tạo một Product rỗng (dùng khi khởi tạo mặc định)
   factory Product.empty() {
     return const Product(
-      productAID: '',
+      productAID: 0,
       productID: '',
       idKeeton: '',
       idIndustrial: '',
@@ -73,7 +75,8 @@ class Product {
       // idBill: '',
       parameter: '',
       vehicleDetail: '',
-      vehicleTypeID: 0,
+      vehicleCluster: '',
+      vehicleTypeID: '',
       manufacturerID: 0,
       countryID: 0,
       supplierID: 0,
@@ -106,7 +109,8 @@ class Product {
       // idBill: json['ID_Bill'] ?? '',
       parameter: json['Parameter'] ?? '',
       vehicleDetail: json['VehicleDetail'] ?? '',
-      vehicleTypeID: json['VehicleTypeID'] ?? 0,
+      vehicleTypeID: json['VehicleTypeID'] ?? '',
+      vehicleCluster: json['VehicleCluster'] ?? '',
       manufacturerID: json['ManufacturerID'] ?? 0,
       countryID: json['CountryID'] ?? 0,
       supplierID: json['SupplierID'] ?? 0,
@@ -130,7 +134,7 @@ class Product {
 
   Map<String, dynamic> toJson() {
     return {
-      'ProductAID': productAID,
+      // 'ProductAID': productAID,
       'ProductID': productID,
       'ID_Keeton': idKeeton,
       'ID_Industrial': idIndustrial,
@@ -142,6 +146,7 @@ class Product {
       'Parameter': parameter,
       'VehicleDetail': vehicleDetail,
       'VehicleTypeID': vehicleTypeID,
+      'VehicleCluster': vehicleCluster,
       'ManufacturerID': manufacturerID,
       'CountryID': countryID,
       'SupplierID': supplierID,
@@ -152,7 +157,7 @@ class Product {
       // 'VehicleTypeName': vehicleTypeName,
       // 'SupplierActualName': supplierActualName,
       // 'SupplierName': supplierName,
-      'UnitName': unitName,
+      // 'UnitName': unitName,
       'Img1': img1,
       'Img2': img2,
       'Img3': img3,
@@ -162,7 +167,7 @@ class Product {
   }
 
   Product copyWith({
-    String? productAID,
+    int? productAID,
     String? productID,
     String? idKeeton,
     String? idIndustrial,
@@ -173,7 +178,8 @@ class Product {
     // String? idBill,
     String? parameter,
     String? vehicleDetail,
-    int? vehicleTypeID,
+    String? vehicleTypeID,
+    String? vehicleCluster,
     int? manufacturerID,
     int? countryID,
     int? supplierID,
@@ -204,6 +210,7 @@ class Product {
       parameter: parameter ?? this.parameter,
       vehicleDetail: vehicleDetail ?? this.vehicleDetail,
       vehicleTypeID: vehicleTypeID ?? this.vehicleTypeID,
+      vehicleCluster: vehicleCluster ?? this.vehicleCluster,
       manufacturerID: manufacturerID ?? this.manufacturerID,
       countryID: countryID ?? this.countryID,
       supplierID: supplierID ?? this.supplierID,

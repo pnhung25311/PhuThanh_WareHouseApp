@@ -12,7 +12,6 @@ class SftpService {
     final body = await response.stream.bytesToString();
 
     if (response.statusCode == 200) {
-      print("✅ Upload thành công: $body");
       return body;
     } else {
       print("❌ Upload thất bại: ${response.statusCode} - $body");
@@ -23,14 +22,11 @@ class SftpService {
   /// 🗑️ Xóa file (gọi ApiClient.delete)
   Future<bool> deleteFile(String imageUrl, String productID) async {
     final fileName = imageUrl.split('/').last.split('.').first;
-    print("======================fileName");
-    print(fileName);
     final response = await api.delete(
       "delete/$productID?fileName=$fileName",
     );
 
     if (response.statusCode == 200) {
-      print("🗑️ Xóa thành công: $fileName");
       return true;
     } else {
       print("❌ Lỗi xóa: ${response.statusCode} - ${response.body}");

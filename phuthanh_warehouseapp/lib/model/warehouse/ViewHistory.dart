@@ -1,6 +1,6 @@
 class ViewHistory {
-  final String historyAID;
-  final String dataWareHouseAID;
+  final int historyAID;
+  final int dataWareHouseAID;
   final double qty;
   final int employeeId;
   final String nameEmployee;
@@ -28,8 +28,8 @@ class ViewHistory {
   /// ✅ Constructor để tạo object rỗng (empty)
   factory ViewHistory.empty() {
     return ViewHistory(
-      historyAID: "",
-      dataWareHouseAID: "",
+      historyAID: 0,
+      dataWareHouseAID: 0,
       qty: 0.0,
       employeeId: 0,
       nameEmployee: "",
@@ -44,8 +44,8 @@ class ViewHistory {
 
   factory ViewHistory.fromJson(Map<String, dynamic> json) {
     return ViewHistory(
-      historyAID: json['HistoryAID'] ?? '',
-      dataWareHouseAID: json['DataWareHouseAID'] ?? '',
+      historyAID: int.tryParse(json['HistoryAID']?.toString() ?? '') ?? 0,
+      dataWareHouseAID: int.tryParse(json['DataWareHouseAID']?.toString() ?? '') ?? 0,
       qty: (json['Qty'] ?? 0).toDouble(),
       employeeId: json['ID_Employee'] ?? 0,
       nameEmployee: json['NameEmployee'] ?? "",

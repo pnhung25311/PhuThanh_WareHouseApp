@@ -1,6 +1,6 @@
 class History {
-  final String historyAID;
-  final String dataWareHouseAID;
+  final int? historyAID;
+  final int dataWareHouseAID;
   final double qty;
   final int employeeId;
   final int partner;
@@ -10,7 +10,7 @@ class History {
   final String lastTime;
 
   History({
-    required this.historyAID,
+    this.historyAID,
     required this.dataWareHouseAID,
     required this.qty,
     required this.employeeId,
@@ -24,8 +24,8 @@ class History {
   /// ✅ Constructor để tạo object rỗng (empty)
   factory History.empty() {
     return History(
-      historyAID: "",
-      dataWareHouseAID: "",
+      historyAID: 0,
+      dataWareHouseAID: 0,
       qty: 0.0,
       employeeId: 0,
       partner: 0,
@@ -38,8 +38,8 @@ class History {
 
   factory History.fromJson(Map<String, dynamic> json) {
     return History(
-      historyAID: json['HistoryAID'] ?? '',
-      dataWareHouseAID: json['DataWareHouseAID'] ?? '',
+      historyAID: int.tryParse(json['HistoryAID']?.toString() ?? '') ?? 0,
+      dataWareHouseAID: int.tryParse(json['DataWareHouseAID']?.toString() ?? '') ?? 0,
       qty: (json['Qty'] ?? 0).toDouble(),
       employeeId: json['ID_Employee'] ?? 0,
       partner: json['Partner'] ?? 0,
@@ -52,7 +52,7 @@ class History {
 
   Map<String, dynamic> toJson() {
     return {
-      'HistoryAID': historyAID,
+      // 'HistoryAID': historyAID,
       'DataWareHouseAID': dataWareHouseAID,
       'Qty': qty,
       'ID_Employee': employeeId,

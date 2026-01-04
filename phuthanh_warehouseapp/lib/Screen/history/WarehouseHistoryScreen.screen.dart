@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/history/HistoryDetailScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomHistoryItem.custom.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/ViewHistory.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/HistoryService.service.dart';
@@ -13,16 +11,18 @@ class WarehouseHistoryScreen extends StatefulWidget {
     : super(key: key);
 
   @override
-  State<WarehouseHistoryScreen> createState() => _WarehouseHistoryScreen();
+  State<WarehouseHistoryScreen> createState() => _WarehouseHistoryScreenState();
 }
 
-class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
+class _WarehouseHistoryScreenState extends State<WarehouseHistoryScreen> {
   late Future<List<ViewHistory>> _futureHistory;
-
+  HistoryService historyService = HistoryService();
   @override
   void initState() {
     super.initState();
-    _futureHistory = HistoryService.LoadDtata(widget.item.dataWareHouseAID);
+    _futureHistory = historyService.LoadDtata(
+      widget.item.dataWareHouseAID.toString(),
+    );
   }
 
   @override
@@ -53,91 +53,17 @@ class _WarehouseHistoryScreen extends State<WarehouseHistoryScreen> {
           return RefreshIndicator(
             onRefresh: () async {
               setState(() {
-                _futureHistory = HistoryService.LoadDtata(
-                  widget.item.dataWareHouseAID,
+                _futureHistory = historyService.LoadDtata(
+                  widget.item.dataWareHouseAID.toString(),
                 );
               });
             },
             child: ListView.builder(
               itemCount: histories.length,
               itemBuilder: (context, index) {
-                final h = histories[index];
-                final bool isImport = h.qty > 0;
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 5,
-                  shadowColor: Colors.grey.withOpacity(0.4),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: isImport
-                            ? [Colors.green.shade50, Colors.green.shade100]
-                            : [Colors.red.shade50, Colors.red.shade100],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: ListTile(
-                      onTap: () async {
-                        print(h.qty);
-                        NavigationHelper.push(
-                          context,
-                          HistoryDetailScreen(
-                            item: widget.item,
-                            itemHistory: h,
-                            isReadOnlyHistory: true,
-                            isCreateHistory: true,
-                            readOnly: true,
-                          ),
-                        );
-                      },
-                      title: Text(
-                        "${isImport ? "Nhập" : "Xuất"} hàng - ${widget.item.productID}",
-                        // "${isImport ? "Nhập" : "Xuất"} hàng - ${h.productID}",
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Padding(
-                        padding: const EdgeInsets.only(top: 6),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Số lượng: ${h.qty}"),
-                            if (h.remark.isNotEmpty)
-                              Text("Ghi chú: ${h.remark}"),
-                            Text(
-                              "Thời gian: ${Formatdatehelper.formatDMY(Formatdatehelper.parseDate(h.time.toString()))}",
-                            ),
-                            Text("Nhân viên: ${h.nameEmployee}"),
-                            Text("Đối tác: ${h.nameSupplier}"),
-                            // if (h.timeUpdate != null)
-                            //   Text(
-                            //       "Cập nhật: ${Formatdatehelper.formatDMY(Formatdatehelper.parseDate(h.timeUpdate!))}"),
-                            if (h.lastUser.isNotEmpty)
-                              Text("Người thao tác: ${h.lastUser.toString()}"),
-                          ],
-                        ),
-                      ),
-                      trailing: CircleAvatar(
-                        radius: 20,
-                        backgroundColor: isImport ? Colors.green : Colors.red,
-                        child: Icon(
-                          isImport ? Icons.arrow_downward : Icons.arrow_upward,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
+                return HistoryItem(
+                  history: histories[index],
+                  warehouse: widget.item,
                 );
               },
             ),

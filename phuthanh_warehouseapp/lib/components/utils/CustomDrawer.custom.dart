@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
-// import 'package:phuthanh_warehouseapp/components/utils/CustomDialogDisplaySettings.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDrawerLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
-import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class CustomDrawer extends StatefulWidget {
-  final VoidCallback? onWarehouseSelected; // callback reload
+  final VoidCallback? onWarehouseSelected;
+
   const CustomDrawer({super.key, this.onWarehouseSelected});
 
   @override
@@ -16,230 +17,196 @@ class CustomDrawer extends StatefulWidget {
 }
 
 class _CustomDrawerState extends State<CustomDrawer> {
-  String? _selectedWarehouse;
+  List<DrawerItem> _drawerItems = [];
+  int? _selectedWarehouseId;
+  bool _loading = true;
+  String? _error;
+  Warehouseservice warehouseservice = Warehouseservice();
+  NavigationHelper navigationHelper = NavigationHelper();
+  MySharedPreferences mySharedPreferences = MySharedPreferences();
+  DrawerLongClick drawerLongClick = DrawerLongClick();
 
   @override
   void initState() {
     super.initState();
-    _init();
+    _fetchWarehouses();
   }
 
-  Future<void> _init() async {
-    await _loadSelectedWarehouse();
-  }
-
-  Future<void> _loadSelectedWarehouse() async {
-    String? wh = AppState.instance.get("StatusHome") ?? "Product";
+  Future<void> _fetchWarehouses() async {
     setState(() {
-      _selectedWarehouse = wh;
+      _loading = true;
+      _error = null;
     });
+
+    try {
+      final list = await warehouseservice.getItemhWareHouse();
+
+      setState(() {
+        _drawerItems = list;
+
+        if (list.isNotEmpty) {
+          final savedItem = AppState.instance.get("itemDrawer");
+
+          if (savedItem != null) {
+            _selectedWarehouseId = savedItem.wareHouseID;
+          } else {
+            _selectedWarehouseId = list.first.wareHouseID;
+            AppState.instance.set("itemDrawer", list.first);
+          }
+        }
+
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
   }
 
-  String convertWarehouseName(String name) {
-    // Chuyển WareHouse1 → Kho 1
-    return name.replaceFirst('DataWareHouse', 'Kho ');
+  void _onTapWarehouse(DrawerItem item) {
+    setState(() {
+      _selectedWarehouseId = item.wareHouseID;
+    });
+
+    AppState.instance.set("itemDrawer", item);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đang ở ${item.nameWareHouse}'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    widget.onWarehouseSelected?.call();
+    navigationHelper.pop(context);
   }
 
-  Future<void> _showLogoutDialog(BuildContext context) async {
-    final confirm = await showDialog<bool>(
+  void _onLogout() {
+    showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Xác nhận đăng xuất'),
         content: const Text('Bạn có chắc chắn muốn đăng xuất không?'),
         actions: [
           TextButton(
-            onPressed: () => NavigationHelper.pop(context, false),
+            onPressed: () => Navigator.pop(context),
             child: const Text('Hủy'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-            onPressed: () => NavigationHelper.pop(context, true),
+            onPressed: () async {
+              await mySharedPreferences.clearAll();
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => Loginscreen()),
+              );
+            },
             child: const Text('Đăng xuất'),
           ),
         ],
       ),
     );
-
-    if (confirm == true) {
-      await MySharedPreferences.clearAll();
-      NavigationHelper.pop(context); // đóng drawer
-      NavigationHelper.pushAndRemoveUntil(context, Loginscreen());
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
+      child: Column(
         children: [
-          // Header người dùng
+          /// ===== HEADER =====
           FutureBuilder<String?>(
-            future: MySharedPreferences.getDataString('username'),
+            future: mySharedPreferences.getDataString('username'),
             builder: (context, snapshot) {
-              String username = snapshot.data ?? 'User';
+              final username = snapshot.data ?? 'User';
+
               return DrawerHeader(
-                decoration: const BoxDecoration(color: Colors.blue),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const CircleAvatar(
-                      backgroundColor: Colors.white,
-                      radius: 30,
-                      child: Icon(Icons.person, color: Colors.blue, size: 35),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Xin chào, $username!',
-                      style: const TextStyle(color: Colors.white, fontSize: 18),
-                    ),
-                  ],
+                padding: EdgeInsets.zero,
+                child: Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: Colors.blue,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircleAvatar(
+                        backgroundColor: Colors.white,
+                        radius: 30,
+                        child: Icon(Icons.person, color: Colors.blue, size: 35),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Xin chào, $username!',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
           ),
 
-          // Sản phẩm
-          // Sản phẩm
-          ListTile(
-            leading: Icon(
-              Icons.inventory,
-              color: _selectedWarehouse == "Product"
-                  ? Colors.blue
-                  : Colors.grey,
-            ),
-            title: Text(
-              'Danh sách sản phẩm',
-              style: TextStyle(
-                color: _selectedWarehouse == "Product"
-                    ? Colors.blue
-                    : Colors.black87,
-                fontWeight: _selectedWarehouse == "Product"
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-              ),
-            ),
-            tileColor: _selectedWarehouse == "Product"
-                ? Colors.blue.withOpacity(0.1)
-                : Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            onTap: () {
-              Navigator.pop(context, true);
+          /// ===== LIST WAREHOUSE =====
+          Expanded(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : _error != null
+                ? Center(child: Text('Lỗi: $_error'))
+                : ListView.builder(
+                    itemCount: _drawerItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _drawerItems[index];
+                      final isSelected =
+                          item.wareHouseID == _selectedWarehouseId;
 
-              AppState.instance.set("StatusHome", "Product");
-              setState(() {
-                _selectedWarehouse = "Product";
-              });
-              widget.onWarehouseSelected?.call();
-            },
-            onLongPress: _selectedWarehouse == "Product"
-                ? () {
-                    // Navigator.pop(context, true);
-                    DrawerLongClick.show(context, "showhideProduct");
-                    // widget.onWarehouseSelected?.call();
-                  }
-                : null, // long press chỉ khi đã chọn
-          ),
-
-          const Divider(),
-
-          // 🔹 Danh sách kho gọi API
-          FutureBuilder<List<String>>(
-            future: Warehouseservice.getItemhWareHouse(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: CircularProgressIndicator(),
-                  ),
-                );
-              } else if (snapshot.hasError) {
-                return ListTile(
-                  leading: const Icon(Icons.error, color: Colors.red),
-                  title: Text('Lỗi tải dữ liệu: ${snapshot.error}'),
-                );
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const ListTile(
-                  leading: Icon(Icons.info),
-                  title: Text('Không có dữ liệu kho.'),
-                );
-              }
-
-              final warehouses = snapshot.data!;
-              final converted = warehouses
-                  .map((e) => convertWarehouseName(e))
-                  .toList();
-
-              return Column(
-                children: List.generate(warehouses.length, (index) {
-                  final original = warehouses[index];
-                  final display = converted[index];
-                  final isSelected = original == _selectedWarehouse;
-                  return ListTile(
-                    leading: Icon(
-                      Icons.warehouse,
-                      color: isSelected ? Colors.blue : Colors.black54,
-                    ),
-                    title: Text(
-                      display,
-                      style: TextStyle(
-                        color: isSelected ? Colors.blue : Colors.black87,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    tileColor: isSelected
-                        ? Colors.blue.withOpacity(0.1)
-                        : Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    onTap: () async {
-                      AppState.instance.set("StatusHome", original);
-                      AppState.instance.remove("DataWareHouse");
-                      setState(() {
-                        _selectedWarehouse = original;
-                      });
-
-                      NavigationHelper.pop(context);
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Đang ở $display'),
-                          duration: const Duration(seconds: 2),
-                          backgroundColor: Colors.blue,
+                      return ListTile(
+                        leading: Icon(
+                          Icons.warehouse,
+                          color: isSelected ? Colors.blue : Colors.black54,
                         ),
+                        title: Text(
+                          item.nameWareHouse ?? '',
+                          style: TextStyle(
+                            color: isSelected ? Colors.blue : Colors.black87,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? const Icon(Icons.check, color: Colors.blue)
+                            : null,
+                        tileColor: isSelected
+                            ? Colors.blue.withOpacity(0.12)
+                            : null,
+                        onTap: () => _onTapWarehouse(item),
+                        onLongPress: isSelected
+                            ? () {
+                                // Navigator.pop(context, true);
+                                drawerLongClick.show(
+                                  context,
+                                  "showhideWareHouse",
+                                );
+                                // widget.onWarehouseSelected?.call();
+                              }
+                            : null, // nếu không chọn thì không cho long press,
                       );
-
-                      widget.onWarehouseSelected?.call();
                     },
-                    onLongPress: isSelected
-                        ? () {
-                            // Navigator.pop(context, true);
-                            DrawerLongClick.show(context, "showhideWareHouse");
-                            // widget.onWarehouseSelected?.call();
-                          }
-                        : null, // nếu không chọn thì không cho long press
-                  );
-                }),
-              );
-            },
+                  ),
           ),
 
           const Divider(),
 
-          // Đăng xuất
+          /// ===== LOGOUT =====
           ListTile(
-            leading: const Icon(
-              Icons.logout,
-              color: Color.fromARGB(255, 236, 112, 103),
-            ),
+            leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
-            onTap: () => _showLogoutDialog(context),
+            onTap: _onLogout,
           ),
         ],
       ),

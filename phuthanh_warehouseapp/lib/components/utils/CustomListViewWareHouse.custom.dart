@@ -6,20 +6,25 @@ import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 class WarehouseListView extends StatefulWidget {
   final List<WareHouse> warehouses;
   final Future<void> Function() onRefresh;
-  const WarehouseListView({super.key, required this.warehouses, required this.onRefresh});
+
+  const WarehouseListView({
+    super.key,
+    required this.warehouses,
+    required this.onRefresh,
+  });
 
   @override
   State<WarehouseListView> createState() => _WarehouseListViewState();
 }
 
 class _WarehouseListViewState extends State<WarehouseListView> {
-  late final ScrollController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = ScrollController();
-  }
+  final ScrollController _controller = ScrollController();
+  WarehouseLongClick warehouseLongClick = WarehouseLongClick();
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _controller = ScrollController();
+  // }
 
   @override
   void dispose() {
@@ -36,16 +41,16 @@ class _WarehouseListViewState extends State<WarehouseListView> {
     return RefreshIndicator(
       onRefresh: widget.onRefresh,
       child: ListView.builder(
-        key: const PageStorageKey('warehouseList'),
         controller: _controller,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: widget.warehouses.length,
         itemBuilder: (context, index) {
           final item = widget.warehouses[index];
           return WarehouseItem(
+            key: ValueKey('${item.dataWareHouseAID ?? ''}-$index'),
             item: item,
             onLongPress: () {
-              WarehouseLongClick.show(context, item);
+              warehouseLongClick.show(context, item);
             },
           );
         },

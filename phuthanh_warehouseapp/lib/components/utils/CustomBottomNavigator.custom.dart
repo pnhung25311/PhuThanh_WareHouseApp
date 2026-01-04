@@ -1,73 +1,77 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/WareHouse/ScanBarcodeScreen.screen.dart';
 
-class CustomBottomNavigator extends StatefulWidget {
+class CustomBottomNavigator extends StatelessWidget {
   final List<Widget> screens;
   final List<BottomNavigationBarItem> items;
-  final int initialIndex;
+
+  /// 🔥 index hiện tại (BẮT BUỘC)
+  final int currentIndex;
+
+  /// callback khi đổi tab
+  final ValueChanged<int> onTabChanged;
+
   final Color selectedColor;
   final Color unselectedColor;
 
+  final int? scanIndex;
+  final VoidCallback? onScanTap;
+
+  final IconData scanIcon;
+  final Color scanColor;
+  final double scanSize;
+
   const CustomBottomNavigator({
-    Key? key,
+    super.key,
     required this.screens,
     required this.items,
-    this.initialIndex = 0,
+    required this.currentIndex,
+    required this.onTabChanged,
     this.selectedColor = Colors.blue,
     this.unselectedColor = Colors.grey,
-  }) : super(key: key);
-
-  @override
-  State<CustomBottomNavigator> createState() => _CustomBottomNavigatorState();
-}
-
-class _CustomBottomNavigatorState extends State<CustomBottomNavigator> {
-  late int _selectedIndex;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedIndex = widget.initialIndex;
-  }
-
-  void _onItemTapped(int index) {
-    if (index == 1) {
-      Navigator.push(context, MaterialPageRoute(builder: (_) => ScanScreen(isUpdate: true,)));
-      return; // không đổi _selectedIndex
-    }
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
+    this.scanIndex,
+    this.onScanTap,
+    this.scanIcon = Icons.qr_code_scanner,
+    this.scanColor = Colors.red,
+    this.scanSize = 48,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: widget.screens[_selectedIndex],
+      body: screens[currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        selectedItemColor: widget.selectedColor,
-        unselectedItemColor: widget.unselectedColor,
-        onTap: _onItemTapped,
-        iconSize: 30,
-        items: widget.items.map((item) {
-          if (item.label == "Scan") {
-            return BottomNavigationBarItem(
-              icon: SizedBox(
-                height: 50,
-                width: 50,
-                child: Icon(
-                  Icons.qr_code_scanner, // icon scan
-                  color: Colors.red, // màu riêng cho icon scan
-                  size: 50,
-                ),
-              ),
-              label: item.label,
-            );
+        currentIndex: currentIndex,
+        selectedItemColor: selectedColor,
+        unselectedItemColor: unselectedColor,
+        type: BottomNavigationBarType.fixed,
+        items: _buildItems(),
+        onTap: (index) {
+          if (scanIndex != null && index == scanIndex && onScanTap != null) {
+            onScanTap!();
+            return;
           }
-          return item;
-        }).toList(),
+          onTabChanged(index);
+        },
       ),
     );
+  }
+
+  List<BottomNavigationBarItem> _buildItems() {
+    return items.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+
+      if (scanIndex != null && index == scanIndex) {
+        return BottomNavigationBarItem(
+          label: item.label,
+          icon: SizedBox(
+            height: scanSize,
+            width: scanSize,
+            child: Icon(scanIcon, size: scanSize, color: scanColor),
+          ),
+        );
+      }
+      return item;
+    }).toList();
   }
 }

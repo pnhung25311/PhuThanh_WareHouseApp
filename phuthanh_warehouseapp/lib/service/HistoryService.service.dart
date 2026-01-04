@@ -1,23 +1,27 @@
 import 'dart:convert';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/ViewHistory.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class HistoryService {
-  static Future<List<ViewHistory>> LoadDtata(String condition) async {
+  Future<List<ViewHistory>> LoadDtata(String condition) async {
     try {
       const apiClient = ApiClient();
+      final DrawerItem item = AppState.instance.get("itemDrawer");
+
       final response = await apiClient.get(
-        "dynamic/find-history/vwHistory"+AppState.instance.get("StatusHome")+"/DataWareHouseAID/" + condition,
+        "dynamic/find-history/vw" +
+            item.wareHouseDataBaseHistory.toString() +
+            "/DataWareHouseAID/" +
+            condition,
       );
-      print("dynamic/find-history/History"+AppState.instance.get("StatusHome")+"/DataWareHouseAID/" + condition);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((e) => ViewHistory.fromJson(e)).toList();
       } else {
-        print("=======>" + response.statusCode.toString());
         // throw Exception("Failed to load data (${response.statusCode})");
         return [];
       }
@@ -27,7 +31,7 @@ class HistoryService {
     }
   }
 
-  static Future<History?> FindByIDHistory(String condition) async {
+  Future<History?> FindByIDHistory(String condition) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
@@ -38,7 +42,6 @@ class HistoryService {
         final Map<String, dynamic> data = jsonDecode(response.body);
         return History.fromJson(data);
       } else {
-        print("=======>" + response.statusCode.toString());
         // throw Exception("Failed to load data (${response.statusCode})");
         return null;
       }
@@ -48,17 +51,15 @@ class HistoryService {
     }
   }
 
-  static Future<Map<String, dynamic>> AddHistory(
+  Future<Map<String, dynamic>> AddHistory(
     String table,
+    String tableWh,
     String body,
   ) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.post(
-        "dynamic/insert/history" +
-            AppState.instance.get("StatusHome") +
-            "/" +
-            table,
+        "dynamic/insert/" + table + "/" + tableWh,
         body,
       );
       return {

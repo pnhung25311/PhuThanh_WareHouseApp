@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDialogAppendix.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDropdownField.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomSmartDropdown.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextField.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/GenerateCodeAID.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/ImagePickerHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
@@ -55,6 +55,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   List<Unit> units = [];
   List<Employee> emps = [];
   List<VehicleType> vehicles = [];
+  List<VehicleType> selectVehicles = [];
+  List<int> selectedVehicelIds = [];
 
   Country? selectedCountry;
   Manufacturer? selectedManufacturer;
@@ -73,6 +75,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   final TextEditingController idBillController = TextEditingController();
   final TextEditingController parameterController = TextEditingController();
   final TextEditingController vehicleDetailController = TextEditingController();
+  final TextEditingController vehicleClusterController =
+      TextEditingController();
   final TextEditingController replacedPartNoController =
       TextEditingController();
   final TextEditingController image1Controller = TextEditingController();
@@ -86,6 +90,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   DateTime initialDate = DateTime.now(); // ⚡ biến state
 
   bool StatusCreate = AppState.instance.get("CreateAppendix");
+  InfoService infoService = InfoService();
+  Warehouseservice warehouseservice = Warehouseservice();
+  Formatdatehelper formatdatehelper = Formatdatehelper();
+  NavigationHelper navigationHelper = NavigationHelper();
+          MySharedPreferences mySharedPreferences =MySharedPreferences();
+
 
   @override
   void initState() {
@@ -101,6 +111,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     // idBillController.text = widget.item.idBill.toString();
     parameterController.text = widget.item.parameter.toString();
     vehicleDetailController.text = widget.item.vehicleDetail.toString();
+    vehicleClusterController.text = widget.item.vehicleCluster.toString();
     image1Controller.text = widget.item.img1 ?? '';
     image2Controller.text = widget.item.img2 ?? '';
     image3Controller.text = widget.item.img3 ?? '';
@@ -111,10 +122,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   // thêm helper init để await các load
   Future<void> _init() async {
     await _loadAllData();
+    await _loadDataVehicel();
   }
 
   DateTime parseDateManual(String dateStr) {
-    return Formatdatehelper.parseDate(dateStr);
+    return formatdatehelper.parseDate(dateStr);
   }
 
   Future<void> _loadAllData() async {
@@ -122,11 +134,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     try {
       // ✅ Chạy tất cả API song song
       final results = await Future.wait([
-        InfoService.LoadDtataCountry(),
-        InfoService.LoadDtataManufacturer(),
-        InfoService.LoadDtataSupplier(),
-        InfoService.LoadDtataUnit(),
-        InfoService.LoadDtataVehicleType(),
+        infoService.LoadDtataCountry(),
+        infoService.LoadDtataManufacturer(),
+        infoService.LoadDtataSupplier(),
+        infoService.LoadDtataUnit(),
+        infoService.LoadDtataVehicleType(),
       ]);
 
       countries = results[0] as List<Country>;
@@ -171,7 +183,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<String?> getFullname() async {
-    Map<String, dynamic>? account = await MySharedPreferences.getDataObject(
+    Map<String, dynamic>? account = await mySharedPreferences.getDataObject(
       "account",
     );
     // Kiểm tra null và lấy fullname
@@ -179,9 +191,40 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return fullname;
   }
 
+  Future<void> _loadDataVehicel() async {
+    // AppState.instance.set("vehicleAppState", null);
+    final vehicleAppState = await AppState.instance.get("vehicleAppState");
+    if (vehicleAppState != null) {
+      vehicles = vehicleAppState;
+      setState(() {
+        dropdownKey = UniqueKey();
+      });
+    } else {
+      final callVehicle = await infoService.LoadDtataVehicleType();
+      vehicles = callVehicle;
+      AppState.instance.set("vehicleAppState", callVehicle);
+      setState(() {
+        dropdownKey = UniqueKey();
+      });
+    }
+    String vehicle = widget.item.vehicleTypeID.toString();
+    selectedVehicelIds = vehicle
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => int.tryParse(e) != null)
+        .map((e) => int.parse(e))
+        .toList();
+
+    selectVehicles = vehicles
+        .where((loc) => selectedVehicelIds.contains(loc.VehicleTypeID))
+        .toList();
+  }
+
   void _upDateWareHouse() async {
     setState(() => isSaving = true);
     try {
+      String vehicleResult = selectedVehicelIds.join(",");
+
       // final api = const ApiClient();
       final helper = ImagePickerHelper();
       final files = [
@@ -218,10 +261,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
 
       final product = Product.empty();
-      print(DateTime.now());
+      final _productCreate = Product.empty();
 
-      final productCreate = Product(
-        productAID: await CodeHelper.generateCodeAID("SP"),
+      final productCreate = _productCreate.copyWith(
+        // productAID: null,
         productID: productIDController.text.trim(),
         idKeeton: keetonController.text.trim(),
         idIndustrial: industrialController.text.trim(),
@@ -232,7 +275,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         // idBill: idBillController.text.trim(),
         parameter: parameterController.text.trim(),
         vehicleDetail: vehicleDetailController.text.trim(),
-        vehicleTypeID: selectedVehicleType?.VehicleTypeID ?? 0,
+        vehicleTypeID: vehicleResult,
+        vehicleCluster: vehicleClusterController.text.trim(),
         manufacturerID: selectedManufacturer?.ManufacturerID ?? 0,
         countryID: selectedCountry?.CountryID ?? 0,
         supplierID: selectedSupplier?.SupplierID ?? 0,
@@ -242,7 +286,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         img1: image1Controller.text.trim(),
         img2: image2Controller.text.trim(),
         img3: image3Controller.text.trim(),
-        lastTime: Formatdatehelper.toSqlDateTime(DateTime.now()),
+        lastTime: formatdatehelper.toSqlDateTime(DateTime.now()),
       );
 
       final productUpdate = product.copyWith(
@@ -256,7 +300,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         // idBill: idBillController.text.trim(),
         parameter: parameterController.text.trim(),
         vehicleDetail: vehicleDetailController.text.trim(),
-        vehicleTypeID: selectedVehicleType?.VehicleTypeID ?? 0,
+        vehicleTypeID: vehicleResult,
         manufacturerID: selectedManufacturer?.ManufacturerID ?? 0,
         countryID: selectedCountry?.CountryID ?? 0,
         supplierID: selectedSupplier?.SupplierID ?? 0,
@@ -266,7 +310,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         img1: image1Controller.text.trim(),
         img2: image2Controller.text.trim(),
         img3: image3Controller.text.trim(),
-        lastTime: Formatdatehelper.toSqlDateTime(DateTime.now()),
+        lastTime: formatdatehelper.toSqlDateTime(DateTime.now()),
       );
 
       final jsonProduct = productCreate.toJson();
@@ -279,7 +323,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       // final tableName = await _loadData();
 
       if (widget.isCreate) {
-        final checkProductID = await InfoService.checkProductID(
+        final checkProductID = await infoService.checkProductID(
           "Product",
           idProductID,
         );
@@ -289,7 +333,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ).showSnackBar(SnackBar(content: Text('❌ Mã sản phẩm đã tồn tại ')));
         } else {
           // final response = await api.post("dynamic/insert/Product", bodyCreate);
-          final response = await Warehouseservice.addWarehouseRow(
+          final response = await warehouseservice.addWarehouseRow(
             "Product",
             jsonEncode(jsonProduct),
           );
@@ -301,7 +345,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             );
             AppState.instance.set("ListProduct", null);
             AppState.instance.set("DataWareHouseLimit", null);
-            NavigationHelper.pushAndRemoveUntil(
+            navigationHelper.pushAndRemoveUntil(
               context,
               HomeScreen(),
             ); // quay lại và báo màn trước refresh
@@ -314,8 +358,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       }
 
       if (widget.isUpDate) {
-        final response = await InfoService.UpdateProduct(
-          widget.item.productAID,
+        final response = await infoService.UpdateProduct(
+          widget.item.productAID.toString(),
           jsonEncode(jsonProductUpdate),
         );
         if (response["isSuccess"]) {
@@ -325,7 +369,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           );
           AppState.instance.set("ListProduct", null);
           AppState.instance.set("DataWareHouseLimit", null);
-          NavigationHelper.pushAndRemoveUntil(
+          navigationHelper.pushAndRemoveUntil(
             context,
             HomeScreen(),
           ); // quay lại và báo màn trước refresh
@@ -467,31 +511,69 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
             // ======= DROPDOWN =======
             //LOẠI XE
-            CustomDropdownField(
-              label: "Hãng xe",
-              selectedValue: selectedVehicleType,
+            Text(
+              "Hãng xe",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SmartDropdown<VehicleType>(
+              key: dropdownKey,
+              labelBuilder: (loc) => loc.VehicleTypeName,
               items: vehicles,
-              getLabel: (i) => i.VehicleTypeName.toString(),
-              onChanged: (v) => setState(() => selectedVehicleType = v),
-              readOnly: widget.readOnly,
+              hint: "Chọn hãng xe",
               isSearch: true,
-              isCreate: StatusCreate,
-              textCreate: "Thêm mới loại xe",
+              isMultiSelect: true,
+              readOnly: widget.readOnly,
+              initialValues: selectVehicles, // ✅ dùng plural
+              onChanged: (values) => setState(() {
+                selectVehicles = List<VehicleType>.from(values as List);
+                selectedVehicelIds = selectVehicles
+                    .map((e) => e.VehicleTypeID)
+                    .toList();
+                // print(selectedVehicelIds);
+              }),
               functionCreate: () async {
                 // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 4);
+                final result = await showAddDialogDynamic(context, model: 3);
                 if (result != null) {
-                  await _loadAllData(); // reload danh sách
+                  await _loadDataVehicel(); // reload danh sách
                   setState(() {}); // cập nhật lại UI
                 }
               },
+              dropdownMaxHeight: 300,
             ),
+            // CustomDropdownField(
+            //   label: "Hãng xe",
+            //   selectedValue: selectedVehicleType,
+            //   items: vehicles,
+            //   getLabel: (i) => i.VehicleTypeName.toString(),
+            //   onChanged: (v) => setState(() => selectedVehicleType = v),
+            //   readOnly: widget.readOnly,
+            //   isSearch: true,
+            //   isCreate: StatusCreate,
+            //   textCreate: "Thêm mới loại xe",
+            //   functionCreate: () async {
+            //     // 👇 Tắt dropdown tự động, mở dialog thêm mới
+            //     final result = await showAddDialogDynamic(context, model: 4);
+            //     if (result != null) {
+            //       await _loadAllData(); // reload danh sách
+            //       setState(() {}); // cập nhật lại UI
+            //     }
+            //   },
+            // ),
             const SizedBox(height: 10),
             //DÒNG XE
             CustomTextField(
               label: "Dòng xe:",
               controller: vehicleDetailController,
               hintText: "Nhập dòng xe",
+              readOnly: widget.readOnly,
+            ),
+            const SizedBox(height: 10),
+            //CỤM XE
+            CustomTextField(
+              label: "Cụm xe:",
+              controller: vehicleClusterController,
+              hintText: "Cụm xe",
               readOnly: widget.readOnly,
             ),
             const SizedBox(height: 10),

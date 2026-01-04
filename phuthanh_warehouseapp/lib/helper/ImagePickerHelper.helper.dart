@@ -11,7 +11,9 @@ import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 class ImagePickerHelper {
   final SftpService _sftpService = SftpService();
   ApiClient api = new ApiClient();
+  FunctionConvertHelper functionConvertHelper = FunctionConvertHelper();
   Future<bool> get statusConnect async {
+    // print();
     return await api.isInternalNetwork();
   }
   // Chọn ảnh từ camera hoặc gallery
@@ -77,8 +79,7 @@ class ImagePickerHelper {
     required ValueChanged<String?> onImageChanged,
   }) async {
     final file = AppState.instance.get<File?>(nameImg);
-    print("🧩 File trong store: $file");
-    print("🧩 Link ảnh: $imageUrl");
+    bool isInternal = await statusConnect;
 
     if (file == null && (imageUrl == null || imageUrl.isEmpty)) {
       // Không có ảnh nào
@@ -114,9 +115,9 @@ class ImagePickerHelper {
                   ? Image.file(file, fit: BoxFit.contain)
                   : Image.network(
                       // imageUrl!,
-                      statusConnect == true
+                      isInternal
                           ? imageUrl!
-                          : FunctionConvertHelper.convertToPublicIP(imageUrl!),
+                          : functionConvertHelper.convertToPublicIP(imageUrl!),
                       fit: BoxFit.contain,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
