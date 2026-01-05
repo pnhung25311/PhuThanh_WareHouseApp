@@ -101,7 +101,7 @@ class HistoryItem extends StatelessWidget {
               _InfoLine(
                 icon: Icons.store,
                 label: "Đối tác",
-                value: history.nameSupplier,
+                value: history.partner,
               ),
               if (history.lastUser.isNotEmpty)
                 _InfoLine(
