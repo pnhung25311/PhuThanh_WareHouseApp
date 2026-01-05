@@ -4,7 +4,7 @@ class ViewHistory {
   final double qty;
   final int employeeId;
   final String nameEmployee;
-  final int partner;
+  final String partner;
   final String nameSupplier;
   final String remark;
   final String time;
@@ -33,7 +33,7 @@ class ViewHistory {
       qty: 0.0,
       employeeId: 0,
       nameEmployee: "",
-      partner: 0,
+      partner: "",
       nameSupplier: "",
       remark: "",
       time: "",
@@ -49,7 +49,7 @@ class ViewHistory {
       qty: (json['Qty'] ?? 0).toDouble(),
       employeeId: json['ID_Employee'] ?? 0,
       nameEmployee: json['NameEmployee'] ?? "",
-      partner: json['Partner'] ?? 0,
+      partner: json['Partner'] ?? "",
       nameSupplier: json['NameSupplier'] ?? "",
       remark: json['Remark'] ?? '',
       time: json['Time'] ?? '',

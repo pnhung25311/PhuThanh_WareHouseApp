@@ -17,15 +17,18 @@ class HistoryService {
             "/DataWareHouseAID/" +
             condition,
       );
+      print(response.body);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+        print(data.map((e) => ViewHistory.fromJson(e)).toList());
         return data.map((e) => ViewHistory.fromJson(e)).toList();
       } else {
         // throw Exception("Failed to load data (${response.statusCode})");
         return [];
       }
     } catch (e) {
+      print("====================");
       print(e);
       return [];
     }
