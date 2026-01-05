@@ -1,18 +1,18 @@
 class Supplier {
   final int SupplierID;
   final String Name;
-  final int Category;
+  // final int Category;
 
   Supplier({
     required this.SupplierID,
     required this.Name,
-    required this.Category,
+    // required this.Category,
   });
 
   factory Supplier.fromJson(Map<String, dynamic> json) => Supplier(
     SupplierID: json['SupplierID'],
     Name: json['Name'],
-    Category: json['Category'],
+    // Category: json['Category'],
   );
 
   // ✅ Thêm phần này

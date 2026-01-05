@@ -168,6 +168,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         // } else if (query.toString().isEmpty) {
         //   suppliersHistory = await InfoService.LoadDtataSupplier();
         // } else {
+        print("============");
         suppliersHistory = await infoService.LoadDtataSupplier();
         // }
         if (suppliersHistory.isNotEmpty && mounted) {
