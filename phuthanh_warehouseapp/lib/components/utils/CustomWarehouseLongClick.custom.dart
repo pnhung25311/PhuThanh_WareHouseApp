@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/Screen/history/WarehouseHistoryScreen.screen.dart';
-import 'package:flutter/services.dart'; 
+import 'package:flutter/services.dart';
 
 class WarehouseLongClick {
-
-  void show(BuildContext context, WareHouse item) {
+  void show(BuildContext context, WareHouse item, bool role) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -67,30 +66,49 @@ class WarehouseLongClick {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) =>
-                      WarehouseHistoryScreen(item: item),
+                  builder: (_) => WarehouseHistoryScreen(item: item),
                 ),
               );
             },
           ),
           //THÊM NHẬP XUẤT
-          ListTile(
-            leading: const Icon(Icons.update, color: Colors.green),
-            title: const Text('Thêm nhập/xuất'),
-            onTap: () async {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => WarehouseDetailScreen(
-                    item: item,
-                    readOnly: true,
-                    isCreateHistory: true,
+          if (role)
+            ListTile(
+              leading: const Icon(Icons.update, color: Colors.green),
+              title: const Text('Thêm nhập/xuất'),
+              onTap: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => WarehouseDetailScreen(
+                      item: item,
+                      readOnly: true,
+                      isCreateHistory: true,
+                    ),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
+          //XUẤT ĐIỀU CHUYỂN
+          if (role)
+            ListTile(
+              leading: const Icon(Icons.update, color: Colors.green),
+              title: const Text('Xuất điều chuyển'),
+              onTap: () async {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => WarehouseDetailScreen(
+                      item: item,
+                      readOnly: true,
+                      isCreateHistory: true,
+                    ),
+                  ),
+                );
+              },
+            ),
           //CHỈNH SỬA THÔNG TIN
           // ListTile(
           //   leading: const Icon(Icons.update, color: Colors.green),

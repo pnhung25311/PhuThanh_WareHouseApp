@@ -5,7 +5,7 @@ import 'package:phuthanh_warehouseapp/Screen/Product/ViewImgProduct.screen.dart'
 import 'package:flutter/services.dart';
 
 class ProductLongClick {
-    NavigationHelper navigationHelper = NavigationHelper();
+  NavigationHelper navigationHelper = NavigationHelper();
 
   void show(BuildContext context, Product item) {
     showModalBottomSheet(

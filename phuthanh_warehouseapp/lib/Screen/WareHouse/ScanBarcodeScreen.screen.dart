@@ -104,6 +104,7 @@ class _ScanScreenState extends State<ScanScreen> {
             context,
             WarehouseDetailScreen(
               item: scannedItem,
+              isUpDate: roles,
               isCreateHistory: roles,
               isReadOnlyHistory: !roles,
             ),

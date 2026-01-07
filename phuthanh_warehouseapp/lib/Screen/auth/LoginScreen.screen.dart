@@ -50,9 +50,9 @@ class _LoginscreenState extends State<Loginscreen> {
         _passwordController.text = savedPassword;
       });
 
-      if (savedUsername.isNotEmpty && savedPassword.isNotEmpty) {
-        _handleLogin(savedUsername, savedPassword);
-      }
+      // if (savedUsername.isNotEmpty && savedPassword.isNotEmpty) {
+      //   _handleLogin(savedUsername, savedPassword);
+      // }
     }
   }
 

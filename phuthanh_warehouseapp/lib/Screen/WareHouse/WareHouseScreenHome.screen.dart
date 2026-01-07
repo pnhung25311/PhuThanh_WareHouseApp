@@ -124,7 +124,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
   }
 
   /// ✅ List kho
-  Widget _buildWarehouseList() {
+  Widget _buildWarehouseList(bool role) {
     if (_isLoading) return _buildLoading();
     if (_warehouses.isEmpty) {
       return const Center(child: Text("Không có dữ liệu kho hàng."));
@@ -139,7 +139,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
         itemCount: items.length,
         itemBuilder: (context, index) => WarehouseItem(
           item: items[index],
-          onLongPress: () => warehouseLongClick.show(context, items[index]),
+          onLongPress: () => warehouseLongClick.show(context, items[index], role),
         ),
       ),
     );
@@ -150,6 +150,8 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
   @override
   Widget build(BuildContext context) {
     final DrawerItem item = AppState.instance.get("itemDrawer");
+    final roles = AppState.instance.get("role");
+
     return Scaffold(
       appBar: AppBar(
         title: Text(item.nameWareHouse ?? ''),
@@ -174,18 +176,23 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
       drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
       body: item.wareHouseCategory == 0
           ? _buildProductList()
-          : _buildWarehouseList(),
+          : _buildWarehouseList(roles),
       floatingActionButton: item.wareHouseCategory == 0
-          ? FloatingActionButton(
-              onPressed: () async {
-                await navigationHelper.push(
-                  context,
-                  ProductDetailScreen(item: Product.empty(), isCreate: true),
-                );
-              },
-              backgroundColor: Colors.blue,
-              child: const Icon(Icons.add),
-            )
+          ? roles == true
+                ? FloatingActionButton(
+                    onPressed: () async {
+                      await navigationHelper.push(
+                        context,
+                        ProductDetailScreen(
+                          item: Product.empty(),
+                          isCreate: true,
+                        ),
+                      );
+                    },
+                    backgroundColor: Colors.blue,
+                    child: const Icon(Icons.add),
+                  )
+                : null
           : null,
     );
   }

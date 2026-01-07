@@ -194,7 +194,7 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _buildWarehouseList() {
+  Widget _buildWarehouseList(bool role) {
     final items = _filteredWarehouses;
     if (_isLoading) return _buildLoading();
 
@@ -209,7 +209,7 @@ class _SearchScreenState extends State<SearchScreen> {
         itemCount: items.length,
         itemBuilder: (context, index) => WarehouseItem(
           item: items[index],
-          onLongPress: () => warehouseLongClick.show(context, items[index]),
+          onLongPress: () => warehouseLongClick.show(context, items[index], role),
         ),
       ),
     );
@@ -235,6 +235,8 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     final DrawerItem item = AppState.instance.get("itemDrawer");
+    final roles = AppState.instance.get("role");
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
@@ -284,7 +286,7 @@ class _SearchScreenState extends State<SearchScreen> {
         onRefresh: _loadData,
         child: item.wareHouseCategory == 0
             ? _buildProductList()
-            : _buildWarehouseList(),
+            : _buildWarehouseList(roles),
       ),
     );
   }

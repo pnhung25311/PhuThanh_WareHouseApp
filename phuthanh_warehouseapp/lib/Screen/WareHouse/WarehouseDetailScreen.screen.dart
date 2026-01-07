@@ -116,12 +116,12 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
   bool loading = true;
   bool isSaving = false; // ⚡ trạng thái loading khi lưu
+  bool pinned = false;
   Key dropdownKey = UniqueKey();
   Key vehicleDropdownKey = UniqueKey();
   Key locationDropdownKey = UniqueKey();
   Formatdatehelper formatdatehelper = Formatdatehelper();
-          MySharedPreferences mySharedPreferences =MySharedPreferences();
-
+  MySharedPreferences mySharedPreferences = MySharedPreferences();
 
   DateTime initialDate = DateTime.now(); // ⚡ biến state
 
@@ -260,32 +260,43 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   }
 
   Future<void> _loadDataLocation() async {
-    AppState.instance.set("locationAppState", null);
+    // 1️⃣ Load danh sách location
     final locationAppState = await AppState.instance.get("locationAppState");
     if (locationAppState != null) {
       locations = locationAppState;
-      setState(() {
-        locationDropdownKey = UniqueKey();
-      });
     } else {
-      final callLocation = await infoService.fetchLocations();
-      locations = callLocation;
-      AppState.instance.set("locationAppState", callLocation);
-      setState(() {
-        locationDropdownKey = UniqueKey();
-      });
+      locations = await infoService.fetchLocations();
+      AppState.instance.set("locationAppState", locations);
     }
-    String location = widget.item.locationID.toString();
-    selectedLocationIds = location
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => int.tryParse(e) != null)
-        .map((e) => int.parse(e))
-        .toList();
 
+    // 2️⃣ Ưu tiên load PIN
+    final pinnedIds = AppState.instance.get("pinnedLocationIds")?.toString();
+
+    if (pinnedIds != null && pinnedIds.isNotEmpty) {
+      selectedLocationIds = pinnedIds
+          .split(',')
+          .map((e) => int.tryParse(e))
+          .whereType<int>()
+          .toList();
+    } else {
+      // 3️⃣ Nếu không pin → dùng dữ liệu từ item
+      selectedLocationIds = widget.item.locationID
+          .toString()
+          .split(',')
+          .map((e) => int.tryParse(e.trim()))
+          .whereType<int>()
+          .toList();
+    }
+
+    // 4️⃣ Map ID → Location object
     selectedLocation = locations
         .where((loc) => selectedLocationIds.contains(loc.LocationID))
         .toList();
+
+    // 5️⃣ Force rebuild dropdown
+    setState(() {
+      locationDropdownKey = UniqueKey();
+    });
   }
 
   Future<void> _loadDataVehicel() async {
@@ -633,6 +644,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     if (isSaving) {
       return Scaffold(body: _buildLoading());
     }
+    final roles = AppState.instance.get("role");
 
     return Scaffold(
       appBar: AppBar(
@@ -889,34 +901,55 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               readOnly: widget.isReadOnlyHistory,
             ),
             const SizedBox(height: 10),
-
-            // ======= LOCATION =======
             Text("Vị trí", style: const TextStyle(fontWeight: FontWeight.bold)),
-            SmartDropdown<Location>(
-              key: locationDropdownKey,
-              labelBuilder: (loc) => loc.NameLocation,
-              items: locations,
-              hint: "Chọn vị trí",
-              isSearch: true,
-              isMultiSelect: true,
-              readOnly: widget.isReadOnlyHistory,
-              initialValues: selectedLocation, // ✅ dùng plural
-              onChanged: (values) => setState(() {
-                selectedLocation = List<Location>.from(values as List);
-                selectedLocationIds = selectedLocation
-                    .map((e) => e.LocationID)
-                    .toList();
-              }),
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 3);
-                if (result != null) {
-                  await _loadDataLocation(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-              dropdownMaxHeight: 300,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const SizedBox(width: 8),
+                Expanded(
+                  child: SmartDropdown<Location>(
+                    key: locationDropdownKey,
+                    labelBuilder: (loc) => loc.NameLocation,
+                    items: locations,
+                    hint: "Chọn vị trí",
+                    isSearch: true,
+                    isMultiSelect: true,
+                    readOnly: widget.isReadOnlyHistory,
+                    initialValues: selectedLocation,
+                    onChanged: (values) => setState(() {
+                      selectedLocation = List<Location>.from(values as List);
+                      selectedLocationIds = selectedLocation
+                          .map((e) => e.LocationID)
+                          .toList();
+                    }),
+                    functionCreate: () async {
+                      final result = await showAddDialogDynamic(
+                        context,
+                        model: 3,
+                      );
+                      if (result != null) {
+                        await _loadDataLocation();
+                        setState(() {});
+                      }
+                    },
+                    dropdownMaxHeight: 300,
+                  ),
+                ),
+
+                // const SizedBox(width: 8),
+                if (roles)
+                  IconButton(
+                    icon: Icon(
+                      AppState.instance.get("isPinLocation") == true
+                          ? Icons.push_pin
+                          : Icons.push_pin_outlined,
+                      color: Colors.black,
+                    ),
+                    onPressed: toggleLocationPin,
+                  ),
+              ],
             ),
+
             const SizedBox(height: 15),
             //GHI CHÚ
             CustomTextField(
@@ -1182,5 +1215,27 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
       // Bỏ ghim: xóa dữ liệu
       AppState.instance.set("PinRemark", null);
     }
+  }
+
+  Future<void> toggleLocationPin() async {
+    if (!mounted) return;
+
+    bool isPinned = AppState.instance.get("isPinLocation") == true;
+
+    if (!isPinned) {
+      // 📌 PIN
+      if (selectedLocationIds.isEmpty) return;
+
+      AppState.instance.set("pinnedLocationIds", selectedLocationIds.join(","));
+      AppState.instance.set("isPinLocation", true);
+    } else {
+      // 📍 UNPIN
+      AppState.instance.set("pinnedLocationIds", null);
+      AppState.instance.set("isPinLocation", false);
+    }
+
+    setState(() {
+      locationDropdownKey = UniqueKey();
+    });
   }
 }

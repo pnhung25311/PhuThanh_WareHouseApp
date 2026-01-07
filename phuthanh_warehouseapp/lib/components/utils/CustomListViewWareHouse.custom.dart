@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseItem.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class WarehouseListView extends StatefulWidget {
   final List<WareHouse> warehouses;
@@ -20,6 +21,8 @@ class WarehouseListView extends StatefulWidget {
 class _WarehouseListViewState extends State<WarehouseListView> {
   final ScrollController _controller = ScrollController();
   WarehouseLongClick warehouseLongClick = WarehouseLongClick();
+    final roles = AppState.instance.get("role");
+
   // @override
   // void initState() {
   //   super.initState();
@@ -50,7 +53,7 @@ class _WarehouseListViewState extends State<WarehouseListView> {
             key: ValueKey('${item.dataWareHouseAID ?? ''}-$index'),
             item: item,
             onLongPress: () {
-              warehouseLongClick.show(context, item);
+              warehouseLongClick.show(context, item, roles);
             },
           );
         },
