@@ -12,8 +12,8 @@ class ApiClient {
   Future<String> getBaseUrl() async {
     String localIP = 'http://192.168.1.54:2010/api/';
     String puclicIP = 'http://14.224.207.115:2010/api/';
-    // String localIP = 'http://192.168.1.11:2010/api/';
-    // String puclicIP = 'http://14.224.207.115:2010/api/';
+    // String localIP = 'http://192.168.1.11:8080/api/';
+    // String puclicIP = 'http://14.224.207.115:8080/api/';
     try {
       final url = Uri.parse('http://checkip.amazonaws.com/');
       final result = await http.get(url);

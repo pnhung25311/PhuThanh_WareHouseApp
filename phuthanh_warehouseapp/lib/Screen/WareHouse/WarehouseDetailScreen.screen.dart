@@ -82,7 +82,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   InfoService infoService = InfoService();
   HistoryService historyService = HistoryService();
   Warehouseservice warehouseservice = Warehouseservice();
-  NavigationHelper navigationHelper = NavigationHelper();
+  NavigationHelper navigationHelper = new NavigationHelper();
 
   final TextEditingController remarkController = TextEditingController();
   final TextEditingController productIDController = TextEditingController();
@@ -544,7 +544,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Cập nhật sản phẩm thành công')),
           );
-          navigationHelper.pushAndRemoveUntil(context, const HomeScreen());
+          navigationHelper.pushAndRemoveUntil(context, HomeScreen());
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Cập nhật sản phẩm thất bại')),
@@ -605,7 +605,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           );
         }
       }
-      navigationHelper.pushAndRemoveUntil(context, const HomeScreen());
+      navigationHelper.pushAndRemoveUntil(context, HomeScreen());
     } catch (e) {
       print(e);
       ScaffoldMessenger.of(
