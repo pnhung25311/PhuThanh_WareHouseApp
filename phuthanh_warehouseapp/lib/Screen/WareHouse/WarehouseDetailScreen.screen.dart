@@ -261,6 +261,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
   Future<void> _loadDataLocation() async {
     // 1️⃣ Load danh sách location
+    AppState.instance.set("locationAppState", null);
     final locationAppState = await AppState.instance.get("locationAppState");
     if (locationAppState != null) {
       locations = locationAppState;
@@ -709,16 +710,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               readOnly: true,
             ),
             const SizedBox(height: 10),
-            //SỐ LƯỢNG
-            CustomTextField(
-              label: "Số lượng:",
-              controller: qtyController,
-              hintText: "Nhập số lượng mới",
-              keyboardType: TextInputType.number,
-              readOnly: true,
-            ),
 
-            const SizedBox(height: 10),
             //THÔNG SỐ
             CustomTextField(
               label: "Thông số:",
@@ -901,6 +893,16 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               readOnly: widget.isReadOnlyHistory,
             ),
             const SizedBox(height: 10),
+                        //SỐ LƯỢNG
+            CustomTextField(
+              label: "Số lượng tồn kho:",
+              controller: qtyController,
+              hintText: "Nhập số lượng mới",
+              keyboardType: TextInputType.number,
+              readOnly: true,
+            ),
+
+            const SizedBox(height: 10),
             Text("Vị trí", style: const TextStyle(fontWeight: FontWeight.bold)),
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -927,7 +929,8 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                         context,
                         model: 3,
                       );
-                      if (result != null) {
+                      if (result == true) {
+                        print("============================= load data");
                         await _loadDataLocation();
                         setState(() {});
                       }

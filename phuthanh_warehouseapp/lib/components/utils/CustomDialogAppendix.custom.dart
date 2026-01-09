@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 
 Future<bool?> showAddDialogDynamic(
@@ -11,6 +12,8 @@ Future<bool?> showAddDialogDynamic(
   Map<String, String> body = {};
   String table = "";
 InfoService infoService = InfoService();
+  NavigationHelper navigationHelper = NavigationHelper();
+
   // 🧩 Biến dropdown (chỉ dùng khi model == 5)
   String? selectedCategory;
   final Map<String, String> categories = {
@@ -117,7 +120,7 @@ InfoService infoService = InfoService();
 
                   setBody();
                   await infoService.addAppendix(table,jsonEncode( body));
-                  Navigator.of(context).pop(true); // ✅ Báo thêm thành công
+                  navigationHelper.pop(context, true); // ✅ Báo thêm thành công
                 },
                 child: const Text('Lưu'),
               ),

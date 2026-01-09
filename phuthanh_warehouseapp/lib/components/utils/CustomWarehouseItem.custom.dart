@@ -45,7 +45,7 @@ class _WarehouseItemState extends State<WarehouseItem> {
   @override
   void initState() {
     super.initState();
-    _loadDisplaySettings();
+    // _loadDisplaySettings();
     _loadDataLocation();
     _loadDataVehicleType();
   }
@@ -156,50 +156,50 @@ class _WarehouseItemState extends State<WarehouseItem> {
               /// 🧾 MAIN INFO
               _row(true, Icons.qr_code, "Mã sản phẩm", widget.item.productID),
               _row(
-                showID_Keeton,
+                false,
                 Icons.confirmation_number,
                 "Mã Keeton",
                 widget.item.idKeeton,
               ),
               _row(
-                showIndustrial,
+                false,
                 Icons.precision_manufacturing,
                 "Mã công nghiệp",
                 widget.item.idIndustrial,
               ),
               _row(
-                showID_PartNo,
+                true,
                 Icons.view_list,
                 "Danh điểm",
                 widget.item.idPartNo,
               ),
               _row(
-                showID_ReplacedPartNo,
+                false,
                 Icons.compare_arrows,
                 "Danh điểm TĐ",
                 widget.item.idReplacedPartNo,
               ),
               _row(
-                showParameter,
+                false,
                 Icons.tune,
                 "Thông số",
                 widget.item.parameter,
               ),
               _row(showUnitName, Icons.straighten, "ĐVT", widget.item.unitName),
               _row(
-                showManufacturerName,
+                false,
                 Icons.factory,
                 "Nhà sản xuất",
                 widget.item.manufacturerName,
               ),
               _row(
-                showVehicleDetails,
+                false,
                 Icons.directions_car,
                 "Dòng xe",
                 widget.item.vehicleDetail,
               ),
               _row(
-                showVehicleTypeName,
+                false,
                 Icons.local_shipping,
                 "Hãng xe",
                 helper.getNamesFromIdsDynamic<VehicleType>(
@@ -210,19 +210,19 @@ class _WarehouseItemState extends State<WarehouseItem> {
                 ),
               ),
               _row(
-                showCountryName,
+                false,
                 Icons.public,
                 "Nước SX",
                 widget.item.countryName,
               ),
               _row(
-                showSupplierActualName,
+                false,
                 Icons.store,
                 "NCC thực tế",
                 widget.item.supplierActualName,
               ),
               _row(
-                showSupplierName,
+                false,
                 Icons.description,
                 "NCC giấy tờ",
                 widget.item.supplierName,
