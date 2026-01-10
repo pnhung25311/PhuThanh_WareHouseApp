@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
@@ -20,23 +19,19 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  String scannedCode = '';
-  bool isProcessing = false;
-  final TextEditingController _manualController = TextEditingController();
-  bool enableScanWindow = true;
-  InfoService infoService = InfoService();
-  Warehouseservice warehouseservice = Warehouseservice();
-  NavigationHelper navigationHelper = NavigationHelper();
-
-  // 🔥 Set để tránh quét trùng
-  Set<String> scannedCodes = {};
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
   final MobileScannerController _controller = MobileScannerController();
+
+  final TextEditingController _manualController = TextEditingController();
+
+  bool enableScanWindow = true;
+  bool isProcessing = false;
+  bool isLocked = false; // 🔒 KHÓA QUÉT
+
+  String scannedCode = '';
+
+  final InfoService infoService = InfoService();
+  final Warehouseservice warehouseservice = Warehouseservice();
+  final NavigationHelper navigationHelper = NavigationHelper();
 
   void _showToast(String message) {
     ScaffoldMessenger.of(
@@ -44,25 +39,22 @@ class _ScanScreenState extends State<ScanScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  void _handleBarcode(BarcodeCapture capture) async {
-    if (isProcessing || capture.barcodes.isEmpty) return;
+  // ================= HANDLE CAMERA SCAN =================
+  void _handleBarcode(BarcodeCapture capture) {
+    if (isLocked) return;
+    if (capture.barcodes.isEmpty) return;
 
-    final code = capture.barcodes.first.rawValue ?? '';
+    final code = capture.barcodes.first.rawValue?.trim() ?? '';
     if (code.isEmpty) return;
-    if (scannedCodes.contains(code)) return;
-    scannedCodes.add(code);
 
-    await _processCode(code);
+    isLocked = true; // 🔒 khóa ngay
+    _processCode(code);
   }
 
+  // ================= CORE LOGIC =================
   Future<void> _processCode(String code) async {
     if (isProcessing) return;
-    String result;
-    if (code.contains('-')) {
-      result = code.split('-').last.trim();
-    } else {
-      result = code.trim();
-    }
+
     setState(() {
       scannedCode = code;
       isProcessing = true;
@@ -70,109 +62,114 @@ class _ScanScreenState extends State<ScanScreen> {
 
     try {
       final roles = AppState.instance.get("role");
-      if (widget.isUpdate) {
-        final DrawerItem item = AppState.instance.get("itemDrawer");
+      final DrawerItem item = AppState.instance.get("itemDrawer");
 
-        if (item.wareHouseCategory == 0) {
-          final product = await infoService.findProduct(result);
-          if (product != null) {
-            _showToast("✅ Đã tìm thấy sản phẩm $code");
-            navigationHelper.pushReplacement(
-              context,
-              ProductDetailScreen(
-                item: product,
-                // isCreateHistory: true,
-                // isCreate: false,
-                readOnly: !roles,
-                isUpDate: roles,
-                // isReadOnlyHistory: false,
-              ),
-            );
-            scannedCodes.clear();
-            isProcessing = false;
-            return;
-          }
-        }
+      // ================= PRODUCT =================
+      if (item.wareHouseCategory == 0) {
+        final product = await infoService.findProduct(code);
 
-        final scannedItem = await warehouseservice.getWarehouseById(
-          item.wareHouseTable ?? '',
-          code,
-        );
-        if (scannedItem != null) {
-          _showToast("✅ Tìm thấy dữ liệu kho $code");
-          navigationHelper.pushReplacement(
-            context,
-            WarehouseDetailScreen(
-              item: scannedItem,
-              isUpDate: roles,
-              isCreateHistory: roles,
-              isReadOnlyHistory: !roles,
-            ),
-          );
-          scannedCodes.clear();
-          isProcessing = false;
-          return;
-        }
-
-        final product = await infoService.findProduct(result);
         if (product != null) {
-          // final dataWareHouseAID = await CodeHelper.generateCodeAID("WH");
-          final item = WareHouse(
-            productAID: product.productAID,
-            productID: product.productID,
-            idKeeton: product.idKeeton,
-            countryID: product.countryID,
-            idIndustrial: product.idIndustrial,
-            idPartNo: product.idPartNo,
-            idReplacedPartNo: product.idReplacedPartNo,
-            img1: product.img1,
-            img2: product.img2,
-            img3: product.img3,
-            lastTime: product.lastTime,
-            manufacturerID: product.manufacturerID,
-            nameProduct: product.nameProduct,
-            parameter: product.parameter,
-            supplierID: product.supplierID,
-            unitID: product.unitID,
-            remarkOfDataWarehouse: "",
-            qty: 0,
-          );
+          _showToast("✅ Đã tìm thấy sản phẩm $code");
 
-          _showToast("⚠ Không có trong kho — sẽ tạo mới");
-          navigationHelper.pushReplacement(
-            context,
-            WarehouseDetailScreen(
-              item: item,
-              isCreateHistory: roles,
-              isCreate: roles,    
-              readOnly: roles,
-              isReadOnlyHistory: !roles,
-            ),
-          );
+          navigationHelper
+              .pushReplacement(
+                context,
+                ProductDetailScreen(
+                  item: product,
+                  readOnly: !roles,
+                  isUpDate: roles,
+                ),
+              )
+              .then((_) => isLocked = false);
 
-          scannedCodes.clear();
-          isProcessing = false;
           return;
         }
+      }
 
-        _showToast("❌ Không tìm thấy dữ liệu cho mã: $code");
-        setState(() {
-          isProcessing = false;
-          scannedCodes.clear();
-          scannedCode = "";
-          _manualController.clear();
-        });
+      // ================= WAREHOUSE =================
+      final scannedItem = await warehouseservice.getWarehouseById(
+        item.wareHouseTable ?? '',
+        code,
+      );
+
+      if (scannedItem != null) {
+        _showToast("✅ Tìm thấy dữ liệu kho $code");
+
+        navigationHelper
+            .pushReplacement(
+              context,
+              WarehouseDetailScreen(
+                item: scannedItem,
+                isUpDate: roles,
+                isCreateHistory: roles,
+                isReadOnlyHistory: !roles,
+              ),
+            )
+            .then((_) => isLocked = false);
 
         return;
       }
 
-      navigationHelper.pop(context, scannedCode);
+      // ================= CREATE NEW =================
+      final product = await infoService.findProduct(code);
+      if (product != null) {
+        final newItem = WareHouse(
+          productAID: product.productAID,
+          productID: product.productID,
+          idKeeton: product.idKeeton,
+          countryID: product.countryID,
+          idIndustrial: product.idIndustrial,
+          idPartNo: product.idPartNo,
+          idReplacedPartNo: product.idReplacedPartNo,
+          img1: product.img1,
+          img2: product.img2,
+          img3: product.img3,
+          lastTime: product.lastTime,
+          manufacturerID: product.manufacturerID,
+          nameProduct: product.nameProduct,
+          parameter: product.parameter,
+          supplierID: product.supplierID,
+          unitID: product.unitID,
+          remarkOfDataWarehouse: "",
+          qty: 0,
+        );
+
+        _showToast("⚠ Không có trong kho — tạo mới");
+
+        navigationHelper
+            .pushReplacement(
+              context,
+              WarehouseDetailScreen(
+                item: newItem,
+                isCreate: roles,
+                isCreateHistory: roles,
+                readOnly: roles,
+                isReadOnlyHistory: !roles,
+              ),
+            )
+            .then((_) => isLocked = false);
+
+        return;
+      }
+
+      // ================= NOT FOUND =================
+      _showToast("❌ Không tìm thấy mã: $code");
+
+      setState(() {
+        isProcessing = false;
+        scannedCode = '';
+        _manualController.clear();
+      });
+
+      isLocked = false; // 🔓 cho quét lại
     } catch (e) {
-      _showToast("❌ Lỗi khi lấy dữ liệu");
+      _showToast("❌ Lỗi xử lý mã");
+      isLocked = false;
       setState(() => isProcessing = false);
     }
   }
 
+  // ================= UI =================
   @override
   Widget build(BuildContext context) {
     final rectWidth = 350.0;
