@@ -72,30 +72,28 @@ class _WarehouseItemState extends State<WarehouseItem> {
     });
   }
 
-  Future<void> _loadDisplaySettings() async {
-    if (!mounted) return;
-    final itemSetting = await mySharedPreferences.getDataObject(
-      "showhideWareHouse",
-    );
-    displaySetting = DisplaySetting.fromJson(itemSetting);
-
-    setState(() {
-      showID_PartNo = displaySetting!.showIDPartNo;
-      showID_ReplacedPartNo = displaySetting!.showIDReplacedPartNo;
-      showID_Keeton = displaySetting!.showIDKeeton;
-      showIndustrial = displaySetting!.showIndustrial;
-      showParameter = displaySetting!.showParameter;
-      showRemark = displaySetting!.showRemark;
-      showVehicleDetails = displaySetting!.showVehicleDetails;
-      showVehicleTypeName = displaySetting!.showVehicleTypeName;
-      showUnitName = displaySetting!.showUnitName;
-      showCountryName = displaySetting!.showCountryName;
-      showManufacturerName = displaySetting!.showManufacturerName;
-      showSupplierName = displaySetting!.showSupplierName;
-      showSupplierActualName = displaySetting!.showSupplierActualName;
-    });
-  }
-
+  // Future<void> _loadDisplaySettings() async {
+  //   if (!mounted) return;
+  //   final itemSetting = await mySharedPreferences.getDataObject(
+  //     "showhideWareHouse",
+  //   );
+  //   displaySetting = DisplaySetting.fromJson(itemSetting);
+  //   setState(() {
+  //     showID_PartNo = displaySetting!.showIDPartNo;
+  //     showID_ReplacedPartNo = displaySetting!.showIDReplacedPartNo;
+  //     showID_Keeton = displaySetting!.showIDKeeton;
+  //     showIndustrial = displaySetting!.showIndustrial;
+  //     showParameter = displaySetting!.showParameter;
+  //     showRemark = displaySetting!.showRemark;
+  //     showVehicleDetails = displaySetting!.showVehicleDetails;
+  //     showVehicleTypeName = displaySetting!.showVehicleTypeName;
+  //     showUnitName = displaySetting!.showUnitName;
+  //     showCountryName = displaySetting!.showCountryName;
+  //     showManufacturerName = displaySetting!.showManufacturerName;
+  //     showSupplierName = displaySetting!.showSupplierName;
+  //     showSupplierActualName = displaySetting!.showSupplierActualName;
+  //   });
+  // }
   // bool _getBool(String key) {
   //   final value = AppState.instance.get(key);
   //   return value ?? true;

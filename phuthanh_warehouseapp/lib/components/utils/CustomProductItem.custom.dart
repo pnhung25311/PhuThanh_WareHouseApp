@@ -23,20 +23,20 @@ class ProductItem extends StatefulWidget {
 
 class _ProductItemState extends State<ProductItem> {
   bool showProductID = true;
-  bool showID_Keeton = false;
-  bool showIndustrial = false;
-  bool showID_PartNo = false;
-  bool showID_ReplacedPartNo = false;
-  bool showParameter = false;
-  bool showRemark = false;
-  bool showVehicleDetails = false;
+  bool showID_Keeton = true;
+  bool showIndustrial = true;
+  bool showID_PartNo = true;
+  bool showID_ReplacedPartNo = true;
+  bool showParameter = true;
+  bool showRemark = true;
+  bool showVehicleDetails = true;
 
-  bool showVehicleTypeName = false;
-  bool showUnitName = false;
-  bool showCountryName = false;
-  bool showManufacturerName = false;
-  bool showSupplierName = false;
-  bool showSupplierActualName = false;
+  bool showVehicleTypeName = true;
+  bool showUnitName = true;
+  bool showCountryName = true;
+  bool showManufacturerName = true;
+  bool showSupplierName = true;
+  bool showSupplierActualName = true;
   DisplaySetting? displaySetting;
   List<VehicleType> vehicles = [];
   InfoService infoService = InfoService();
@@ -49,7 +49,7 @@ class _ProductItemState extends State<ProductItem> {
   @override
   void initState() {
     super.initState();
-    _loadDisplaySettings();
+    // _loadDisplaySettings();
     _loadDataVehicel();
   }
 
@@ -76,31 +76,29 @@ class _ProductItemState extends State<ProductItem> {
     });
   }
 
-  Future<void> _loadDisplaySettings() async {
-    if (!mounted) return;
-    final itemSetting = await mySharedPreferences.getDataObject(
-      "showhideProduct",
-    );
-    // final itemSetting = AppState.instance.get("showhideProduct");
-
-    setState(() {
-      displaySetting = DisplaySetting.fromJson(itemSetting);
-
-      showID_PartNo = displaySetting!.showIDPartNo;
-      showID_ReplacedPartNo = displaySetting!.showIDReplacedPartNo;
-      showID_Keeton = displaySetting!.showIDKeeton;
-      showIndustrial = displaySetting!.showIndustrial;
-      showParameter = displaySetting!.showParameter;
-      showRemark = displaySetting!.showRemark;
-      showVehicleDetails = displaySetting!.showVehicleDetails;
-      showVehicleTypeName = displaySetting!.showVehicleTypeName;
-      showUnitName = displaySetting!.showUnitName;
-      showCountryName = displaySetting!.showCountryName;
-      showManufacturerName = displaySetting!.showManufacturerName;
-      showSupplierName = displaySetting!.showSupplierName;
-      showSupplierActualName = displaySetting!.showSupplierActualName;
-    });
-  }
+  // Future<void> _loadDisplaySettings() async {
+  //   if (!mounted) return;
+  //   final itemSetting = await mySharedPreferences.getDataObject(
+  //     "showhideProduct",
+  //   );
+  //   // final itemSetting = AppState.instance.get("showhideProduct");
+  //   setState(() {
+  //     displaySetting = DisplaySetting.fromJson(itemSetting);
+  //     showID_PartNo = displaySetting!.showIDPartNo;
+  //     showID_ReplacedPartNo = displaySetting!.showIDReplacedPartNo;
+  //     showID_Keeton = displaySetting!.showIDKeeton;
+  //     showIndustrial = displaySetting!.showIndustrial;
+  //     showParameter = displaySetting!.showParameter;
+  //     showRemark = displaySetting!.showRemark;
+  //     showVehicleDetails = displaySetting!.showVehicleDetails;
+  //     showVehicleTypeName = displaySetting!.showVehicleTypeName;
+  //     showUnitName = displaySetting!.showUnitName;
+  //     showCountryName = displaySetting!.showCountryName;
+  //     showManufacturerName = displaySetting!.showManufacturerName;
+  //     showSupplierName = displaySetting!.showSupplierName;
+  //     showSupplierActualName = displaySetting!.showSupplierActualName;
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
