@@ -13,6 +13,7 @@ class DrawerItem {
   String? wareHouseSheetDataBase;
   String? wareHouseCheckDataBase;
   String? wareHouseDataCheck;
+  int? wareHouseSupplierID;
 
   DrawerItem({
     this.wareHouseID,
@@ -29,6 +30,7 @@ class DrawerItem {
     this.wareHouseSheetDataBase,
     this.wareHouseCheckDataBase,
     this.wareHouseDataCheck,
+    this.wareHouseSupplierID,
   });
 
   factory DrawerItem.fromJson(Map<String, dynamic> json) {
@@ -51,6 +53,9 @@ class DrawerItem {
       wareHouseSheetDataBase: json['WareHouseSheetDataBase'],
       wareHouseCheckDataBase: json['WareHouseCheckDataBase'],
       wareHouseDataCheck: json['WareHouseDataCheck'],
+      wareHouseSupplierID: json['WareHouseSupplierID'] is int
+          ? json['WareHouseSupplierID']
+          : int.tryParse(json['WareHouseSupplierID'].toString()),
     );
   }
 
@@ -69,6 +74,7 @@ class DrawerItem {
       'WareHouseUpdateHistory': wareHouseUpdateHistory,
       'WareHouseSheetDataBase': wareHouseSheetDataBase,
       'WareHouseCheckDataBase': wareHouseCheckDataBase,
+      'WareHouseSupplierID': wareHouseSupplierID,
     };
   }
 }

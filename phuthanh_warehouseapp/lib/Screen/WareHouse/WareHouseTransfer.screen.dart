@@ -27,7 +27,7 @@ import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 import 'package:collection/collection.dart';
 
-class WarehouseDetailScreen extends StatefulWidget {
+class WareHouseTransfer extends StatefulWidget {
   final WareHouse item;
   final History itemHistory;
   final bool isUpDate;
@@ -36,7 +36,7 @@ class WarehouseDetailScreen extends StatefulWidget {
   final bool isReadOnlyHistory;
   final bool readOnly;
 
-  WarehouseDetailScreen({
+  WareHouseTransfer({
     super.key,
     required this.item,
     History? itemHistory, // ✅ đổi thành nullable
@@ -48,10 +48,10 @@ class WarehouseDetailScreen extends StatefulWidget {
   }) : itemHistory = itemHistory ?? History.empty(); // ✅ gán mặc định ở đây
 
   @override
-  State<WarehouseDetailScreen> createState() => _WarehouseDetailScreenState();
+  State<WareHouseTransfer> createState() => _WareHouseTransferState();
 }
 
-class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
+class _WareHouseTransferState extends State<WareHouseTransfer> {
   List<Country> countries = [];
   List<Manufacturer> manufacturers = [];
   List<Supplier> suppliers = [];
@@ -157,29 +157,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           .toString(); // ID hoặc tên tùy theo model
       employeeHistoryController.text = widget.itemHistory.employeeId.toString();
     }
-    qtyHistoryController.addListener(() async {
-      try {
-        // double query = double.tryParse(qtyHistoryController.text) ?? 0;
-
-        // if (query > 0) {
-        //   suppliersHistory = await InfoService.LoadDtataSupplierCategory("2");
-        // } else if (query < 0) {
-        //   suppliersHistory = await InfoService.LoadDtataSupplierCategory("1");
-        // } else if (query.toString().isEmpty) {
-        //   suppliersHistory = await InfoService.LoadDtataSupplier();
-        // } else {
-        print("============");
-        suppliersHistory = await infoService.LoadDtataSupplier();
-        // }
-        if (suppliersHistory.isNotEmpty && mounted) {
-          setState(() {
-            // selectedSupplierHistory = suppliersHistory.first;
-          });
-        }
-      } catch (e) {
-        print("❌ Lỗi load suppliers: $e");
-      }
-    });
     _init().then((_) {
       // 💡 Chỉ cuộn khi đang ở chế độ tạo mới
       if (widget.isCreateHistory) {
@@ -232,7 +209,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
   Future<void> loadTime() async {
     // 1. Load danh sách suppliers
-    suppliersHistory = await infoService.LoadDtataSupplier();
+    suppliersHistory = await infoService.LoadDtataSupplierCategory("4");
 
     // 2. Set selectedSupplier nếu có giá trị trong itemHistory
     if (widget.itemHistory.partner.toString().isNotEmpty &&
@@ -562,7 +539,18 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           widget.item.productAID.toString(),
         );
 
-        final historyCreate = History(
+        final historyCreateFrom = History(
+          // historyAID: await CodeHelper.generateCodeAID("LS"),
+          dataWareHouseAID: widget.item.dataWareHouseAID!,
+          qty: double.tryParse(qtyHistoryController.text.trim()) ?? 0,
+          employeeId: selectedEmployee?.EmployeeID ?? 0,
+          partner: selectedSupplierHistory?.SupplierID ?? 0,
+          remark: remarkOfHistoryController.text.trim(),
+          time: formatdatehelper.formatDateTimeString(convertTime),
+          lastUser: await fullName.toString().trim(),
+          lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
+        );
+        final historyCreateTo = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
           dataWareHouseAID: whAID,
           qty: double.tryParse(qtyHistoryController.text.trim()) ?? 0,
@@ -573,13 +561,23 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           lastUser: await fullName.toString().trim(),
           lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
         );
-
-        final response = await historyService.AddHistory(
+        
+        final responseFrom = await historyService.AddHistory(
           item.wareHouseDataBaseHistory.toString(),
           item.wareHouseDataBase.toString(),
-          jsonEncode(historyCreate.toJson()),
+          jsonEncode(historyCreateFrom.toJson()),
         );
-        final double QtyWh = await infoService.reTurnQtyWhToAddHistory(
+
+        final responseTo = await historyService.AddHistory(
+          item.wareHouseDataBaseHistory.toString(),
+          item.wareHouseDataBase.toString(),
+          jsonEncode(historyCreateTo.toJson()),
+        );
+        final double QtyWhFrom = await infoService.reTurnQtyWhToAddHistory(
+          item.wareHouseDataBaseHistory.toString(),
+          whAID,
+        );
+        final double QtyWhTo = await infoService.reTurnQtyWhToAddHistory(
           item.wareHouseDataBaseHistory.toString(),
           whAID,
         );
@@ -893,7 +891,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               readOnly: widget.isReadOnlyHistory,
             ),
             const SizedBox(height: 10),
-                        //SỐ LƯỢNG
+            //SỐ LƯỢNG
             CustomTextField(
               label: "Số lượng tồn kho:",
               controller: qtyController,

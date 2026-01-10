@@ -11,7 +11,7 @@ class DrawerLongClick {
       builder: (_) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (false)
+          // if (false)
             ListTile(
               leading: const Icon(Icons.update, color: Colors.green),
               title: const Text('Cài đặt hiển thị'),

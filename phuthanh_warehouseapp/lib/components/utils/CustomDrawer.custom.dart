@@ -40,6 +40,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
     try {
       final list = await warehouseservice.getItemhWareHouse();
+      AppState.instance.set("listItemDrawer", list);
 
       setState(() {
         _drawerItems = list;
@@ -188,10 +189,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
                         onLongPress: isSelected
                             ? () {
                                 // Navigator.pop(context, true);
-                                drawerLongClick.show(
-                                  context,
-                                  "showhideWareHouse",
-                                );
+                                // drawerLongClick.show(
+                                //   context,
+                                //   "showhideWareHouse",
+                                // );
                                 // widget.onWarehouseSelected?.call();
                               }
                             : null, // nếu không chọn thì không cho long press,
