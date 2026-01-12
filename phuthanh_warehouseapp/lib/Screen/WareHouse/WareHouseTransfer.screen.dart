@@ -546,7 +546,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
           "ProductAID",
           widget.item.productAID.toString(),
         );
-        String? whAIDNew;
+        int? whAIDNew;
         if (whAID == 0) {
           final response = await warehouseservice.addWarehouseRow(
             itemList?.wareHouseDataBase ?? "",
@@ -569,8 +569,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
                 itemList?.wareHouseDataBase ?? "",
                 "ProductAID",
                 widget.item.productAID.toString(),
-              )
-              .toString();
+              );
           // ScaffoldMessenger.of(context).showSnackBar(
           //   SnackBar(
           //     // content: Text(
@@ -580,9 +579,9 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
           // );
           // return;
         }
-        final String targetWhAID = (whAIDNew != null && whAIDNew.isNotEmpty)
+        final int targetWhAID = (whAIDNew != null)
             ? whAIDNew
-            : whAID.toString();
+            : whAID;
         final qtyFrom = double.tryParse(qtyHistoryController.text.trim()) ?? 0;
         final historyCreateFrom = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
@@ -596,9 +595,10 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
           lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
         );
         final qtyTo = qtyFrom * -1;
+        print("==============1");
         final historyCreateTo = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
-          dataWareHouseAID: int.parse(targetWhAID),
+          dataWareHouseAID: targetWhAID,
           qty: qtyTo,
           employeeId: selectedEmployee?.EmployeeID ?? 0,
           partner: selectedSupplierHistory?.SupplierID ?? 0,
@@ -625,8 +625,10 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
         );
         final double QtyWhTo = await infoService.reTurnQtyWhToAddHistory(
           itemList?.wareHouseDataBaseHistory ?? "",
-          int.parse(targetWhAID),
+          int.parse(targetWhAID.toString()),
         );
+        print("==============2");
+
         print(QtyWhFrom.toString() + "=============" + QtyWhTo.toString());
         // final updateFrom =
         await warehouseservice.upDateWareHouse(
@@ -641,7 +643,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
         // final updateTo =
         await warehouseservice.upDateWareHouse(
           itemList?.wareHouseDataBase ?? "",
-          targetWhAID,
+         targetWhAID.toString(),
           jsonEncode({
             "Qty": QtyWhTo,
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
