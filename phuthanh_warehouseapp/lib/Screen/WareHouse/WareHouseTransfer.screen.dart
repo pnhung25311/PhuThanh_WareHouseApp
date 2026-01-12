@@ -546,16 +546,43 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
           "ProductAID",
           widget.item.productAID.toString(),
         );
+        String? whAIDNew;
         if (whAID == 0) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Trong ${itemList?.nameWareHouse ?? ""} ko có mã ${widget.item.productID}',
-              ),
-            ),
+          final response = await warehouseservice.addWarehouseRow(
+            itemList?.wareHouseDataBase ?? "",
+            jsonEncode({
+              // "dataWareHouseAID": widget.item.dataWareHouseAID.toString().trim(),
+              "productAID": widget.item.productAID,
+              // "LocationID": locaResult.trim(),
+              // "Qty_Expected":
+              //     double.tryParse(qtyExpectedController.text.trim()) ?? 0,
+              // "ID_Bill": idBillController.text.trim(),
+              // "Remark": remarkOfWarehouseController.text.trim(),
+              "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
+              "LastUser": await fullName.toString().trim(),
+            }),
           );
-          return;
+          print("body=======================================");
+          print(response["body"]);
+          whAIDNew = await infoService
+              .reTurnAIDWhToAddHistory(
+                itemList?.wareHouseDataBase ?? "",
+                "ProductAID",
+                widget.item.productAID.toString(),
+              )
+              .toString();
+          // ScaffoldMessenger.of(context).showSnackBar(
+          //   SnackBar(
+          //     // content: Text(
+          //     //   'Trong ${itemList?.nameWareHouse ?? ""} ko có mã ${widget.item.productID}',
+          //     // ),
+          //   ),
+          // );
+          // return;
         }
+        final String targetWhAID = (whAIDNew != null && whAIDNew.isNotEmpty)
+            ? whAIDNew
+            : whAID.toString();
         final qtyFrom = double.tryParse(qtyHistoryController.text.trim()) ?? 0;
         final historyCreateFrom = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
@@ -571,7 +598,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
         final qtyTo = qtyFrom * -1;
         final historyCreateTo = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
-          dataWareHouseAID: whAID,
+          dataWareHouseAID: int.parse(targetWhAID),
           qty: qtyTo,
           employeeId: selectedEmployee?.EmployeeID ?? 0,
           partner: selectedSupplierHistory?.SupplierID ?? 0,
@@ -598,7 +625,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
         );
         final double QtyWhTo = await infoService.reTurnQtyWhToAddHistory(
           itemList?.wareHouseDataBaseHistory ?? "",
-          whAID,
+          int.parse(targetWhAID),
         );
         print(QtyWhFrom.toString() + "=============" + QtyWhTo.toString());
         // final updateFrom =
@@ -610,10 +637,11 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
           }),
         );
+
         // final updateTo =
         await warehouseservice.upDateWareHouse(
           itemList?.wareHouseDataBase ?? "",
-          whAID.toString(),
+          targetWhAID,
           jsonEncode({
             "Qty": QtyWhTo,
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
