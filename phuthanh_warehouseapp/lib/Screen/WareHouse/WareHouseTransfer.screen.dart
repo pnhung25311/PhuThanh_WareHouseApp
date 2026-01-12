@@ -479,29 +479,28 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
           selectedTimePicker ?? formatdatehelper.formatYMDHMS(DateTime.now());
       final DrawerItem item = AppState.instance.get("itemDrawer");
 
-      if (widget.isCreate) {
-        final response = await warehouseservice.addWarehouseRow(
-          item.wareHouseDataBase.toString(),
-          jsonEncode({
-            // "dataWareHouseAID": widget.item.dataWareHouseAID.toString().trim(),
-            "productAID": widget.item.productAID,
-            "LocationID": locaResult.trim(),
-            "Qty_Expected":
-                double.tryParse(qtyExpectedController.text.trim()) ?? 0,
-            "ID_Bill": idBillController.text.trim(),
-            "Remark": remarkOfWarehouseController.text.trim(),
-            "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
-            "LastUser": await fullName.toString().trim(),
-          }),
-        );
-
-        if (response["isSuccess"]) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thêm sản phẩm thành công')),
-          );
-          // NavigationHelper.pushAndRemoveUntil(context, const HomeScreen());
-        }
-      }
+      // if (widget.isCreate) {
+      //   final response = await warehouseservice.addWarehouseRow(
+      //     item.wareHouseDataBase.toString(),
+      //     jsonEncode({
+      //       // "dataWareHouseAID": widget.item.dataWareHouseAID.toString().trim(),
+      //       "productAID": widget.item.productAID,
+      //       "LocationID": locaResult.trim(),
+      //       "Qty_Expected":
+      //           double.tryParse(qtyExpectedController.text.trim()) ?? 0,
+      //       "ID_Bill": idBillController.text.trim(),
+      //       "Remark": remarkOfWarehouseController.text.trim(),
+      //       "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
+      //       "LastUser": await fullName.toString().trim(),
+      //     }),
+      //   );
+      //   if (response["isSuccess"]) {
+      //     ScaffoldMessenger.of(context).showSnackBar(
+      //       const SnackBar(content: Text('Thêm sản phẩm thành công')),
+      //     );
+      //     // NavigationHelper.pushAndRemoveUntil(context, const HomeScreen());
+      //   }
+      // }
 
       if (widget.isUpDate) {
         final response = await warehouseservice.upDateWareHouse(
@@ -533,16 +532,35 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
       if (widget.isCreateHistory == true &&
           qtyHistoryController.text.isNotEmpty &&
           qtyHistoryController.text != "0") {
+        final List<DrawerItem> drawerItems =
+            AppState.instance.get<List<DrawerItem>>("listItemDrawer") ?? [];
+        DrawerItem? itemList;
+
+        if (selectedSupplierHistory != null && drawerItems.isNotEmpty) {
+          itemList = drawerItems.firstWhereOrNull(
+            (e) => e.wareHouseSupplierID == selectedSupplierHistory!.SupplierID,
+          );
+        }
         final whAID = await infoService.reTurnAIDWhToAddHistory(
-          item.wareHouseDataBase.toString(),
+          itemList?.wareHouseDataBase ?? "",
           "ProductAID",
           widget.item.productAID.toString(),
         );
-
+        if (whAID == 0) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Trong ${itemList?.nameWareHouse ?? ""} ko có mã ${widget.item.productID}',
+              ),
+            ),
+          );
+          return;
+        }
+        final qtyFrom = double.tryParse(qtyHistoryController.text.trim()) ?? 0;
         final historyCreateFrom = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
           dataWareHouseAID: widget.item.dataWareHouseAID!,
-          qty: double.tryParse(qtyHistoryController.text.trim()) ?? 0,
+          qty: qtyFrom,
           employeeId: selectedEmployee?.EmployeeID ?? 0,
           partner: selectedSupplierHistory?.SupplierID ?? 0,
           remark: remarkOfHistoryController.text.trim(),
@@ -550,10 +568,11 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
           lastUser: await fullName.toString().trim(),
           lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
         );
+        final qtyTo = qtyFrom * -1;
         final historyCreateTo = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
           dataWareHouseAID: whAID,
-          qty: double.tryParse(qtyHistoryController.text.trim()) ?? 0,
+          qty: qtyTo,
           employeeId: selectedEmployee?.EmployeeID ?? 0,
           partner: selectedSupplierHistory?.SupplierID ?? 0,
           remark: remarkOfHistoryController.text.trim(),
@@ -561,7 +580,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
           lastUser: await fullName.toString().trim(),
           lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
         );
-        
+
         final responseFrom = await historyService.AddHistory(
           item.wareHouseDataBaseHistory.toString(),
           item.wareHouseDataBase.toString(),
@@ -569,37 +588,80 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
         );
 
         final responseTo = await historyService.AddHistory(
-          item.wareHouseDataBaseHistory.toString(),
-          item.wareHouseDataBase.toString(),
+          itemList?.wareHouseDataBaseHistory ?? "",
+          itemList?.wareHouseDataBase.toString() ?? "",
           jsonEncode(historyCreateTo.toJson()),
         );
         final double QtyWhFrom = await infoService.reTurnQtyWhToAddHistory(
           item.wareHouseDataBaseHistory.toString(),
-          whAID,
+          widget.item.dataWareHouseAID!,
         );
         final double QtyWhTo = await infoService.reTurnQtyWhToAddHistory(
-          item.wareHouseDataBaseHistory.toString(),
+          itemList?.wareHouseDataBaseHistory ?? "",
           whAID,
         );
+        print(QtyWhFrom.toString() + "=============" + QtyWhTo.toString());
+        // final updateFrom =
         await warehouseservice.upDateWareHouse(
           item.wareHouseDataBase.toString(),
-          whAID.toString(),
+          widget.item.dataWareHouseAID.toString(),
           jsonEncode({
-            "Qty": QtyWh,
+            "Qty": QtyWhFrom,
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
           }),
         );
-        if (response["isSuccess"]) {
+        // final updateTo =
+        await warehouseservice.upDateWareHouse(
+          itemList?.wareHouseDataBase ?? "",
+          whAID.toString(),
+          jsonEncode({
+            "Qty": QtyWhTo,
+            "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
+          }),
+        );
+        bool fromSuccess = responseFrom["isSuccess"] == true;
+        bool toSuccess = responseTo["isSuccess"] == true;
+        // fromSuccess ? print(updateFrom["isSuccess"]) : "";
+        // toSuccess ? print(updateTo["isSuccess"]) : "";
+
+        String errorMessage = "";
+        if (!fromSuccess && !toSuccess) {
+          errorMessage =
+              "FROM lỗi (${responseFrom["statusCode"]}) | "
+              "TO lỗi (${responseTo["statusCode"]})";
+        } else if (!fromSuccess) {
+          errorMessage = "FROM lỗi (${responseFrom["statusCode"]})";
+        } else if (!toSuccess) {
+          errorMessage = "TO lỗi (${responseTo["statusCode"]})";
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              fromSuccess && toSuccess
+                  ? "✔ Chuyển kho thành công"
+                  : fromSuccess || toSuccess
+                  ? "⚠ Thành công một phần\n$errorMessage"
+                  : "❌ Chuyển kho thất bại\n$errorMessage",
+            ),
+            backgroundColor: fromSuccess && toSuccess
+                ? Colors.green
+                : fromSuccess || toSuccess
+                ? Colors.orange
+                : Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+
+        if (responseFrom["isSuccess"]) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('✅ Cập nhật thành công')),
           );
-
           // quay lại và báo màn trước refresh
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('❌ Lỗi cập nhật: ${response["statusCode"]}'),
+              content: Text('❌ Lỗi cập nhật: ${responseFrom["statusCode"]}'),
             ),
           );
         }

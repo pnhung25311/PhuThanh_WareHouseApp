@@ -377,7 +377,6 @@ class InfoService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-
         return data;
       } else {
         return 0;
