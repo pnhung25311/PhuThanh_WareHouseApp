@@ -127,6 +127,12 @@ class _SearchScreenState extends State<SearchScreen> {
     } else {
       _filteredWarehouses = _allWarehouses.where((item) {
         return (item.productID ?? "").toLowerCase().contains(keyword) ||
+            (item.idPartNo ?? "").toLowerCase().contains(keyword) ||
+            (item.idReplacedPartNo ?? "").toLowerCase().contains(keyword) ||
+            (item.manufacturerName ?? "").toLowerCase().contains(keyword) ||
+            (item.countryName ?? "").toLowerCase().contains(keyword) ||
+            (item.unitName ?? "").toLowerCase().contains(keyword) ||
+            (item.parameter ?? "").toLowerCase().contains(keyword) ||
             (item.nameProduct ?? "").toLowerCase().contains(keyword);
       }).toList();
     }
@@ -209,7 +215,8 @@ class _SearchScreenState extends State<SearchScreen> {
         itemCount: items.length,
         itemBuilder: (context, index) => WarehouseItem(
           item: items[index],
-          onLongPress: () => warehouseLongClick.show(context, items[index], role),
+          onLongPress: () =>
+              warehouseLongClick.show(context, items[index], role),
         ),
       ),
     );
