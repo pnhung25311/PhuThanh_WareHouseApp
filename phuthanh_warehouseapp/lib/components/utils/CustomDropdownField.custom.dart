@@ -207,8 +207,10 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
     return GestureDetector(
       onTap: widget.readOnly ? null : _openSelectDialog,
       child: AbsorbPointer(
+        
         absorbing: widget.readOnly || !widget.enabled,
         child: Column(
+          
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.label != null) ...[
@@ -230,10 +232,11 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                   horizontal: 12,
                   vertical: 14,
                 ),
-                fillColor: widget.readOnly
-                    ? Colors.grey.shade100
-                    : Colors.transparent,
+                // fillColor: widget.readOnly
+                //     ? Colors.grey.shade100
+                //     : Colors.transparent,
                 filled: widget.readOnly,
+                fillColor: Colors.white,
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

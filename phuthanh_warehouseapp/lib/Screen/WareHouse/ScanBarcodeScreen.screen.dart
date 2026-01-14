@@ -51,9 +51,8 @@ class _ScanScreenState extends State<ScanScreen> {
   OptionAction? _selectedAction;
 
   final List<OptionAction> _actions = [
-    OptionAction(id: 1, name: 'Xem chi tiết'),
-    OptionAction(id: 2, name: 'Cập nhật'),
-    OptionAction(id: 3, name: 'Tạo mới'),
+    OptionAction(id: 1, name: 'Thêm nhập xuất'),
+    OptionAction(id: 2, name: 'Xuất điều chuyển'),
   ];
 
   // ================= HANDLE CAMERA SCAN =================
@@ -127,29 +126,21 @@ class _ScanScreenState extends State<ScanScreen> {
                     .then((_) => isLocked = false);
                 break;
               case 2:
-                ListTile(
-                  leading: const Icon(Icons.update, color: Colors.green),
-                  title: const Text('Xuất điều chuyển'),
-                  onTap: () async {
-                    Navigator.pop(context);
-                    Navigator.push(
+                navigationHelper
+                    .pushReplacement(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => WareHouseTransfer(
-                          item: scannedItem,
-                          readOnly: roles,
-                          isCreateHistory: roles,
-                          isReadOnlyHistory: !roles,
-                        ),
+                      WareHouseTransfer(
+                        item: scannedItem,
+                        isUpDate: roles,
+                        isCreateHistory: roles,
+                        isReadOnlyHistory: !roles,
                       ),
-                    );
-                  },
-                );
+                    )
+                    .then((_) => isLocked = false);
                 break;
             }
 
             return;
-            
           }
 
           // ================= CREATE NEW =================
@@ -362,38 +353,41 @@ class _ScanScreenState extends State<ScanScreen> {
             bottom: 20,
             left: 16,
             right: 16,
-            child: CustomDropdownField(
-              label: "Nhà cung cấp: ",
-              selectedValue: _selectedAction,
-              items: _actions,
-              getLabel: (i) => i.name,
-              onChanged: (v) => setState(() => _selectedAction = v),
-              readOnly: true,
-              isCreate: false,
-              isSearch: true,
-            ),
-          ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // DROPDOWN
+                CustomDropdownField(
+                  label: "Chọn hành động:",
+                  selectedValue: _selectedAction,
+                  items: _actions,
+                  getLabel: (i) => i.name,
+                  onChanged: (v) => setState(() => _selectedAction = v),
+                  readOnly: false,
+                  isCreate: false,
+                  isSearch: true,
+                ),
 
-          // INPUT BARCODE THỦ CÔNG
-          Positioned(
-            bottom: 20,
-            left: 16,
-            right: 16,
-            child: CustomTextFieldIcon(
-              label: '',
-              controller: _manualController,
-              hintText: 'Nhập mã barcode thủ công',
-              suffixIcon: Icons.check_circle,
-              onSuffixIconPressed: () {
-                final code = _manualController.text.trim();
-                if (code.isNotEmpty) _processCode(code);
-              },
-              onSubmitted: (value) {
-                final code = value.trim();
-                if (code.isNotEmpty) _processCode(code);
-              },
-              backgroundColor: Colors.white,
-              borderColor: Colors.grey.shade400,
+                const SizedBox(height: 10),
+
+                // TEXTFIELD
+                CustomTextFieldIcon(
+                  label: '',
+                  controller: _manualController,
+                  hintText: 'Nhập mã barcode thủ công',
+                  suffixIcon: Icons.check_circle,
+                  onSuffixIconPressed: () {
+                    final code = _manualController.text.trim();
+                    if (code.isNotEmpty) _processCode(code);
+                  },
+                  onSubmitted: (value) {
+                    final code = value.trim();
+                    if (code.isNotEmpty) _processCode(code);
+                  },
+                  backgroundColor: Colors.white,
+                  borderColor: Colors.grey.shade400,
+                ),
+              ],
             ),
           ),
         ],
