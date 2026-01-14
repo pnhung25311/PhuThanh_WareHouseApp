@@ -149,6 +149,7 @@ class _ScanScreenState extends State<ScanScreen> {
             }
 
             return;
+            
           }
 
           // ================= CREATE NEW =================
