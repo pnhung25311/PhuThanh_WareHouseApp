@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
+import 'package:phuthanh_warehouseapp/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
@@ -38,6 +39,13 @@ class _ScanScreenState extends State<ScanScreen> {
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
+  late OptionAction _selectedAction;
+
+final List<OptionAction> _actions = [
+  OptionAction(id: 1, name: 'Xem chi tiết'),
+  OptionAction(id: 2, name: 'Cập nhật'),
+  OptionAction(id: 3, name: 'Tạo mới'),
+];
 
   // ================= HANDLE CAMERA SCAN =================
   void _handleBarcode(BarcodeCapture capture) {
@@ -62,106 +70,109 @@ class _ScanScreenState extends State<ScanScreen> {
 
     try {
       final roles = AppState.instance.get("role");
-      final DrawerItem item = AppState.instance.get("itemDrawer");
+      if (widget.isUpdate) {
+        final DrawerItem item = AppState.instance.get("itemDrawer");
 
-      // ================= PRODUCT =================
-      if (item.wareHouseCategory == 0) {
-        final product = await infoService.findProduct(code);
+        // ================= PRODUCT =================
+        if (item.wareHouseCategory == 0) {
+          final product = await infoService.findProduct(code);
 
-        if (product != null) {
-          _showToast("✅ Đã tìm thấy sản phẩm $code");
+          if (product != null) {
+            _showToast("✅ Đã tìm thấy sản phẩm $code");
+
+            navigationHelper
+                .pushReplacement(
+                  context,
+                  ProductDetailScreen(
+                    item: product,
+                    readOnly: !roles,
+                    isUpDate: roles,
+                  ),
+                )
+                .then((_) => isLocked = false);
+
+            return;
+          }
+        }
+
+        // ================= WAREHOUSE =================
+        final scannedItem = await warehouseservice.getWarehouseById(
+          item.wareHouseTable ?? '',
+          code,
+        );
+
+        if (scannedItem != null) {
+          _showToast("✅ Tìm thấy dữ liệu kho $code");
 
           navigationHelper
               .pushReplacement(
                 context,
-                ProductDetailScreen(
-                  item: product,
-                  readOnly: !roles,
+                WarehouseDetailScreen(
+                  item: scannedItem,
                   isUpDate: roles,
+                  isCreateHistory: roles,
+                  isReadOnlyHistory: !roles,
                 ),
               )
               .then((_) => isLocked = false);
 
           return;
         }
+
+        // ================= CREATE NEW =================
+        final product = await infoService.findProduct(code);
+        if (product != null) {
+          final newItem = WareHouse(
+            productAID: product.productAID,
+            productID: product.productID,
+            idKeeton: product.idKeeton,
+            countryID: product.countryID,
+            idIndustrial: product.idIndustrial,
+            idPartNo: product.idPartNo,
+            idReplacedPartNo: product.idReplacedPartNo,
+            img1: product.img1,
+            img2: product.img2,
+            img3: product.img3,
+            lastTime: product.lastTime,
+            manufacturerID: product.manufacturerID,
+            nameProduct: product.nameProduct,
+            parameter: product.parameter,
+            supplierID: product.supplierID,
+            unitID: product.unitID,
+            remarkOfDataWarehouse: "",
+            qty: 0,
+          );
+
+          _showToast("⚠ Không có trong kho — tạo mới");
+
+          navigationHelper
+              .pushReplacement(
+                context,
+                WarehouseDetailScreen(
+                  item: newItem,
+                  isCreate: roles,
+                  isCreateHistory: roles,
+                  readOnly: roles,
+                  isReadOnlyHistory: !roles,
+                ),
+              )
+              .then((_) => isLocked = false);
+
+          return;
+        }
+        // ================= NOT FOUND =================
+        _showToast("❌ Không tìm thấy mã: $code");
+
+        setState(() {
+          isProcessing = false;
+          scannedCode = '';
+          _manualController.clear();
+        });
+
+        isLocked = false; // 🔓 cho quét lại
+      } else {
+        navigationHelper.pop(context, scannedCode);
       }
-
-      // ================= WAREHOUSE =================
-      final scannedItem = await warehouseservice.getWarehouseById(
-        item.wareHouseTable ?? '',
-        code,
-      );
-
-      if (scannedItem != null) {
-        _showToast("✅ Tìm thấy dữ liệu kho $code");
-
-        navigationHelper
-            .pushReplacement(
-              context,
-              WarehouseDetailScreen(
-                item: scannedItem,
-                isUpDate: roles,
-                isCreateHistory: roles,
-                isReadOnlyHistory: !roles,
-              ),
-            )
-            .then((_) => isLocked = false);
-
-        return;
-      }
-
-      // ================= CREATE NEW =================
-      final product = await infoService.findProduct(code);
-      if (product != null) {
-        final newItem = WareHouse(
-          productAID: product.productAID,
-          productID: product.productID,
-          idKeeton: product.idKeeton,
-          countryID: product.countryID,
-          idIndustrial: product.idIndustrial,
-          idPartNo: product.idPartNo,
-          idReplacedPartNo: product.idReplacedPartNo,
-          img1: product.img1,
-          img2: product.img2,
-          img3: product.img3,
-          lastTime: product.lastTime,
-          manufacturerID: product.manufacturerID,
-          nameProduct: product.nameProduct,
-          parameter: product.parameter,
-          supplierID: product.supplierID,
-          unitID: product.unitID,
-          remarkOfDataWarehouse: "",
-          qty: 0,
-        );
-
-        _showToast("⚠ Không có trong kho — tạo mới");
-
-        navigationHelper
-            .pushReplacement(
-              context,
-              WarehouseDetailScreen(
-                item: newItem,
-                isCreate: roles,
-                isCreateHistory: roles,
-                readOnly: roles,
-                isReadOnlyHistory: !roles,
-              ),
-            )
-            .then((_) => isLocked = false);
-
-        return;
-      }
-
-      // ================= NOT FOUND =================
-      _showToast("❌ Không tìm thấy mã: $code");
-
-      setState(() {
-        isProcessing = false;
-        scannedCode = '';
-        _manualController.clear();
-      });
-
-      isLocked = false; // 🔓 cho quét lại
     } catch (e) {
       _showToast("❌ Lỗi xử lý mã");
       isLocked = false;
@@ -311,6 +322,27 @@ class _ScanScreenState extends State<ScanScreen> {
                   enableScanWindow = !enableScanWindow;
                 });
               },
+            ),
+          ),
+          Positioned(
+            bottom: 20,
+            left: 16,
+            right: 16,
+            child: CustomDropdownField(
+              label: '',
+              controller: _manualController,
+              hintText: 'Nhập mã barcode thủ công',
+              suffixIcon: Icons.check_circle,
+              onSuffixIconPressed: () {
+                final code = _manualController.text.trim();
+                if (code.isNotEmpty) _processCode(code);
+              },
+              onSubmitted: (value) {
+                final code = value.trim();
+                if (code.isNotEmpty) _processCode(code);
+              },
+              backgroundColor: Colors.white,
+              borderColor: Colors.grey.shade400,
             ),
           ),
 
