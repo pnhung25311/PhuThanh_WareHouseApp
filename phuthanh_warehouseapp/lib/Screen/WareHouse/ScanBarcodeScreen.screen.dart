@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
+import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseTransfer.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/OptionAction.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
@@ -34,18 +36,25 @@ class _ScanScreenState extends State<ScanScreen> {
   final Warehouseservice warehouseservice = Warehouseservice();
   final NavigationHelper navigationHelper = NavigationHelper();
 
+  @override
+  void initState() {
+    super.initState();
+    _selectedAction = _actions.first;
+  }
+
   void _showToast(String message) {
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
-  late OptionAction _selectedAction;
 
-final List<OptionAction> _actions = [
-  OptionAction(id: 1, name: 'Xem chi tiết'),
-  OptionAction(id: 2, name: 'Cập nhật'),
-  OptionAction(id: 3, name: 'Tạo mới'),
-];
+  OptionAction? _selectedAction;
+
+  final List<OptionAction> _actions = [
+    OptionAction(id: 1, name: 'Xem chi tiết'),
+    OptionAction(id: 2, name: 'Cập nhật'),
+    OptionAction(id: 3, name: 'Tạo mới'),
+  ];
 
   // ================= HANDLE CAMERA SCAN =================
   void _handleBarcode(BarcodeCapture capture) {
@@ -93,83 +102,107 @@ final List<OptionAction> _actions = [
 
             return;
           }
-        }
-
-        // ================= WAREHOUSE =================
-        final scannedItem = await warehouseservice.getWarehouseById(
-          item.wareHouseTable ?? '',
-          code,
-        );
-
-        if (scannedItem != null) {
-          _showToast("✅ Tìm thấy dữ liệu kho $code");
-
-          navigationHelper
-              .pushReplacement(
-                context,
-                WarehouseDetailScreen(
-                  item: scannedItem,
-                  isUpDate: roles,
-                  isCreateHistory: roles,
-                  isReadOnlyHistory: !roles,
-                ),
-              )
-              .then((_) => isLocked = false);
-
-          return;
-        }
-
-        // ================= CREATE NEW =================
-        final product = await infoService.findProduct(code);
-        if (product != null) {
-          final newItem = WareHouse(
-            productAID: product.productAID,
-            productID: product.productID,
-            idKeeton: product.idKeeton,
-            countryID: product.countryID,
-            idIndustrial: product.idIndustrial,
-            idPartNo: product.idPartNo,
-            idReplacedPartNo: product.idReplacedPartNo,
-            img1: product.img1,
-            img2: product.img2,
-            img3: product.img3,
-            lastTime: product.lastTime,
-            manufacturerID: product.manufacturerID,
-            nameProduct: product.nameProduct,
-            parameter: product.parameter,
-            supplierID: product.supplierID,
-            unitID: product.unitID,
-            remarkOfDataWarehouse: "",
-            qty: 0,
+        } else {
+          // ================= WAREHOUSE =================
+          final scannedItem = await warehouseservice.getWarehouseById(
+            item.wareHouseTable ?? '',
+            code,
           );
 
-          _showToast("⚠ Không có trong kho — tạo mới");
+          if (scannedItem != null) {
+            _showToast("✅ Tìm thấy dữ liệu kho $code");
 
-          navigationHelper
-              .pushReplacement(
-                context,
-                WarehouseDetailScreen(
-                  item: newItem,
-                  isCreate: roles,
-                  isCreateHistory: roles,
-                  readOnly: roles,
-                  isReadOnlyHistory: !roles,
-                ),
-              )
-              .then((_) => isLocked = false);
+            switch (_selectedAction?.id) {
+              case 1:
+                navigationHelper
+                    .pushReplacement(
+                      context,
+                      WarehouseDetailScreen(
+                        item: scannedItem,
+                        isUpDate: roles,
+                        isCreateHistory: roles,
+                        isReadOnlyHistory: !roles,
+                      ),
+                    )
+                    .then((_) => isLocked = false);
+                break;
+              case 2:
+                ListTile(
+                  leading: const Icon(Icons.update, color: Colors.green),
+                  title: const Text('Xuất điều chuyển'),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => WareHouseTransfer(
+                          item: scannedItem,
+                          readOnly: roles,
+                          isCreateHistory: roles,
+                          isReadOnlyHistory: !roles,
+                        ),
+                      ),
+                    );
+                  },
+                );
+                break;
+            }
 
-          return;
+            return;
+          }
+
+          // ================= CREATE NEW =================
+          final product = await infoService.findProduct(code);
+          if (product != null) {
+            final newItem = WareHouse(
+              productAID: product.productAID,
+              productID: product.productID,
+              idKeeton: product.idKeeton,
+              countryID: product.countryID,
+              idIndustrial: product.idIndustrial,
+              idPartNo: product.idPartNo,
+              idReplacedPartNo: product.idReplacedPartNo,
+              img1: product.img1,
+              img2: product.img2,
+              img3: product.img3,
+              lastTime: product.lastTime,
+              manufacturerID: product.manufacturerID,
+              nameProduct: product.nameProduct,
+              parameter: product.parameter,
+              supplierID: product.supplierID,
+              unitID: product.unitID,
+              remarkOfDataWarehouse: "",
+              qty: 0,
+            );
+
+            _showToast("⚠ Không có trong kho — tạo mới");
+
+            navigationHelper
+                .pushReplacement(
+                  context,
+                  WarehouseDetailScreen(
+                    item: newItem,
+                    isCreate: roles,
+                    isCreateHistory: roles,
+                    readOnly: roles,
+                    isReadOnlyHistory: !roles,
+                  ),
+                )
+                .then((_) => isLocked = false);
+
+            return;
+          }
+          // ================= NOT FOUND =================
+          _showToast("❌ Không tìm thấy mã: $code");
+
+          setState(() {
+            isProcessing = false;
+            scannedCode = '';
+            _manualController.clear();
+          });
+
+          isLocked = false; // 🔓 cho quét lại
         }
-        // ================= NOT FOUND =================
-        _showToast("❌ Không tìm thấy mã: $code");
-
-        setState(() {
-          isProcessing = false;
-          scannedCode = '';
-          _manualController.clear();
-        });
-
-        isLocked = false; // 🔓 cho quét lại
       } else {
         navigationHelper.pop(context, scannedCode);
       }
@@ -329,20 +362,14 @@ final List<OptionAction> _actions = [
             left: 16,
             right: 16,
             child: CustomDropdownField(
-              label: '',
-              controller: _manualController,
-              hintText: 'Nhập mã barcode thủ công',
-              suffixIcon: Icons.check_circle,
-              onSuffixIconPressed: () {
-                final code = _manualController.text.trim();
-                if (code.isNotEmpty) _processCode(code);
-              },
-              onSubmitted: (value) {
-                final code = value.trim();
-                if (code.isNotEmpty) _processCode(code);
-              },
-              backgroundColor: Colors.white,
-              borderColor: Colors.grey.shade400,
+              label: "Nhà cung cấp: ",
+              selectedValue: _selectedAction,
+              items: _actions,
+              getLabel: (i) => i.name,
+              onChanged: (v) => setState(() => _selectedAction = v),
+              readOnly: true,
+              isCreate: false,
+              isSearch: true,
             ),
           ),
 
