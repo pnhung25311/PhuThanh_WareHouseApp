@@ -26,6 +26,10 @@ class CustomDropdownField<T> extends StatefulWidget {
   final EdgeInsetsGeometry? rightIconPadding;
   final double? rightIconSize;
 
+  // 🆕 BACKGROUND
+  final Color? backgroundColor;
+  final Color? disabledBackgroundColor;
+
   const CustomDropdownField({
     super.key,
     this.label,
@@ -47,6 +51,10 @@ class CustomDropdownField<T> extends StatefulWidget {
     this.rightIconDecoration,
     this.rightIconPadding,
     this.rightIconSize,
+
+    // background
+    this.backgroundColor,
+    this.disabledBackgroundColor,
   });
 
   @override
@@ -127,12 +135,10 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                           final ql = q.toLowerCase();
                           setStateDialog(() {
                             _filteredItems = widget.items
-                                .where(
-                                  (e) => widget
-                                      .getLabel(e)
-                                      .toLowerCase()
-                                      .contains(ql),
-                                )
+                                .where((e) => widget
+                                    .getLabel(e)
+                                    .toLowerCase()
+                                    .contains(ql))
                                 .toList();
                           });
                         },
@@ -144,7 +150,6 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                           ? const Center(child: Text('Không có dữ liệu'))
                           : Scrollbar(
                               child: ListView.builder(
-                                shrinkWrap: true,
                                 itemCount: _filteredItems.length,
                                 itemBuilder: (context, index) {
                                   final item = _filteredItems[index];
@@ -204,13 +209,12 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
     final display = widget.selectedValue == null
         ? (widget.hintText ?? 'Chưa chọn')
         : widget.getLabel(widget.selectedValue as T);
+
     return GestureDetector(
       onTap: widget.readOnly ? null : _openSelectDialog,
       child: AbsorbPointer(
-        
         absorbing: widget.readOnly || !widget.enabled,
         child: Column(
-          
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (widget.label != null) ...[
@@ -232,49 +236,45 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                   horizontal: 12,
                   vertical: 14,
                 ),
-                // fillColor: widget.readOnly
-                //     ? Colors.grey.shade100
-                //     : Colors.transparent,
-                filled: widget.readOnly,
-                fillColor: Colors.white,
+
+                // 🎯 BACKGROUND CHUẨN
+                filled: true,
+                fillColor: !widget.enabled
+                    ? (widget.disabledBackgroundColor ??
+                        Colors.grey.shade200)
+                    : (widget.backgroundColor ?? Colors.white),
               ),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
                     child: Text(
                       display,
-                      style: TextStyle(
-                        color: widget.readOnly
-                            ? Colors.grey.shade700
-                            : (widget.enabled
-                                  ? Colors.black87
-                                  : Colors.grey.shade600),
-                      ),
                       overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: widget.enabled
+                            ? Colors.black87
+                            : Colors.grey.shade600,
+                      ),
                     ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!widget.readOnly) const Icon(Icons.arrow_drop_down),
-                      if (widget.rightIcon != null)
-                        GestureDetector(
-                          onTap: widget.readOnly ? null : widget.onRightIconTap,
-                          child: Container(
-                            padding:
-                                widget.rightIconPadding ??
-                                const EdgeInsets.all(4),
-                            decoration: widget.rightIconDecoration,
-                            child: Icon(
-                              widget.rightIcon,
-                              size: widget.rightIconSize ?? 24,
-                              color: widget.rightIconColor ?? Colors.grey,
-                            ),
-                          ),
+                  if (!widget.readOnly)
+                    const Icon(Icons.arrow_drop_down),
+                  if (widget.rightIcon != null)
+                    GestureDetector(
+                      onTap:
+                          widget.readOnly ? null : widget.onRightIconTap,
+                      child: Container(
+                        padding: widget.rightIconPadding ??
+                            const EdgeInsets.all(4),
+                        decoration: widget.rightIconDecoration,
+                        child: Icon(
+                          widget.rightIcon,
+                          size: widget.rightIconSize ?? 24,
+                          color:
+                              widget.rightIconColor ?? Colors.grey,
                         ),
-                    ],
-                  ),
+                      ),
+                    ),
                 ],
               ),
             ),

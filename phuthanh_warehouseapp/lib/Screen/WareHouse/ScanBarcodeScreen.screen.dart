@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
-import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseTransfer.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
-import 'package:phuthanh_warehouseapp/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/OptionAction.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/service/WareHouseService.service.dart';
@@ -39,7 +36,6 @@ class _ScanScreenState extends State<ScanScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedAction = _actions.first;
   }
 
   void _showToast(String message) {
@@ -47,13 +43,6 @@ class _ScanScreenState extends State<ScanScreen> {
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
-
-  OptionAction? _selectedAction;
-
-  final List<OptionAction> _actions = [
-    OptionAction(id: 1, name: 'Thêm nhập xuất'),
-    OptionAction(id: 2, name: 'Xuất điều chuyển'),
-  ];
 
   // ================= HANDLE CAMERA SCAN =================
   void _handleBarcode(BarcodeCapture capture) {
@@ -110,35 +99,17 @@ class _ScanScreenState extends State<ScanScreen> {
 
           if (scannedItem != null) {
             _showToast("✅ Tìm thấy dữ liệu kho $code");
-
-            switch (_selectedAction?.id) {
-              case 1:
-                navigationHelper
-                    .pushReplacement(
-                      context,
-                      WarehouseDetailScreen(
-                        item: scannedItem,
-                        isUpDate: roles,
-                        isCreateHistory: roles,
-                        isReadOnlyHistory: !roles,
-                      ),
-                    )
-                    .then((_) => isLocked = false);
-                break;
-              case 2:
-                navigationHelper
-                    .pushReplacement(
-                      context,
-                      WareHouseTransfer(
-                        item: scannedItem,
-                        isUpDate: roles,
-                        isCreateHistory: roles,
-                        isReadOnlyHistory: !roles,
-                      ),
-                    )
-                    .then((_) => isLocked = false);
-                break;
-            }
+            navigationHelper
+                .pushReplacement(
+                  context,
+                  WarehouseDetailScreen(
+                    item: scannedItem,
+                    isUpDate: roles,
+                    isCreateHistory: roles,
+                    isReadOnlyHistory: !roles,
+                  ),
+                )
+                .then((_) => isLocked = false);
 
             return;
           }
@@ -356,20 +327,6 @@ class _ScanScreenState extends State<ScanScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // DROPDOWN
-                CustomDropdownField(
-                  label: "Chọn hành động:",
-                  selectedValue: _selectedAction,
-                  items: _actions,
-                  getLabel: (i) => i.name,
-                  onChanged: (v) => setState(() => _selectedAction = v),
-                  readOnly: false,
-                  isCreate: false,
-                  isSearch: true,
-                ),
-
-                const SizedBox(height: 10),
-
                 // TEXTFIELD
                 CustomTextFieldIcon(
                   label: '',

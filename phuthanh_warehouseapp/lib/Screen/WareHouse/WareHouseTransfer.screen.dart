@@ -209,7 +209,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
 
   Future<void> loadTime() async {
     // 1. Load danh sách suppliers
-    suppliersHistory = await infoService.LoadDtataSupplierCategory("4");
+    suppliersHistory = await infoService.LoadDtataSupplier();
 
     // 2. Set selectedSupplier nếu có giá trị trong itemHistory
     if (widget.itemHistory.partner.toString().isNotEmpty &&
@@ -414,7 +414,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
       final results = await Future.wait([
         infoService.LoadDtataCountry(),
         infoService.LoadDtataManufacturer(),
-        infoService.LoadDtataSupplierCategory("4"),
+        infoService.LoadDtataSupplier(),
         infoService.LoadDtataUnit(),
         infoService.LoadDtataVehicleType(),
       ]);
@@ -532,56 +532,6 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
       if (widget.isCreateHistory == true &&
           qtyHistoryController.text.isNotEmpty &&
           qtyHistoryController.text != "0") {
-        final List<DrawerItem> drawerItems =
-            AppState.instance.get<List<DrawerItem>>("listItemDrawer") ?? [];
-        DrawerItem? itemList;
-
-        if (selectedSupplierHistory != null && drawerItems.isNotEmpty) {
-          itemList = drawerItems.firstWhereOrNull(
-            (e) => e.wareHouseSupplierID == selectedSupplierHistory!.SupplierID,
-          );
-        }
-        final whAID = await infoService.reTurnAIDWhToAddHistory(
-          itemList?.wareHouseDataBase ?? "",
-          "ProductAID",
-          widget.item.productAID.toString(),
-        );
-        int? whAIDNew;
-        if (whAID == 0) {
-          final response = await warehouseservice.addWarehouseRow(
-            itemList?.wareHouseDataBase ?? "",
-            jsonEncode({
-              // "dataWareHouseAID": widget.item.dataWareHouseAID.toString().trim(),
-              "productAID": widget.item.productAID,
-              // "LocationID": locaResult.trim(),
-              // "Qty_Expected":
-              //     double.tryParse(qtyExpectedController.text.trim()) ?? 0,
-              // "ID_Bill": idBillController.text.trim(),
-              // "Remark": remarkOfWarehouseController.text.trim(),
-              "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
-              "LastUser": await fullName.toString().trim(),
-            }),
-          );
-          print("body=======================================");
-          print(response["body"]);
-          whAIDNew = await infoService
-              .reTurnAIDWhToAddHistory(
-                itemList?.wareHouseDataBase ?? "",
-                "ProductAID",
-                widget.item.productAID.toString(),
-              );
-          // ScaffoldMessenger.of(context).showSnackBar(
-          //   SnackBar(
-          //     // content: Text(
-          //     //   'Trong ${itemList?.nameWareHouse ?? ""} ko có mã ${widget.item.productID}',
-          //     // ),
-          //   ),
-          // );
-          // return;
-        }
-        final int targetWhAID = (whAIDNew != null)
-            ? whAIDNew
-            : whAID;
         final qtyFrom = double.tryParse(qtyHistoryController.text.trim()) ?? 0;
         final historyCreateFrom = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
@@ -594,43 +544,15 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
           lastUser: await fullName.toString().trim(),
           lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
         );
-        final qtyTo = qtyFrom * -1;
-        print("==============1");
-        final historyCreateTo = History(
-          // historyAID: await CodeHelper.generateCodeAID("LS"),
-          dataWareHouseAID: targetWhAID,
-          qty: qtyTo,
-          employeeId: selectedEmployee?.EmployeeID ?? 0,
-          partner: selectedSupplierHistory?.SupplierID ?? 0,
-          remark: remarkOfHistoryController.text.trim(),
-          time: formatdatehelper.formatDateTimeString(convertTime),
-          lastUser: await fullName.toString().trim(),
-          lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
-        );
-
         final responseFrom = await historyService.AddHistory(
           item.wareHouseDataBaseHistory.toString(),
           item.wareHouseDataBase.toString(),
           jsonEncode(historyCreateFrom.toJson()),
         );
-
-        final responseTo = await historyService.AddHistory(
-          itemList?.wareHouseDataBaseHistory ?? "",
-          itemList?.wareHouseDataBase.toString() ?? "",
-          jsonEncode(historyCreateTo.toJson()),
-        );
         final double QtyWhFrom = await infoService.reTurnQtyWhToAddHistory(
           item.wareHouseDataBaseHistory.toString(),
           widget.item.dataWareHouseAID!,
         );
-        final double QtyWhTo = await infoService.reTurnQtyWhToAddHistory(
-          itemList?.wareHouseDataBaseHistory ?? "",
-          int.parse(targetWhAID.toString()),
-        );
-        print("==============2");
-
-        print(QtyWhFrom.toString() + "=============" + QtyWhTo.toString());
-        // final updateFrom =
         await warehouseservice.upDateWareHouse(
           item.wareHouseDataBase.toString(),
           widget.item.dataWareHouseAID.toString(),
@@ -639,48 +561,116 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
           }),
         );
-
-        // final updateTo =
-        await warehouseservice.upDateWareHouse(
-          itemList?.wareHouseDataBase ?? "",
-         targetWhAID.toString(),
-          jsonEncode({
-            "Qty": QtyWhTo,
-            "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
-          }),
-        );
         bool fromSuccess = responseFrom["isSuccess"] == true;
-        bool toSuccess = responseTo["isSuccess"] == true;
+
+        final List<DrawerItem> drawerItems =
+            AppState.instance.get<List<DrawerItem>>("listItemDrawer") ?? [];
+        DrawerItem? itemList;
+
+        if (selectedSupplierHistory != null && drawerItems.isNotEmpty) {
+          itemList = drawerItems.firstWhereOrNull(
+            (e) => e.wareHouseSupplierID == selectedSupplierHistory!.SupplierID,
+          );
+        }
+        if (itemList?.wareHouseSupplierID ==
+            selectedSupplierHistory!.SupplierID) {
+          print("đã kiểm tra ra đc đúng vào xuất điều chuyển");
+          final whAID = await infoService.reTurnAIDWhToAddHistory(
+            itemList?.wareHouseDataBase ?? "",
+            "ProductAID",
+            widget.item.productAID.toString(),
+          );
+
+          int? whAIDNew;
+          if (whAID == 0) {
+            final response = await warehouseservice.addWarehouseRow(
+              itemList?.wareHouseDataBase ?? "",
+              jsonEncode({
+                "productAID": widget.item.productAID,
+                "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
+                "LastUser": await fullName.toString().trim(),
+              }),
+            );
+            print("body=======================================");
+            print(response["body"]);
+            whAIDNew = await infoService.reTurnAIDWhToAddHistory(
+              itemList?.wareHouseDataBase ?? "",
+              "ProductAID",
+              widget.item.productAID.toString(),
+            );
+          }
+          final int targetWhAID = (whAIDNew != null) ? whAIDNew : whAID;
+
+          final qtyTo = qtyFrom * -1;
+          print("==============1");
+          final historyCreateTo = History(
+            // historyAID: await CodeHelper.generateCodeAID("LS"),
+            dataWareHouseAID: targetWhAID,
+            qty: qtyTo,
+            employeeId: selectedEmployee?.EmployeeID ?? 0,
+            partner: selectedSupplierHistory?.SupplierID ?? 0,
+            remark: remarkOfHistoryController.text.trim(),
+            time: formatdatehelper.formatDateTimeString(convertTime),
+            lastUser: await fullName.toString().trim(),
+            lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
+          );
+
+          final responseTo = await historyService.AddHistory(
+            itemList?.wareHouseDataBaseHistory ?? "",
+            itemList?.wareHouseDataBase.toString() ?? "",
+            jsonEncode(historyCreateTo.toJson()),
+          );
+
+          final double QtyWhTo = await infoService.reTurnQtyWhToAddHistory(
+            itemList?.wareHouseDataBaseHistory ?? "",
+            int.parse(targetWhAID.toString()),
+          );
+          print("==============2");
+
+          print(QtyWhFrom.toString() + "=============" + QtyWhTo.toString());
+          // final updateFrom =
+
+          // final updateTo =
+          await warehouseservice.upDateWareHouse(
+            itemList?.wareHouseDataBase ?? "",
+            targetWhAID.toString(),
+            jsonEncode({
+              "Qty": QtyWhTo,
+              "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
+            }),
+          );
+          bool toSuccess = responseTo["isSuccess"] == true;
+          String errorMessage = "";
+          if (!fromSuccess && !toSuccess) {
+            errorMessage =
+                "FROM lỗi (${responseFrom["statusCode"]}) | "
+                "TO lỗi (${responseTo["statusCode"]})";
+          } else if (!fromSuccess) {
+            errorMessage = "FROM lỗi (${responseFrom["statusCode"]})";
+          } else if (!toSuccess) {
+            errorMessage = "TO lỗi (${responseTo["statusCode"]})";
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                fromSuccess && toSuccess
+                    ? "✔ Chuyển kho thành công"
+                    : fromSuccess || toSuccess
+                    ? "⚠ Thành công một phần\n$errorMessage"
+                    : "❌ Chuyển kho thất bại\n$errorMessage",
+              ),
+              backgroundColor: fromSuccess && toSuccess
+                  ? Colors.green
+                  : fromSuccess || toSuccess
+                  ? Colors.orange
+                  : Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+
         // fromSuccess ? print(updateFrom["isSuccess"]) : "";
         // toSuccess ? print(updateTo["isSuccess"]) : "";
-
-        String errorMessage = "";
-        if (!fromSuccess && !toSuccess) {
-          errorMessage =
-              "FROM lỗi (${responseFrom["statusCode"]}) | "
-              "TO lỗi (${responseTo["statusCode"]})";
-        } else if (!fromSuccess) {
-          errorMessage = "FROM lỗi (${responseFrom["statusCode"]})";
-        } else if (!toSuccess) {
-          errorMessage = "TO lỗi (${responseTo["statusCode"]})";
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              fromSuccess && toSuccess
-                  ? "✔ Chuyển kho thành công"
-                  : fromSuccess || toSuccess
-                  ? "⚠ Thành công một phần\n$errorMessage"
-                  : "❌ Chuyển kho thất bại\n$errorMessage",
-            ),
-            backgroundColor: fromSuccess && toSuccess
-                ? Colors.green
-                : fromSuccess || toSuccess
-                ? Colors.orange
-                : Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
 
         if (responseFrom["isSuccess"]) {
           if (!mounted) return;
@@ -744,7 +734,7 @@ class _WareHouseTransferState extends State<WareHouseTransfer> {
               ? "Thêm sản phẩm mới"
               : widget.item.nameProduct.toString(),
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.yellow,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

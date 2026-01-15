@@ -92,7 +92,7 @@ class WarehouseLongClick {
               },
             ),
           //XUẤT ĐIỀU CHUYỂN
-          if (role)
+          if (1==2)
             ListTile(
               leading: const Icon(Icons.update, color: Colors.green),
               title: const Text('Xuất điều chuyển'),
