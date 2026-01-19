@@ -17,7 +17,7 @@ class HomeCheckListScreen extends StatefulWidget {
 class _HomeCheckListScreenState extends State<HomeCheckListScreen> {
   int _selectedIndex = 0;
   int _detailsReloadToken = 0;
-        NavigationHelper navigationHelper = NavigationHelper();
+  NavigationHelper navigationHelper = NavigationHelper();
 
   void _onTabChanged(int index) {
     setState(() {

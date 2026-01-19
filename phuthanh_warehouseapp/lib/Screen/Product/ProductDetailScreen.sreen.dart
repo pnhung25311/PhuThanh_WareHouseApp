@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/HomeScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDialogAppendix.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomSmartDropdown.custom.dart';
@@ -95,8 +96,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Warehouseservice warehouseservice = Warehouseservice();
   Formatdatehelper formatdatehelper = Formatdatehelper();
   NavigationHelper navigationHelper = NavigationHelper();
-          MySharedPreferences mySharedPreferences =MySharedPreferences();
-
+  MySharedPreferences mySharedPreferences = MySharedPreferences();
 
   @override
   void initState() {
@@ -339,6 +339,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             jsonEncode(jsonProduct),
           );
 
+          if (response["statusCode"] == 403 ||
+              response["statusCode"] == 401 ||
+              response["statusCode"] == 0) {
+            navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+            return;
+          }
+
           if (response["isSuccess"]) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
@@ -363,6 +370,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           widget.item.productAID.toString(),
           jsonEncode(jsonProductUpdate),
         );
+        if (response["statusCode"] == 403 ||
+            response["statusCode"] == 401 ||
+            response["statusCode"] == 0) {
+          navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+          return;
+        }
+
         if (response["isSuccess"]) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(

@@ -11,7 +11,7 @@ import 'package:phuthanh_warehouseapp/model/info/Category.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
 
 class InfoService {
-   Future<List<Country>> LoadDtataCountry() async {
+  Future<List<Country>> LoadDtataCountry() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/Country");
@@ -29,7 +29,7 @@ class InfoService {
     }
   }
 
-   Future<List<Supplier>> LoadDtataSupplier() async {
+  Future<List<Supplier>> LoadDtataSupplier() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/Supplier");
@@ -46,9 +46,7 @@ class InfoService {
     }
   }
 
-   Future<List<Supplier>> LoadDtataSupplierCategory(
-    String condition,
-  ) async {
+  Future<List<Supplier>> LoadDtataSupplierCategory(String condition) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
@@ -67,7 +65,7 @@ class InfoService {
     }
   }
 
-   Future<List<Employee>> LoadDtataEmployee() async {
+  Future<List<Employee>> LoadDtataEmployee() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/Employee");
@@ -84,7 +82,7 @@ class InfoService {
     }
   }
 
-   Future<List<VehicleType>> LoadDtataVehicleType() async {
+  Future<List<VehicleType>> LoadDtataVehicleType() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/VehicleType");
@@ -101,7 +99,7 @@ class InfoService {
     }
   }
 
-   Future<List<Manufacturer>> LoadDtataManufacturer() async {
+  Future<List<Manufacturer>> LoadDtataManufacturer() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/Manufacturer");
@@ -118,7 +116,7 @@ class InfoService {
     }
   }
 
-   Future<List<Unit>> LoadDtataUnit() async {
+  Future<List<Unit>> LoadDtataUnit() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/Unit");
@@ -135,7 +133,7 @@ class InfoService {
     }
   }
 
-   Future<List<Location>> fetchLocations() async {
+  Future<List<Location>> fetchLocations() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/Location");
@@ -151,7 +149,7 @@ class InfoService {
     }
   }
 
-   Future<List<Category>> getAllCategory() async {
+  Future<List<Category>> getAllCategory() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/Category");
@@ -167,7 +165,7 @@ class InfoService {
     }
   }
 
-   Future<String> addAppendix(String table, String body) async {
+  Future<String> addAppendix(String table, String body) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.post(
@@ -187,25 +185,24 @@ class InfoService {
     }
   }
 
-   Future<List<Product>> LoadProduct() async {
+  Future<Map<String, dynamic>> LoadProduct() async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/vwProduct");
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((e) => Product.fromJson(e)).toList();
-      } else {
-        // throw Exception("Failed to load data (${response.statusCode})");
-        return [];
-      }
+      final List<dynamic> data = jsonDecode(response.body);
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": data.map((e) => Product.fromJson(e)).toList(),
+      };
     } catch (e) {
       print(e);
-      return [];
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 
-   Future<String> addProduct(String table, String body) async {
+  Future<String> addProduct(String table, String body) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.post(
@@ -225,7 +222,7 @@ class InfoService {
     }
   }
 
-   Future<bool> checkProductID(String table, String body) async {
+  Future<bool> checkProductID(String table, String body) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.post(
@@ -247,30 +244,26 @@ class InfoService {
     }
   }
 
-   Future<Product?> findProduct(String condition) async {
+  Future<Map<String, dynamic>> findProduct(String condition) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
         "dynamic/find/Product/ProductID/$condition",
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        if (data.isNotEmpty) {
-          return Product.fromJson(data.first);
-        }
-        return null;
-      } else {
-        return null;
-      }
+      final List<dynamic> data = jsonDecode(response.body);
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": Product.fromJson(data.first),
+      };
     } catch (e) {
       print(e);
-      print("ở product");
-      return null;
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 
-   Future<Map<String, dynamic>> UpdateProduct(
+  Future<Map<String, dynamic>> UpdateProduct(
     String condition,
     String body,
   ) async {
@@ -291,7 +284,7 @@ class InfoService {
     }
   }
 
-   Future<List<Product>> getAllPages(int size, int threads) async {
+  Future<List<Product>> getAllPages(int size, int threads) async {
     const apiClient = ApiClient();
 
     try {
@@ -311,7 +304,7 @@ class InfoService {
     }
   }
 
-   Future<List<Product>> fetchAllProducts({int size = 50}) async {
+  Future<List<Product>> fetchAllProducts({int size = 50}) async {
     final stopwatchTotal = Stopwatch()..start();
 
     List<Product> allProducts = [];
@@ -364,7 +357,7 @@ class InfoService {
     }
   }
 
-   Future<int> reTurnAIDWhToAddHistory(
+  Future<int> reTurnAIDWhToAddHistory(
     String table,
     String columnCondition,
     String condition,
@@ -372,8 +365,13 @@ class InfoService {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/getAID/" + table + "/DataWareHouseAID/" +
-            columnCondition + "/" + condition, );
+        "dynamic/getAID/" +
+            table +
+            "/DataWareHouseAID/" +
+            columnCondition +
+            "/" +
+            condition,
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -387,10 +385,7 @@ class InfoService {
     }
   }
 
-   Future<double> reTurnQtyWhToAddHistory(
-    String table,
-    int condition,
-  ) async {
+  Future<double> reTurnQtyWhToAddHistory(String table, int condition) async {
     try {
       print("object");
       const apiClient = ApiClient();

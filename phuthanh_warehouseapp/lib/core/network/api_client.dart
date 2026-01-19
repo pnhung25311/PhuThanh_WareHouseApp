@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class ApiClient {
   const ApiClient();
@@ -32,17 +33,31 @@ class ApiClient {
   Future<http.Response> get(String endpoint) async {
     final baseUrl = await getBaseUrl(); // ✅ Lấy URL async
     final url = Uri.parse('$baseUrl$endpoint');
-    return await http.get(url);
+    final token = AppState.instance.get("token");
+    return await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
   }
 
   // POST request
   Future<http.Response> post(String endpoint, String body) async {
     final baseUrl = await getBaseUrl(); // ✅ Lấy URL async
     final url = Uri.parse('$baseUrl$endpoint');
-    print('$baseUrl$endpoint');
+    // print('$baseUrl$endpoint');
+    final token = AppState.instance.get("token");
+    print(token);
+
     return await http.post(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+
       body: body,
     );
   }
@@ -51,9 +66,13 @@ class ApiClient {
   Future<http.Response> put(String endpoint, String body) async {
     final baseUrl = await getBaseUrl(); // ✅ Lấy URL async
     final url = Uri.parse('$baseUrl$endpoint');
+    final token = AppState.instance.get("token");
     return await http.put(
       url,
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
       body: body,
     );
   }
@@ -91,7 +110,15 @@ class ApiClient {
   Future<http.Response> delete(String endpoint) async {
     final baseUrl = await getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
-    return await http.delete(url);
+    final token = AppState.instance.get("token");
+
+    return await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+    );
   }
 
   // Nếu true → đang nội bộ, dùng IP LAN.

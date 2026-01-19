@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
@@ -74,20 +75,25 @@ class _ScanScreenState extends State<ScanScreen> {
         if (item.wareHouseCategory == 0) {
           final product = await infoService.findProduct(code);
 
-          if (product != null) {
+          if (product["isSuccess"]) {
             _showToast("✅ Đã tìm thấy sản phẩm $code");
 
             navigationHelper
                 .pushReplacement(
                   context,
                   ProductDetailScreen(
-                    item: product,
+                    item: product["body"],
                     readOnly: !roles,
                     isUpDate: roles,
                   ),
                 )
                 .then((_) => isLocked = false);
-
+            return;
+          }
+          if (product["statusCode"] == 403 ||
+              product["statusCode"] == 401 ||
+              product["statusCode"] == 0) {
+            navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
             return;
           }
         } else {
@@ -97,13 +103,13 @@ class _ScanScreenState extends State<ScanScreen> {
             code,
           );
 
-          if (scannedItem != null) {
+          if (scannedItem["isSuccess"]) {
             _showToast("✅ Tìm thấy dữ liệu kho $code");
             navigationHelper
                 .pushReplacement(
                   context,
                   WarehouseDetailScreen(
-                    item: scannedItem,
+                    item: scannedItem["body"],
                     isUpDate: roles,
                     isCreateHistory: roles,
                     isReadOnlyHistory: !roles,
@@ -113,30 +119,42 @@ class _ScanScreenState extends State<ScanScreen> {
 
             return;
           }
+          if (scannedItem["statusCode"] == 403 ||
+              scannedItem["statusCode"] == 401 ||
+              scannedItem["statusCode"] == 0) {
+            navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+            return;
+          }
 
           // ================= CREATE NEW =================
           final product = await infoService.findProduct(code);
-          if (product != null) {
+          if (product["isSuccess"]) {
             final newItem = WareHouse(
-              productAID: product.productAID,
-              productID: product.productID,
-              idKeeton: product.idKeeton,
-              countryID: product.countryID,
-              idIndustrial: product.idIndustrial,
-              idPartNo: product.idPartNo,
-              idReplacedPartNo: product.idReplacedPartNo,
-              img1: product.img1,
-              img2: product.img2,
-              img3: product.img3,
-              lastTime: product.lastTime,
-              manufacturerID: product.manufacturerID,
-              nameProduct: product.nameProduct,
-              parameter: product.parameter,
-              supplierID: product.supplierID,
-              unitID: product.unitID,
+              productAID: product["body"].productAID,
+              productID: product["body"].productID,
+              idKeeton: product["body"].idKeeton,
+              countryID: product["body"].countryID,
+              idIndustrial: product["body"].idIndustrial,
+              idPartNo: product["body"].idPartNo,
+              idReplacedPartNo: product["body"].idReplacedPartNo,
+              img1: product["body"].img1,
+              img2: product["body"].img2,
+              img3: product["body"].img3,
+              lastTime: product["body"].lastTime,
+              manufacturerID: product["body"].manufacturerID,
+              nameProduct: product["body"].nameProduct,
+              parameter: product["body"].parameter,
+              supplierID: product["body"].supplierID,
+              unitID: product["body"].unitID,
               remarkOfDataWarehouse: "",
               qty: 0,
             );
+            if (product["statusCode"] == 403 ||
+                product["statusCode"] == 401 ||
+                product["statusCode"] == 0) {
+              navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+              return;
+            }
 
             _showToast("⚠ Không có trong kho — tạo mới");
 

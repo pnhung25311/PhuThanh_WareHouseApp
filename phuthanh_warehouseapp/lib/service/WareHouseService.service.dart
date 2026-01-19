@@ -1,50 +1,54 @@
 import 'dart:convert';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class Warehouseservice {
-  Future<List<WareHouse>> LoadDtata(String table) async {
+  NavigationHelper navigationHelper = NavigationHelper();
+
+  Future<Map<String, dynamic>> LoadDtata(String table) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get("dynamic/get-all/" + table);
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((e) => WareHouse.fromJson(e)).toList();
-      } else {
-        // throw Exception("Failed to load data (${response.statusCode})");
-        return [];
-      }
+      final List<dynamic> data = jsonDecode(response.body);
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": data.map((e) => WareHouse.fromJson(e)).toList(),
+      };
     } catch (e) {
       print(e);
-      return [];
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 
-  Future<List<WareHouse>> LoadDtataLimit(String table, String limit) async {
+  Future<Map<String, dynamic>> LoadDtataLimit(
+    String table,
+    String limit,
+  ) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
         "dynamic/get-all/" + table + "/" + limit,
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((e) => WareHouse.fromJson(e)).toList();
-      } else {
-        // throw Exception("Failed to load data (${response.statusCode})");
-        return [];
-      }
+      final List<dynamic> data = jsonDecode(response.body);
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": data.map((e) => WareHouse.fromJson(e)).toList(),
+      };
     } catch (e) {
       print(e);
-      return [];
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 
-  Future<WareHouse?> getWarehouseById(String table, String id) async {
+  Future<Map<String, dynamic>> getWarehouseById(String table, String id) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.post(
@@ -52,19 +56,31 @@ class Warehouseservice {
         jsonEncode({"productID": id}),
       );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        if (data.isEmpty) {
-          return null;
-        }
-        return WareHouse.fromJson(data);
-      } else {
-        return null;
-      }
+      final List<dynamic> data = jsonDecode(response.body);
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": data.map((e) => WareHouse.fromJson(e)).toList(),
+      };
     } catch (e) {
-      print("ở wh" + e.toString());
-      return null;
+      print(e);
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
+
+
+    //   if (response.statusCode == 200) {
+    //     final Map<String, dynamic> data = jsonDecode(response.body);
+    //     if (data.isEmpty) {
+    //       return null;
+    //     }
+    //     return WareHouse.fromJson(data);
+    //   } else {
+    //     return null;
+    //   }
+    // } catch (e) {
+    //   print("ở wh" + e.toString());
+    //   return null;
+    // }
   }
 
   Future<Map<String, dynamic>> upDateWareHouse(
@@ -178,23 +194,31 @@ class Warehouseservice {
     }
   }
 
-  Future<List<Product>> LoadDtataLimitProduct(String limit) async {
+  Future<Map<String, dynamic>> LoadDtataLimitProduct(String limit) async {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
         "dynamic/get-all/vwProduct/" + limit,
       );
 
-      if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        return data.map((e) => Product.fromJson(e)).toList();
-      } else {
-        // throw Exception("Failed to load data (${response.statusCode})");
-        return [];
-      }
+      // if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+
+      // } else if (response.statusCode == 200) {
+      //   navigationHelper.pushAndRemoveUntil(context, const HomeScreen());
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": data.map((e) => Product.fromJson(e)).toList(),
+      };
+      // } else {
+      //   // throw Exception("Failed to load data (${response.statusCode})");
+      //   return [];
+      // }
     } catch (e) {
       print(e);
-      return [];
+      // return [];
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 }

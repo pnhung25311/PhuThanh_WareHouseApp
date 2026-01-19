@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/datacheck/DataCheckDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
@@ -33,8 +34,7 @@ class _ScanDataCheckScreenState extends State<ScanDataCheckScreen> {
   InfoService infoService = InfoService();
   SheetService sheetService = SheetService();
   Warehouseservice warehouseservice = Warehouseservice();
-        NavigationHelper navigationHelper = NavigationHelper();
-
+  NavigationHelper navigationHelper = NavigationHelper();
 
   @override
   void dispose() {
@@ -120,23 +120,30 @@ class _ScanDataCheckScreenState extends State<ScanDataCheckScreen> {
         code.trim(),
       );
 
-      if (scannedItem != null) {
+      if (scannedItem["isSuccess"]) {
         final dataCheck = DataCheck(
           checkAID: 0,
           sheetAID: AppState.instance.get("SheetAID"),
-          productAID: scannedItem.productAID,
-          productID: scannedItem.productID,
-          idPartNo: scannedItem.idPartNo,
-          nameProduct: scannedItem.nameProduct,
-          nameCountry: scannedItem.countryName,
-          nameSupplier: scannedItem.supplierName,
-          nameUnit: scannedItem.unitName,
-          qtyWareHouse: scannedItem.qty,
+          productAID: scannedItem["body"].productAID,
+          productID: scannedItem["body"].productID,
+          idPartNo: scannedItem["body"].idPartNo,
+          nameProduct: scannedItem["body"].nameProduct,
+          nameCountry: scannedItem["body"].countryName,
+          nameSupplier: scannedItem["body"].supplierName,
+          nameUnit: scannedItem["body"].unitName,
+          qtyWareHouse: scannedItem["body"].qty,
           qtyCheck: 0,
           qtyDifferent: 0,
           remark: "",
           lastTime: DateTime.now(),
         );
+
+        if (scannedItem["statusCode"] == 403 ||
+            scannedItem["statusCode"] == 401 ||
+            scannedItem["statusCode"] == 0) {
+          navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+          return;
+        }
 
         final result = await navigationHelper.push(
           context,
@@ -150,23 +157,30 @@ class _ScanDataCheckScreenState extends State<ScanDataCheckScreen> {
       }
 
       final scannedProductItem = await infoService.findProduct(code);
-      if (scannedProductItem != null) {
+      if (scannedProductItem["isSuccess"]) {
         final dataCheck = DataCheck(
           checkAID: 0,
           sheetAID: AppState.instance.get("SheetAID"),
-          productAID: scannedProductItem.productAID,
-          productID: scannedProductItem.productID,
-          idPartNo: scannedProductItem.idPartNo,
-          nameProduct: scannedProductItem.nameProduct,
-          nameCountry: scannedProductItem.countryName,
-          nameSupplier: scannedProductItem.supplierName,
-          nameUnit: scannedProductItem.unitName,
+          productAID: scannedProductItem["body"].productAID,
+          productID: scannedProductItem["body"].productID,
+          idPartNo: scannedProductItem["body"].idPartNo,
+          nameProduct: scannedProductItem["body"].nameProduct,
+          nameCountry: scannedProductItem["body"].countryName,
+          nameSupplier: scannedProductItem["body"].supplierName,
+          nameUnit: scannedProductItem["body"].unitName,
           qtyWareHouse: 0,
           qtyCheck: 0,
           qtyDifferent: 0,
           remark: "",
           lastTime: DateTime.now(),
         );
+
+        if (scannedProductItem["statusCode"] == 403 ||
+            scannedProductItem["statusCode"] == 401 ||
+            scannedProductItem["statusCode"] == 0) {
+          navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+          return;
+        }
 
         final result = await navigationHelper.push(
           context,

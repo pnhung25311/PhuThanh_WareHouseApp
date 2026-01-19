@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/HomeScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/formatters/DotToMinusFormatte.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDatePicker.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDialogAppendix.custom.dart';
@@ -100,6 +101,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   final TextEditingController image1Controller = TextEditingController();
   final TextEditingController image2Controller = TextEditingController();
   final TextEditingController image3Controller = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
 
   final TextEditingController qtyHistoryController = TextEditingController();
   final TextEditingController idEmployeeController = TextEditingController();
@@ -274,25 +276,16 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     final pinnedIds = AppState.instance.get("pinnedLocationIds")?.toString();
 
     if (pinnedIds != null && pinnedIds.isNotEmpty) {
-      selectedLocationIds = pinnedIds
-          .split(',')
-          .map((e) => int.tryParse(e))
-          .whereType<int>()
-          .toList();
+      locationController.text = pinnedIds;
     } else {
       // 3️⃣ Nếu không pin → dùng dữ liệu từ item
-      selectedLocationIds = widget.item.locationID
-          .toString()
-          .split(',')
-          .map((e) => int.tryParse(e.trim()))
-          .whereType<int>()
-          .toList();
+      locationController.text  = widget.item.locationID.toString();
     }
 
     // 4️⃣ Map ID → Location object
-    selectedLocation = locations
-        .where((loc) => selectedLocationIds.contains(loc.LocationID))
-        .toList();
+    // selectedLocation = locations
+    //     .where((loc) => selectedLocationIds.contains(loc.LocationID))
+    //     .toList();
 
     // 5️⃣ Force rebuild dropdown
     setState(() {
@@ -495,7 +488,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   void _upDateWareHouse() async {
     setState(() => isSaving = true);
     try {
-      String locaResult = selectedLocationIds.join(",");
+      // String locaResult = selectedLocationIds.join(",");
       String? fullName = await getFullname();
 
       String convertTime =
@@ -508,7 +501,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           jsonEncode({
             // "dataWareHouseAID": widget.item.dataWareHouseAID.toString().trim(),
             "productAID": widget.item.productAID,
-            "LocationID": locaResult.trim(),
+            "LocationID": locationController.text.trim(),
             "Qty_Expected":
                 double.tryParse(qtyExpectedController.text.trim()) ?? 0,
             "ID_Bill": idBillController.text.trim(),
@@ -532,7 +525,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           widget.item.dataWareHouseAID.toString(),
           jsonEncode({
             "productAID": widget.item.productAID,
-            "LocationID": locaResult.trim(),
+            "LocationID": locationController.text.trim(),
             "Qty_Expected":
                 double.tryParse(qtyExpectedController.text.trim()) ?? 0,
             "ID_Bill": idBillController.text.trim(),
@@ -664,6 +657,12 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
             }),
           );
+          if (responseTo["statusCode"] == 401 ||
+              responseTo["statusCode"] == 403 ||
+              responseTo["statusCode"] == 0) {
+            navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+          }
+
           bool toSuccess = responseTo["isSuccess"] == true;
           String errorMessage = "";
           if (!fromSuccess && !toSuccess) {
@@ -697,12 +696,16 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         // fromSuccess ? print(updateFrom["isSuccess"]) : "";
         // toSuccess ? print(updateTo["isSuccess"]) : "";
 
-        if (responseFrom["isSuccess"]) {
+        if (responseFrom["statusCode"] == 200) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('✅ Cập nhật thành công')),
           );
           // quay lại và báo màn trước refresh
+        } else if (responseFrom["statusCode"] == 401 ||
+            responseFrom["statusCode"] == 403 ||
+            responseFrom["statusCode"] == 0) {
+          navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -750,7 +753,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     if (isSaving) {
       return Scaffold(body: _buildLoading());
     }
-    final roles = AppState.instance.get("role");
 
     return Scaffold(
       appBar: AppBar(
@@ -1008,54 +1010,20 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             ),
 
             const SizedBox(height: 10),
-            Text("Vị trí", style: const TextStyle(fontWeight: FontWeight.bold)),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SmartDropdown<Location>(
-                    key: locationDropdownKey,
-                    labelBuilder: (loc) => loc.NameLocation,
-                    items: locations,
-                    hint: "Chọn vị trí",
-                    isSearch: true,
-                    isMultiSelect: true,
-                    readOnly: widget.isReadOnlyHistory,
-                    initialValues: selectedLocation,
-                    onChanged: (values) => setState(() {
-                      selectedLocation = List<Location>.from(values as List);
-                      selectedLocationIds = selectedLocation
-                          .map((e) => e.LocationID)
-                          .toList();
-                    }),
-                    functionCreate: () async {
-                      final result = await showAddDialogDynamic(
-                        context,
-                        model: 3,
-                      );
-                      if (result == true) {
-                        print("============================= load data");
-                        await _loadDataLocation();
-                        setState(() {});
-                      }
-                    },
-                    dropdownMaxHeight: 300,
-                  ),
-                ),
-
-                // const SizedBox(width: 8),
-                if (roles)
-                  IconButton(
-                    icon: Icon(
-                      AppState.instance.get("isPinLocation") == true
-                          ? Icons.push_pin
-                          : Icons.push_pin_outlined,
-                      color: Colors.black,
-                    ),
-                    onPressed: toggleLocationPin,
-                  ),
-              ],
+            // Text("Vị trí", style: const TextStyle(fontWeight: FontWeight.bold)),
+            CustomTextFieldIcon(
+              label: "Vị trí: ",
+              controller: locationController,
+              hintText: " ",
+              readOnly: widget.isReadOnlyHistory,
+              suffixIcon: AppState.instance.get("isPinLocation") == true
+                  ? Icons.push_pin
+                  : Icons.push_pin_outlined,
+              suffixIconPadding: const EdgeInsets.only(right: 22),
+              onSuffixIconPressed: () async {
+                await toggleLocationPin();
+                setState(() {});
+              },
             ),
 
             const SizedBox(height: 15),
@@ -1187,19 +1155,16 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             Visibility(
               visible: widget.isCreateHistory,
               child: CustomTextFieldIcon(
-                label: "Diễn giải: ",
-                controller: remarkOfHistoryController,
-                hintText: "Nhập diễn giải ",
+                label: "Vị trí: ",
+                controller: locationController,
+                hintText: " ",
                 readOnly: widget.isReadOnlyHistory,
-                suffixIcon: AppState.instance.get("isPinRemark") == true
+                suffixIcon: AppState.instance.get("isPinLocation") == true
                     ? Icons.push_pin
                     : Icons.push_pin_outlined,
                 suffixIconPadding: const EdgeInsets.only(right: 22),
                 onSuffixIconPressed: () async {
-                  final newPinState =
-                      (AppState.instance.get("PinRemark") ?? "");
-                  await toggleRemarkOfHistory(newPinState);
-                  setState(() {});
+                  await toggleLocationPin();
                 },
               ),
             ),
@@ -1335,21 +1300,24 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   Future<void> toggleLocationPin() async {
     if (!mounted) return;
 
-    bool isPinned = AppState.instance.get("isPinLocation") == true;
+    final bool isPinned = AppState.instance.get("isPinLocation") == true;
 
     if (!isPinned) {
       // 📌 PIN
-      if (selectedLocationIds.isEmpty) return;
+      if (locationController.text.isEmpty) return;
 
-      AppState.instance.set("pinnedLocationIds", selectedLocationIds.join(","));
-      AppState.instance.set("isPinLocation", true);
+      AppState.instance
+        ..set("isPinLocation", true)
+        ..set("pinnedLocationIds", locationController.text);
     } else {
       // 📍 UNPIN
-      AppState.instance.set("pinnedLocationIds", null);
-      AppState.instance.set("isPinLocation", false);
+      AppState.instance
+        ..set("isPinLocation", false)
+        ..set("pinnedLocationIds", null);
     }
 
     setState(() {
+      // reset dropdown để load lại giá trị
       locationDropdownKey = UniqueKey();
     });
   }

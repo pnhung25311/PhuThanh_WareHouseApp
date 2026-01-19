@@ -35,7 +35,7 @@ class _ProductHomeState extends State<ProductHome> {
     try {
       final data = await infoService.LoadProduct();
       setState(() {
-        _warehouses = data;
+        _warehouses = data["body"];
         _isLoading = false;
       });
     } catch (e) {

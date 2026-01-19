@@ -46,20 +46,20 @@ class _WarehouseItemState extends State<WarehouseItem> {
   void initState() {
     super.initState();
     // _loadDisplaySettings();
-    _loadDataLocation();
+    // _loadDataLocation();
     _loadDataVehicleType();
   }
 
-  Future<void> _loadDataLocation() async {
-    List<Location> data;
+  // Future<void> _loadDataLocation() async {
+  //   List<Location> data;
 
-    data = await infoService.fetchLocations();
+  //   data = await infoService.fetchLocations();
 
-    if (!mounted) return;
-    setState(() {
-      loacation = data;
-    });
-  }
+  //   if (!mounted) return;
+  //   setState(() {
+  //     loacation = data;
+  //   });
+  // }
 
   Future<void> _loadDataVehicleType() async {
     List<VehicleType> data;
@@ -217,17 +217,18 @@ class _WarehouseItemState extends State<WarehouseItem> {
                 widget.item.remarkOfDataWarehouse,
               ),
               _row(true, Icons.notes, "Mã hóa đơn", widget.item.idBill),
-              _row(
-                true,
-                Icons.location_on_sharp,
-                "Vị trí",
-                helper.getNamesFromIdsDynamic<Location>(
-                  ids: widget.item.locationID.toString(),
-                  list: loacation,
-                  getId: (e) => e.LocationID.toString(),
-                  getName: (e) => e.NameLocation.toString(),
-                ),
-              ),
+              _row(true, Icons.notes, "Vị trí", widget.item.locationID),
+              // _row(
+              //   true,
+              //   Icons.location_on_sharp,
+              //   "Vị trí",
+              //   helper.getNamesFromIdsDynamic<Location>(
+              //     ids: widget.item.locationID.toString(),
+              //     list: loacation,
+              //     getId: (e) => e.LocationID.toString(),
+              //     getName: (e) => e.NameLocation.toString(),
+              //   ),
+              // ),
 
               /// 🧩 EXTRA INFO (wrap chips)
               const SizedBox(height: 6),

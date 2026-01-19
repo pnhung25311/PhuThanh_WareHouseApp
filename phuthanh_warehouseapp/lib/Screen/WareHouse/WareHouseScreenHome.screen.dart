@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/Product/ProductDetailScreen.sreen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/sheetckeck/HomeCheckListScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDrawer.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomProductItem.custom.dart';
@@ -57,15 +58,25 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
     try {
       if (item.wareHouseCategory == 0) {
         final data = await warehouseservice.LoadDtataLimitProduct("200");
+        if (data["statusCode"] == 403 ||
+            data["statusCode"] == 401 ||
+            data["statusCode"] == 0) {
+          navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+        }
         setState(() {
           _products.clear();
-          _products.addAll(data);
+          _products.addAll(data["body"]);
         });
       } else {
         final data = await warehouseservice.LoadDtataLimit(table, "200");
+        if (data["statusCode"] == 403 ||
+            data["statusCode"] == 401 ||
+            data["statusCode"] == 0) {
+          navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+        }
         setState(() {
           _warehouses.clear();
-          _warehouses.addAll(data);
+          _warehouses.addAll(data["body"]);
         });
       }
     } catch (e) {
@@ -139,7 +150,8 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
         itemCount: items.length,
         itemBuilder: (context, index) => WarehouseItem(
           item: items[index],
-          onLongPress: () => warehouseLongClick.show(context, items[index], role),
+          onLongPress: () =>
+              warehouseLongClick.show(context, items[index], role),
         ),
       ),
     );

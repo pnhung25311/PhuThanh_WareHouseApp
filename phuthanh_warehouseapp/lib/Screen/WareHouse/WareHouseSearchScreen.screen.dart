@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/ScanBarcodeScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomDrawer.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomProductItem.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomProductLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseItem.custom.dart';
 import 'package:phuthanh_warehouseapp/components/utils/CustomWarehouseLongClick.custom.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
@@ -35,6 +37,7 @@ class _SearchScreenState extends State<SearchScreen> {
   InfoService infoService = InfoService();
   Warehouseservice warehouseservice = Warehouseservice();
   WarehouseLongClick warehouseLongClick = WarehouseLongClick();
+  NavigationHelper navigationHelper = NavigationHelper();
 
   // String _statusHome = "Product";
 
@@ -92,7 +95,12 @@ class _SearchScreenState extends State<SearchScreen> {
           _allProducts = cached;
         } else {
           final data = await infoService.LoadProduct();
-          _allProducts = data;
+          if (data["statusCode"] == 403 ||
+              data["statusCode"] == 401 ||
+              data["statusCode"] == 0) {
+            navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+          }
+          _allProducts = data["body"];
         }
         _filteredProducts = _allProducts;
       } else {
@@ -102,8 +110,13 @@ class _SearchScreenState extends State<SearchScreen> {
           _allWarehouses = cached;
         } else {
           final data = await warehouseservice.LoadDtata(table);
-          AppState.instance.set("DataWareHouse", data);
-          _allWarehouses = data;
+          // AppState.instance.set("DataWareHouse", data);
+          if (data["statusCode"] == 403 ||
+              data["statusCode"] == 401 ||
+              data["statusCode"] == 0) {
+            navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
+          }
+          _allWarehouses = data["body"];
         }
         _filteredWarehouses = _allWarehouses;
       }

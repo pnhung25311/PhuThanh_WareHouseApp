@@ -6,6 +6,7 @@ import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
+import 'package:phuthanh_warehouseapp/model/auth/LoginResponse.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/system/DisplaySetting.model.dart';
 import 'package:phuthanh_warehouseapp/model/system/StatusSystem.model.dart';
@@ -146,8 +147,11 @@ class _LoginscreenState extends State<Loginscreen> {
           return;
         }
 
-        final account = Account.fromJson(jsonResponse);
+        final loginResponse = LoginResponse.fromJson(jsonResponse);
+        final account = loginResponse.account;
         AppState.instance.set("account", account);
+        AppState.instance.set("token", loginResponse.token);
+        print(loginResponse.token);
 
         await mySharedPreferences.setDataObject('account', account.toJson());
         await mySharedPreferences.setDataString('username', username);

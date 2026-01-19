@@ -4,12 +4,14 @@ class Account {
   final String PassWord;
   final String FullName;
   final String Role;
+  final String Status;
   Account({
     required this.AccountID,
     required this.UserName,
     required this.PassWord,
     required this.FullName,
     required this.Role,
+    required this.Status,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) {
@@ -19,6 +21,7 @@ class Account {
       UserName: json['UserName'] ?? '',
       Role: json['Role'] ?? '',
       FullName: json['FullName'] ?? '',
+      Status: json['Status'] ?? '',
     );
   }
 
@@ -29,6 +32,7 @@ class Account {
       'UserName': UserName,
       'FullName': FullName,
       'Role': Role,
+      'Status':Status
     };
   }
 }
