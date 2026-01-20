@@ -45,21 +45,18 @@ class ApiClient {
 
   // POST request
   Future<http.Response> post(String endpoint, String body) async {
-    final baseUrl = await getBaseUrl(); // ✅ Lấy URL async
+    final baseUrl = await getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
-    // print('$baseUrl$endpoint');
     final token = AppState.instance.get("token");
-    print(token);
 
-    return await http.post(
-      url,
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
+    final headers = {'Content-Type': 'application/json'};
 
-      body: body,
-    );
+    // ✅ CHỈ GỬI TOKEN KHI CÓ
+    if (token != null && token.toString().isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    return await http.post(url, headers: headers, body: body);
   }
 
   // PUT request

@@ -1155,8 +1155,8 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             Visibility(
               visible: widget.isCreateHistory,
               child: CustomTextFieldIcon(
-                label: "Vị trí: ",
-                controller: locationController,
+                label: "Diễn giải: ",
+                controller: remarkOfHistoryController,
                 hintText: " ",
                 readOnly: widget.isReadOnlyHistory,
                 suffixIcon: AppState.instance.get("isPinLocation") == true
