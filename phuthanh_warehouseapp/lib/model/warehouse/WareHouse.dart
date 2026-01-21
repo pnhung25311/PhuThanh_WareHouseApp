@@ -74,8 +74,9 @@ class WareHouse {
   /// ---- JSON serialization ----
   factory WareHouse.fromJson(Map<String, dynamic> json) {
     return WareHouse(
-      dataWareHouseAID: int.tryParse(json['DataWareHouseAID']?.toString() ?? '') ?? 0,
-      productAID: int.tryParse(json['ProductAID']?.toString() ?? '') ?? 0,      
+      dataWareHouseAID:
+          int.tryParse(json['DataWareHouseAID']?.toString() ?? '') ?? 0,
+      productAID: int.tryParse(json['ProductAID']?.toString() ?? '') ?? 0,
       productID: json['ProductID'] ?? '',
       idKeeton: json['ID_Keeton'] ?? '',
       idIndustrial: json['ID_Industrial'] ?? '',
@@ -90,13 +91,18 @@ class WareHouse {
       parameter: json['Parameter'] ?? '',
       vehicleDetail: json['VehicleDetail'] ?? '',
       vehicleCluster: json['VehicleCluster'] ?? '',
-      vehicleTypeID: json['VehicleTypeID'] ??'',
+      vehicleTypeID: json['VehicleTypeID'] ?? '',
       manufacturerID: (json['ManufacturerID'] as num?)?.toInt() ?? 0,
       countryID: (json['CountryID'] as num?)?.toInt() ?? 0,
       supplierID: (json['SupplierID'] as num?)?.toInt() ?? 0,
       supplierActualID: (json['SupplierActualID'] as num?)?.toInt() ?? 0,
       unitID: (json['UnitID'] as num?)?.toInt() ?? 0,
       locationID: json['LocationID']?.toString() ?? "",
+      // locationID:
+      //     (json['LocationID'] == null ||
+      //         json['LocationID'].toString().toLowerCase() == 'null')
+      //     ? ''
+      //     : json['LocationID'].toString(),
       unitName: json['UnitName'] ?? '',
       countryName: json['CountryName'] ?? '',
       manufacturerName: json['ManufacturerName'] ?? '',

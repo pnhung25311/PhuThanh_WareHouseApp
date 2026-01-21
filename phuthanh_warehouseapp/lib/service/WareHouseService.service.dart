@@ -58,7 +58,7 @@ class Warehouseservice {
 
       final dynamic decoded = jsonDecode(response.body);
       print("=================đ");
-      print(decoded);
+      print(response.body);
       if (decoded.isEmpty) {
         return {
           "isSuccess": false,
@@ -71,7 +71,7 @@ class Warehouseservice {
         return {
           "isSuccess": true,
           "statusCode": response.statusCode,
-          "body": WareHouse.fromJson(decoded.first),
+          "body": WareHouse.fromJson(decoded),
         };
       }
 

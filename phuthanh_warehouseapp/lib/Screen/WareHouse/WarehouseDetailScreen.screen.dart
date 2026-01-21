@@ -134,6 +134,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   @override
   void initState() {
     super.initState();
+    print(jsonDecode(widget.item.locationID.toString()));
     remarkController.text = widget.item.remarkOfDataWarehouse.toString();
     productIDController.text = widget.item.productID.toString();
     qtyController.text = widget.item.qty.toString();
@@ -145,7 +146,8 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     nameProductController.text = widget.item.nameProduct.toString();
     idBillController.text = widget.item.idBill ?? "";
     parameterController.text = widget.item.parameter.toString();
-    vehicleDetailController.text = widget.item.vehicleDetail.toString();
+    vehicleDetailController.text = widget.item.vehicleDetail ?? " ";
+    locationController.text = widget.item.locationID ?? 'ko có vị trí';
 
     image1Controller.text = widget.item.img1.toString();
     image2Controller.text = widget.item.img2.toString();
