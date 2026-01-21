@@ -197,6 +197,12 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     });
   }
 
+  @override
+  void dispose() {
+    remarkOfHistoryController.dispose();
+    super.dispose();
+  }
+
   // thêm helper init để await các load
   Future<void> _init() async {
     await _loadAllData();
@@ -279,7 +285,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
       locationController.text = pinnedIds;
     } else {
       // 3️⃣ Nếu không pin → dùng dữ liệu từ item
-      locationController.text  = widget.item.locationID.toString();
+      locationController.text = widget.item.locationID.toString();
     }
 
     // 4️⃣ Map ID → Location object
@@ -1159,12 +1165,12 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                 controller: remarkOfHistoryController,
                 hintText: " ",
                 readOnly: widget.isReadOnlyHistory,
-                suffixIcon: AppState.instance.get("isPinLocation") == true
+                suffixIcon: AppState.instance.get("isPinRemark") == true
                     ? Icons.push_pin
                     : Icons.push_pin_outlined,
                 suffixIconPadding: const EdgeInsets.only(right: 22),
                 onSuffixIconPressed: () async {
-                  await toggleLocationPin();
+                  await toggleRemarkOfHistory();
                 },
               ),
             ),
@@ -1279,22 +1285,25 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     }
   }
 
-  Future<void> toggleRemarkOfHistory(String? remark) async {
+  Future<void> toggleRemarkOfHistory() async {
     if (!mounted) return;
 
-    // Lấy trạng thái hiện tại
+    // Trạng thái pin hiện tại
     bool isPinned = AppState.instance.get("isPinRemark") == true;
 
     // Đảo trạng thái pin
     AppState.instance.set("isPinRemark", !isPinned);
 
-    if (!isPinned && remark != null) {
-      // Ghim: lưu ngày hiện tại
+    if (!isPinned) {
+      // PIN → lưu remark hiện tại
       AppState.instance.set("PinRemark", remarkOfHistoryController.text);
     } else {
-      // Bỏ ghim: xóa dữ liệu
+      // UNPIN → xóa remark đã ghim
       AppState.instance.set("PinRemark", null);
     }
+
+    // Update UI (icon)
+    setState(() {});
   }
 
   Future<void> toggleLocationPin() async {

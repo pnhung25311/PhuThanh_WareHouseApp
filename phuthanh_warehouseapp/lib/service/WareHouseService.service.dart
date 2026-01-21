@@ -47,42 +47,49 @@ class Warehouseservice {
       return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
-Future<Map<String, dynamic>> getWarehouseById(String table, String id) async {
-  try {
-    const apiClient = ApiClient();
-    final response = await apiClient.post(
-      "dynamic/find/$table",
-      jsonEncode({"productID": id}),
-    );
 
-    final decoded = jsonDecode(response.body);
+  Future<Map<String, dynamic>> getWarehouseById(String table, String id) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.post(
+        "dynamic/find/$table",
+        jsonEncode({"productID": id}),
+      );
 
-    if (decoded is List && decoded.isNotEmpty) {
-      return {
-        "isSuccess": true,
-        "statusCode": response.statusCode,
-        "body": WareHouse.fromJson(decoded.first),
-      };
+      final dynamic decoded = jsonDecode(response.body);
+      print("=================đ");
+      print(decoded);
+      if (decoded.isEmpty) {
+        return {
+          "isSuccess": false,
+          "statusCode": response.statusCode,
+          "body": decoded,
+        };
+      }
+
+      if (decoded.isNotEmpty) {
+        return {
+          "isSuccess": true,
+          "statusCode": response.statusCode,
+          "body": WareHouse.fromJson(decoded.first),
+        };
+      }
+
+      if (decoded is Map<String, dynamic>) {
+        return {
+          "isSuccess": true,
+          "statusCode": response.statusCode,
+          "body": WareHouse.fromJson(decoded),
+        };
+      }
+
+      throw Exception("Response JSON không hợp lệ");
+    } catch (e) {
+      print(e.toString());
+
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
-
-    if (decoded is Map<String, dynamic>) {
-      return {
-        "isSuccess": true,
-        "statusCode": response.statusCode,
-        "body": WareHouse.fromJson(decoded),
-      };
-    }
-
-    throw Exception("Response JSON không hợp lệ");
-  } catch (e) {
-    return {
-      "isSuccess": false,
-      "statusCode": 0,
-      "body": e.toString(),
-    };
   }
-}
-
 
   Future<Map<String, dynamic>> upDateWareHouse(
     String table,

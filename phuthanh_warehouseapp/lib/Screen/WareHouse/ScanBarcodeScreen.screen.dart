@@ -103,9 +103,12 @@ class _ScanScreenState extends State<ScanScreen> {
             item.wareHouseTable ?? '',
             code,
           );
+            print(scannedItem["statusCode"]);
+
 
           if (scannedItem["isSuccess"]) {
             _showToast("✅ Tìm thấy dữ liệu kho $code");
+            print(scannedItem["statusCode"]);
             navigationHelper
                 .pushReplacement(
                   context,
@@ -139,6 +142,7 @@ class _ScanScreenState extends State<ScanScreen> {
               idIndustrial: product["body"].idIndustrial,
               idPartNo: product["body"].idPartNo,
               idReplacedPartNo: product["body"].idReplacedPartNo,
+              vehicleTypeID:  product["body"].vehicleTypeID,
               img1: product["body"].img1,
               img2: product["body"].img2,
               img3: product["body"].img3,

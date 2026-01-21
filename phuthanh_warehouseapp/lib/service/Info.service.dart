@@ -252,12 +252,15 @@ class InfoService {
       );
 
       final List<dynamic> data = jsonDecode(response.body);
+      print("==================>");
+      print(data);
       return {
         "isSuccess": response.statusCode == 200,
         "statusCode": response.statusCode,
         "body": Product.fromJson(data.first),
       };
     } catch (e) {
+      print("==================>");
       print(e);
       return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
