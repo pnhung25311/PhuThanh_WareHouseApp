@@ -47,41 +47,42 @@ class Warehouseservice {
       return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
+Future<Map<String, dynamic>> getWarehouseById(String table, String id) async {
+  try {
+    const apiClient = ApiClient();
+    final response = await apiClient.post(
+      "dynamic/find/$table",
+      jsonEncode({"productID": id}),
+    );
 
-  Future<Map<String, dynamic>> getWarehouseById(String table, String id) async {
-    try {
-      const apiClient = ApiClient();
-      final response = await apiClient.post(
-        "dynamic/find/" + table,
-        jsonEncode({"productID": id}),
-      );
+    final decoded = jsonDecode(response.body);
 
-      final List<dynamic> data = jsonDecode(response.body);
+    if (decoded is List && decoded.isNotEmpty) {
       return {
-        "isSuccess": response.statusCode == 200,
+        "isSuccess": true,
         "statusCode": response.statusCode,
-        "body": data.map((e) => WareHouse.fromJson(e)).toList(),
+        "body": WareHouse.fromJson(decoded.first),
       };
-    } catch (e) {
-      print(e);
-      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
 
+    if (decoded is Map<String, dynamic>) {
+      return {
+        "isSuccess": true,
+        "statusCode": response.statusCode,
+        "body": WareHouse.fromJson(decoded),
+      };
+    }
 
-    //   if (response.statusCode == 200) {
-    //     final Map<String, dynamic> data = jsonDecode(response.body);
-    //     if (data.isEmpty) {
-    //       return null;
-    //     }
-    //     return WareHouse.fromJson(data);
-    //   } else {
-    //     return null;
-    //   }
-    // } catch (e) {
-    //   print("ở wh" + e.toString());
-    //   return null;
-    // }
+    throw Exception("Response JSON không hợp lệ");
+  } catch (e) {
+    return {
+      "isSuccess": false,
+      "statusCode": 0,
+      "body": e.toString(),
+    };
   }
+}
+
 
   Future<Map<String, dynamic>> upDateWareHouse(
     String table,

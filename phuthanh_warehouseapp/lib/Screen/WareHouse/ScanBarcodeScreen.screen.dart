@@ -93,6 +93,7 @@ class _ScanScreenState extends State<ScanScreen> {
           if (product["statusCode"] == 403 ||
               product["statusCode"] == 401 ||
               product["statusCode"] == 0) {
+            print(product["body"]);
             navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
             return;
           }
@@ -122,6 +123,7 @@ class _ScanScreenState extends State<ScanScreen> {
           if (scannedItem["statusCode"] == 403 ||
               scannedItem["statusCode"] == 401 ||
               scannedItem["statusCode"] == 0) {
+            print(scannedItem["body"]);
             navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
             return;
           }
@@ -149,12 +151,6 @@ class _ScanScreenState extends State<ScanScreen> {
               remarkOfDataWarehouse: "",
               qty: 0,
             );
-            if (product["statusCode"] == 403 ||
-                product["statusCode"] == 401 ||
-                product["statusCode"] == 0) {
-              navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
-              return;
-            }
 
             _showToast("⚠ Không có trong kho — tạo mới");
 
@@ -171,6 +167,13 @@ class _ScanScreenState extends State<ScanScreen> {
                 )
                 .then((_) => isLocked = false);
 
+            return;
+          }
+          if (product["statusCode"] == 403 ||
+              product["statusCode"] == 401 ||
+              product["statusCode"] == 0) {
+            print(product["body"]);
+            navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
             return;
           }
           // ================= NOT FOUND =================
