@@ -135,6 +135,7 @@ class _ScanScreenState extends State<ScanScreen> {
           final product = await infoService.findProduct(code);
           if (product["isSuccess"]) {
             final newItem = WareHouse(
+              dataWareHouseAID: 0,
               productAID: product["body"].productAID,
               productID: product["body"].productID,
               idKeeton: product["body"].idKeeton,
@@ -174,8 +175,7 @@ class _ScanScreenState extends State<ScanScreen> {
             return;
           }
           if (product["statusCode"] == 403 ||
-              product["statusCode"] == 401 ||
-              product["statusCode"] == 0) {
+              product["statusCode"] == 401 ) {
             print(product["body"]);
             navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
             return;

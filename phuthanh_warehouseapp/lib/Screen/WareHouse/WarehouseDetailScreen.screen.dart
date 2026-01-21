@@ -134,7 +134,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   @override
   void initState() {
     super.initState();
-    print(jsonDecode(widget.item.locationID.toString()));
     remarkController.text = widget.item.remarkOfDataWarehouse.toString();
     productIDController.text = widget.item.productID.toString();
     qtyController.text = widget.item.qty.toString();
@@ -558,9 +557,21 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           qtyHistoryController.text.isNotEmpty &&
           qtyHistoryController.text != "0") {
         final qtyFrom = double.tryParse(qtyHistoryController.text.trim()) ?? 0;
+        int aid = 0;
+        if (widget.item.dataWareHouseAID == null ||
+            widget.item.dataWareHouseAID == 0) {
+          aid = await infoService.reTurnAIDWhToAddHistory(
+            item.wareHouseDataBase ?? "",
+            "ProductAID",
+            widget.item.productAID.toString(),
+          );
+        }else{
+          print("đã vào)");
+          aid = widget.item.dataWareHouseAID!;
+        }
         final historyCreateFrom = History(
           // historyAID: await CodeHelper.generateCodeAID("LS"),
-          dataWareHouseAID: widget.item.dataWareHouseAID!,
+          dataWareHouseAID: aid,
           qty: qtyFrom,
           employeeId: selectedEmployee?.EmployeeID ?? 0,
           partner: selectedSupplierHistory?.SupplierID ?? 0,
@@ -576,11 +587,11 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         );
         final double QtyWhFrom = await infoService.reTurnQtyWhToAddHistory(
           item.wareHouseDataBaseHistory.toString(),
-          widget.item.dataWareHouseAID!,
+          aid,
         );
         await warehouseservice.upDateWareHouse(
           item.wareHouseDataBase.toString(),
-          widget.item.dataWareHouseAID.toString(),
+          aid.toString(),
           jsonEncode({
             "Qty": QtyWhFrom,
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
