@@ -520,7 +520,10 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
         if (response["isSuccess"]) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thêm sản phẩm thành công')),
+            const SnackBar(
+              content: Text('Thêm sản phẩm thành công'),
+              duration: const Duration(milliseconds: 500),
+            ),
           );
           // NavigationHelper.pushAndRemoveUntil(context, const HomeScreen());
         }
@@ -543,12 +546,18 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
 
         if (response["isSuccess"]) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cập nhật sản phẩm thành công')),
+            const SnackBar(
+              content: Text('Cập nhật sản phẩm thành công'),
+              duration: const Duration(milliseconds: 500),
+            ),
           );
           // navigationHelper.pushAndRemoveUntil(context, const HomeScreen());
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cập nhật sản phẩm thất bại')),
+            const SnackBar(
+              content: Text('Cập nhật sản phẩm thất bại'),
+              duration: const Duration(milliseconds: 500),
+            ),
           );
         }
       }
@@ -565,7 +574,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             "ProductAID",
             widget.item.productAID.toString(),
           );
-        }else{
+        } else {
           print("đã vào)");
           aid = widget.item.dataWareHouseAID!;
         }
@@ -707,7 +716,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                   : fromSuccess || toSuccess
                   ? Colors.orange
                   : Colors.red,
-              duration: const Duration(seconds: 3),
+              duration: const Duration(milliseconds: 500),
             ),
           );
         }
@@ -718,7 +727,10 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         if (responseFrom["statusCode"] == 200) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Cập nhật thành công')),
+            const SnackBar(
+              content: Text('✅ Cập nhật thành công'),
+              duration: const Duration(milliseconds: 500),
+            ),
           );
           // quay lại và báo màn trước refresh
         } else if (responseFrom["statusCode"] == 401 ||
@@ -729,6 +741,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('❌ Lỗi cập nhật: ${responseFrom["statusCode"]}'),
+              duration: const Duration(milliseconds: 500),
             ),
           );
         }
@@ -736,9 +749,12 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
       navigationHelper.pushAndRemoveUntil(context, const HomeScreen());
     } catch (e) {
       print(e);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('⚠️ Lỗi kết nối: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠️ Lỗi kết nối: $e'),
+          duration: const Duration(milliseconds: 500),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => isSaving = false);

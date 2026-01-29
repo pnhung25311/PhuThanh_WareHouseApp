@@ -17,13 +17,11 @@ class _DialogSheetState extends State<DialogSheet> {
   TextEditingController sheetIDController = TextEditingController();
   TextEditingController remarkController = TextEditingController();
   SheetService sheetService = SheetService();
-    Formatdatehelper formatdatehelper = Formatdatehelper();
-      NavigationHelper navigationHelper = NavigationHelper();
-
-
+  Formatdatehelper formatdatehelper = Formatdatehelper();
+  NavigationHelper navigationHelper = NavigationHelper();
 
   Future<String?> getFullname() async {
-            MySharedPreferences mySharedPreferences =MySharedPreferences();
+    MySharedPreferences mySharedPreferences = MySharedPreferences();
 
     Map<String, dynamic>? account = await mySharedPreferences.getDataObject(
       "account",
@@ -48,17 +46,23 @@ class _DialogSheetState extends State<DialogSheet> {
         }),
       );
       if (response["isSuccess"]) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Thêm phiếu thành công')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Thêm phiếu thành công'),
+            duration: const Duration(milliseconds: 500),
+          ),
+        );
         // NavigationHelper.pushAndRemoveUntil(context, HomeCheckListScreen());
         navigationHelper.pop(context, true); // Thoát màn hình
       }
     } catch (e) {
       print(e);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('⚠️ Lỗi kết nối: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠️ Lỗi kết nối: $e'),
+          duration: const Duration(milliseconds: 500),
+        ),
+      );
     }
   }
 

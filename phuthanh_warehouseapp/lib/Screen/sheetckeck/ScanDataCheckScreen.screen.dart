@@ -203,9 +203,12 @@ class _ScanDataCheckScreenState extends State<ScanDataCheckScreen> {
 
   // ================= TOAST =================
   void _showToast(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 500),
+      ),
+    );
   }
 
   void checkInit() {

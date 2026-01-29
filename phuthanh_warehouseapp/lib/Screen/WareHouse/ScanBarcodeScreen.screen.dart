@@ -40,9 +40,12 @@ class _ScanScreenState extends State<ScanScreen> {
   }
 
   void _showToast(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(milliseconds: 500),
+      ),
+    );
   }
 
   // ================= HANDLE CAMERA SCAN =================
@@ -103,8 +106,7 @@ class _ScanScreenState extends State<ScanScreen> {
             item.wareHouseTable ?? '',
             code,
           );
-            print(scannedItem["statusCode"]);
-
+          print(scannedItem["statusCode"]);
 
           if (scannedItem["isSuccess"]) {
             _showToast("✅ Tìm thấy dữ liệu kho $code");
@@ -143,7 +145,7 @@ class _ScanScreenState extends State<ScanScreen> {
               idIndustrial: product["body"].idIndustrial,
               idPartNo: product["body"].idPartNo,
               idReplacedPartNo: product["body"].idReplacedPartNo,
-              vehicleTypeID:  product["body"].vehicleTypeID,
+              vehicleTypeID: product["body"].vehicleTypeID,
               img1: product["body"].img1,
               img2: product["body"].img2,
               img3: product["body"].img3,
@@ -174,8 +176,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
             return;
           }
-          if (product["statusCode"] == 403 ||
-              product["statusCode"] == 401 ) {
+          if (product["statusCode"] == 403 || product["statusCode"] == 401) {
             print(product["body"]);
             navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
             return;

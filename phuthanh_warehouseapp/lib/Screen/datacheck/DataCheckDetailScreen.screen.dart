@@ -48,10 +48,8 @@ class _DataCheckDetailScreenState extends State<DataCheckDetailScreen> {
   SheetService sheetService = SheetService();
   DateTime? selectedDate;
   Formatdatehelper formatdatehelper = Formatdatehelper();
-    NavigationHelper navigationHelper = NavigationHelper();
-        MySharedPreferences mySharedPreferences =MySharedPreferences();
-
-
+  NavigationHelper navigationHelper = NavigationHelper();
+  MySharedPreferences mySharedPreferences = MySharedPreferences();
 
   @override
   void initState() {
@@ -111,7 +109,10 @@ class _DataCheckDetailScreenState extends State<DataCheckDetailScreen> {
         );
         if (response["isSuccess"]) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Thêm sản phẩm thành công')),
+            const SnackBar(
+              content: Text('Thêm sản phẩm thành công'),
+              duration: const Duration(milliseconds: 500),
+            ),
           );
           // NavigationHelper.pushAndRemoveUntil(context, HomeCheckListScreen());
           navigationHelper.pop(context, true);
@@ -132,16 +133,22 @@ class _DataCheckDetailScreenState extends State<DataCheckDetailScreen> {
         );
         if (response["isSuccess"]) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cập nhật sản phẩm thành công')),
+            const SnackBar(
+              content: Text('Cập nhật sản phẩm thành công'),
+              duration: const Duration(milliseconds: 500),
+            ),
           );
           navigationHelper.pop(context, true);
         }
       }
     } catch (e) {
       print(e);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('⚠️ Lỗi kết nối: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠️ Lỗi kết nối: $e'),
+          duration: const Duration(milliseconds: 500),
+        ),
+      );
     }
 
     /// TODO: gọi API lưu dữ liệu tại đây

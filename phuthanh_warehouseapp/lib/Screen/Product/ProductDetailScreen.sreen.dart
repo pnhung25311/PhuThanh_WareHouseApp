@@ -329,9 +329,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           idProductID,
         );
         if (checkProductID) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('❌ Mã sản phẩm đã tồn tại ')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Mã sản phẩm đã tồn tại '),
+              duration: const Duration(milliseconds: 500),
+            ),
+          );
         } else {
           // final response = await api.post("dynamic/insert/Product", bodyCreate);
           final response = await warehouseservice.addWarehouseRow(
@@ -349,7 +352,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           if (response["isSuccess"]) {
             if (!mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('✅ Thêm mới thành công')),
+              const SnackBar(
+                content: Text('✅ Thêm mới thành công'),
+                duration: const Duration(milliseconds: 500),
+              ),
             );
             AppState.instance.set("ListProduct", null);
             AppState.instance.set("DataWareHouseLimit", null);
@@ -358,9 +364,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               HomeScreen(),
             ); // quay lại và báo màn trước refresh
           } else {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('❌ Lỗi thêm mới: ')));
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('❌ Lỗi thêm mới: '),
+                duration: const Duration(milliseconds: 500),
+              ),
+            );
           }
         }
       }
@@ -380,7 +389,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         if (response["isSuccess"]) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('✅ Chỉnh sửa thành công')),
+            const SnackBar(
+              content: Text('✅ Chỉnh sửa thành công'),
+              duration: const Duration(milliseconds: 500),
+            ),
           );
           AppState.instance.set("ListProduct", null);
           AppState.instance.set("DataWareHouseLimit", null);
@@ -389,16 +401,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             HomeScreen(),
           ); // quay lại và báo màn trước refresh
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('❌ Lỗi cập nhật: ')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ Lỗi cập nhật: '),
+              duration: const Duration(milliseconds: 500),
+            ),
+          );
         }
       }
     } catch (e) {
       print(e);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('⚠️ Lỗi kết nối: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('⚠️ Lỗi kết nối: $e'),
+          duration: const Duration(milliseconds: 500),
+        ),
+      );
     } finally {
       if (mounted) {
         setState(() => isSaving = false);
