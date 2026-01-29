@@ -33,7 +33,7 @@ class Warehouseservice {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/get-all/" + table + "/" + limit,
+        "dynamic/" + table + "/limit/" + limit,
       );
 
       final List<dynamic> data = jsonDecode(response.body);
@@ -206,7 +206,7 @@ class Warehouseservice {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/get-all/vwProduct/" + limit,
+        "dynamic/vwProduct/limit/" + limit,
       );
 
       // if (response.statusCode == 200) {
