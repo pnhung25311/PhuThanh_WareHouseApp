@@ -33,7 +33,7 @@ class Warehouseservice {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/" + table + "/limit/" + limit,
+        "dynamic/get-all/" + table + "/" + limit,
       );
 
       final List<dynamic> data = jsonDecode(response.body);
@@ -206,7 +206,7 @@ class Warehouseservice {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/vwProduct/limit/" + limit,
+        "dynamic/get-all/vwProduct/" + limit,
       );
 
       // if (response.statusCode == 200) {
@@ -221,6 +221,8 @@ class Warehouseservice {
       };
       // } else {
       //   // throw Exception("Failed to load data (${response.statusCode})");
+      //   return [];
+      //   return [];
       //   return [];
       // }
     } catch (e) {
