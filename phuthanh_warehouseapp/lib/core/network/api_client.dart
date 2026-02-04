@@ -84,8 +84,10 @@ class ApiClient {
   }) async {
     final baseUrl = await getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
+    final token = AppState.instance.get("token");
 
-    final request = http.MultipartRequest('POST', url);
+    final headers = {'Authorization': 'Bearer $token'};
+    final request = http.MultipartRequest('POST', url)..headers.addAll(headers);
 
     // Gửi dữ liệu text (nếu có)
     if (fields != null) {
