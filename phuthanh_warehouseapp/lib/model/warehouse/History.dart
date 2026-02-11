@@ -6,6 +6,7 @@ class History {
   final int partner;
   final String remark;
   final String time;
+  final String transferGroupID;
   final String lastUser;
   final String lastTime;
 
@@ -17,6 +18,7 @@ class History {
     required this.partner,
     required this.remark,
     required this.time,
+    required this.transferGroupID,
     required this.lastUser,
     required this.lastTime,
   });
@@ -31,6 +33,7 @@ class History {
       partner: 0,
       remark: "",
       time: "",
+      transferGroupID: "",
       lastUser: "",
       lastTime: "",
     );
@@ -45,6 +48,7 @@ class History {
       partner: json['Partner'] ?? 0,
       remark: json['Remark'] ?? '',
       time: json['Time'] ?? '',
+      transferGroupID: json['TransferGroupID'] ?? '',
       lastUser: json['LastUser'] ?? '',
       lastTime: json['LastTime'] ?? '',
     );
@@ -59,6 +63,7 @@ class History {
       'Partner': partner,
       'Remark': remark,
       'Time': time,
+      'TransferGroupID': transferGroupID,
       'LastUser': lastUser,
       'LastTime': lastTime,
     };

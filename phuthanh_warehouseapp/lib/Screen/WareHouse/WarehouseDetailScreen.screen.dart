@@ -11,6 +11,7 @@ import 'package:phuthanh_warehouseapp/components/utils/CustomTextField.custom.da
 import 'package:phuthanh_warehouseapp/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/GenerateCodeAID.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
@@ -124,6 +125,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   Key locationDropdownKey = UniqueKey();
   Formatdatehelper formatdatehelper = Formatdatehelper();
   MySharedPreferences mySharedPreferences = MySharedPreferences();
+  CodeHelper codeHelper = CodeHelper();
 
   DateTime initialDate = DateTime.now(); // ⚡ biến state
 
@@ -566,7 +568,20 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           qtyHistoryController.text.isNotEmpty &&
           qtyHistoryController.text != "0") {
         final qtyFrom = double.tryParse(qtyHistoryController.text.trim()) ?? 0;
+        final List<DrawerItem> drawerItems =
+            AppState.instance.get<List<DrawerItem>>("listItemDrawer") ?? [];
+        DrawerItem? itemList;
+
+        if (selectedSupplierHistory != null && drawerItems.isNotEmpty) {
+          itemList = drawerItems.firstWhereOrNull(
+            (e) => e.wareHouseSupplierID == selectedSupplierHistory!.SupplierID,
+          );
+        }
         int aid = 0;
+        String codeTransferGroupID = codeHelper.generateTransferGroupID(
+          item.wareHouseID.toString(),
+          itemList?.wareHouseID.toString() ?? "",
+        );
         if (widget.item.dataWareHouseAID == null ||
             widget.item.dataWareHouseAID == 0) {
           aid = await infoService.reTurnAIDWhToAddHistory(
@@ -586,6 +601,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           partner: selectedSupplierHistory?.SupplierID ?? 0,
           remark: remarkOfHistoryController.text.trim(),
           time: formatdatehelper.formatDateTimeString(convertTime),
+          transferGroupID: codeTransferGroupID,
           lastUser: await fullName.toString().trim(),
           lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
         );
@@ -608,15 +624,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
         );
         bool fromSuccess = responseFrom["isSuccess"] == true;
 
-        final List<DrawerItem> drawerItems =
-            AppState.instance.get<List<DrawerItem>>("listItemDrawer") ?? [];
-        DrawerItem? itemList;
-
-        if (selectedSupplierHistory != null && drawerItems.isNotEmpty) {
-          itemList = drawerItems.firstWhereOrNull(
-            (e) => e.wareHouseSupplierID == selectedSupplierHistory!.SupplierID,
-          );
-        }
         if (itemList?.wareHouseSupplierID ==
             selectedSupplierHistory!.SupplierID) {
           print("đã kiểm tra ra đc đúng vào xuất điều chuyển");
@@ -657,6 +664,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             partner: item.wareHouseSupplierID ?? 0,
             remark: remarkOfHistoryController.text.trim(),
             time: formatdatehelper.formatDateTimeString(convertTime),
+            transferGroupID: codeTransferGroupID,
             lastUser: await fullName.toString().trim(),
             lastTime: formatdatehelper.formatYMDHMS(DateTime.now()),
           );

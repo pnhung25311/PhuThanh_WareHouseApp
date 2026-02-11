@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseTransfer.screen.dart';
+// import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseTransfer.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/Screen/history/WarehouseHistoryScreen.screen.dart';
@@ -92,25 +92,25 @@ class WarehouseLongClick {
               },
             ),
           //XUẤT ĐIỀU CHUYỂN
-          if (1==2)
-            ListTile(
-              leading: const Icon(Icons.update, color: Colors.green),
-              title: const Text('Xuất điều chuyển'),
-              onTap: () async {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => WareHouseTransfer(
-                      item: item,
-                      readOnly: role,
-                      isCreateHistory: role,
-                      isReadOnlyHistory: !role,
-                    ),
-                  ),
-                );
-              },
-            ),
+          // if (1==2)
+          //   ListTile(
+          //     leading: const Icon(Icons.update, color: Colors.green),
+          //     title: const Text('Xuất điều chuyển'),
+          //     onTap: () async {
+          //       Navigator.pop(context);
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(
+          //           builder: (_) => WareHouseTransfer(
+          //             item: item,
+          //             readOnly: role,
+          //             isCreateHistory: role,
+          //             isReadOnlyHistory: !role,
+          //           ),
+          //         ),
+          //       );
+          //     },
+          //   ),
           //CHỈNH SỬA THÔNG TIN
           // ListTile(
           //   leading: const Icon(Icons.update, color: Colors.green),

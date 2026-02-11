@@ -205,30 +205,42 @@ class Warehouseservice {
   Future<Map<String, dynamic>> LoadDtataLimitProduct(String limit) async {
     try {
       const apiClient = ApiClient();
-      final response = await apiClient.get(
-        "dynamic/get-all/vwProduct/" + limit,
-      );
+      final response = await apiClient.get("dynamic/get-all/vwProduct/$limit");
 
-      // if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
+      print("STATUS: ${response.statusCode}");
+      print("BODY: ${response.body}");
 
-      // } else if (response.statusCode == 200) {
-      //   navigationHelper.pushAndRemoveUntil(context, const HomeScreen());
+      if (response.body.isEmpty) {
+        return {
+          "isSuccess": false,
+          "statusCode": response.statusCode,
+          "body": <Product>[], // ✅ luôn trả list
+        };
+      }
+
+      final decoded = jsonDecode(response.body);
+
+      if (decoded is! List) {
+        throw Exception("API không trả về List");
+      }
+
+      final products = decoded
+          .map<Product>((e) => Product.fromJson(e))
+          .toList();
+
       return {
         "isSuccess": response.statusCode == 200,
         "statusCode": response.statusCode,
-        "body": data.map((e) => Product.fromJson(e)).toList(),
+        "body": products,
       };
-      // } else {
-      //   // throw Exception("Failed to load data (${response.statusCode})");
-      //   return [];
-      //   return [];
-      //   return [];
-      // }
     } catch (e) {
-      print(e);
-      // return [];
-      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
+      print("==============e: $e");
+
+      return {
+        "isSuccess": false,
+        "statusCode": 0,
+        "body": <Product>[], // ✅ KHÔNG BAO GIỜ trả String nữa
+      };
     }
   }
 }

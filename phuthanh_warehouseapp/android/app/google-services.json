@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "697075017404",
+    "project_id": "test-notification-6839e",
+    "storage_bucket": "test-notification-6839e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:697075017404:android:80a16c2c25c431b30192b9",
+        "android_client_info": {
+          "package_name": "com.example.phuthanh_warehouseapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBqSLIjMUwWymgx32r7m9UL9uLZO8ZXoSc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
