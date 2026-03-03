@@ -54,6 +54,7 @@ class _ViewImageScreenState extends State<ViewImageScreen> {
               itemCount: images.length,
               itemBuilder: (context, index) {
                 final imageUrl = images[index].trim();
+                print(imageUrl);
 
                 final finalUrl = statusConnect == true
                     ? imageUrl
