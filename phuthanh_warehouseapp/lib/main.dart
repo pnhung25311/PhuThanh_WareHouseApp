@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 // import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseTransfer.screen.dart';
-import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/warehouse/Screen/auth/LoginScreen.screen.dart';
 // import 'package:phuthanh_warehouseapp/router/AppRouter.router.dart';
-import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
+import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
