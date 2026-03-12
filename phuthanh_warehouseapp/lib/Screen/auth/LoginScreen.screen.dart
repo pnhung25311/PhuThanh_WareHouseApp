@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/business/test.dart';
+import 'package:phuthanh_warehouseapp/model/system/SystemOption.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
-import 'package:phuthanh_warehouseapp/warehouse/core/network/api_client.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/sharedPreferences.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/auth/Acount.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/auth/LoginResponse.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/DrawerItem.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/system/DisplaySetting.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/system/StatusSystem.model.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
+import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
+import 'package:phuthanh_warehouseapp/model/auth/LoginResponse.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
+import 'package:phuthanh_warehouseapp/model/system/DisplaySetting.model.dart';
+import 'package:phuthanh_warehouseapp/model/system/StatusSystem.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/StatusSystem.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
@@ -24,6 +26,16 @@ class _LoginscreenState extends State<Loginscreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
+
+  // Danh sách các hệ thống
+  final List<SystemOption> _systems = [
+    SystemOption(name: 'Hệ thống kho', value: 'system1', id: 1),
+    SystemOption(name: 'Hệ thống kinh doanh', value: 'system2', id: 2),
+  ];
+
+  // Hệ thống được chọn
+  SystemOption? _selectedSystem;
+
   List<StatusSystem> arrStatus = [];
   StatusSystemService statusSystemService = StatusSystemService();
   NavigationHelper navigationHelper = NavigationHelper();
@@ -32,6 +44,7 @@ class _LoginscreenState extends State<Loginscreen> {
   @override
   void initState() {
     super.initState();
+    _selectedSystem = _systems[0]; // Mặc định chọn hệ thống đầu tiên
     _loadSavedInfo();
   }
 
@@ -44,16 +57,22 @@ class _LoginscreenState extends State<Loginscreen> {
           await mySharedPreferences.getDataString('username') ?? '';
       final savedPassword =
           await mySharedPreferences.getDataString('password') ?? '';
+      final savedSystem =
+          await mySharedPreferences.getDataString('selectedSystem') ?? '';
 
       setState(() {
         _rememberMe = true;
         _usernameController.text = savedUsername;
         _passwordController.text = savedPassword;
-      });
 
-      // if (savedUsername.isNotEmpty && savedPassword.isNotEmpty) {
-      //   _handleLogin(savedUsername, savedPassword);
-      // }
+        // Khôi phục hệ thống đã chọn
+        if (savedSystem.isNotEmpty) {
+          _selectedSystem = _systems.firstWhere(
+            (system) => system.value == savedSystem,
+            orElse: () => _systems[0],
+          );
+        }
+      });
     }
   }
 
@@ -125,6 +144,20 @@ class _LoginscreenState extends State<Loginscreen> {
       return;
     }
 
+    if (_selectedSystem == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vui lòng chọn hệ thống'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Lưu hệ thống được chọn vào AppState để sử dụng trong toàn bộ app
+    AppState.instance.set("selectedSystem", _selectedSystem!.value);
+    // AppState.instance.set("apiUrl", _selectedSystem!.apiUrl);
+
     final api = const ApiClient();
 
     try {
@@ -136,7 +169,6 @@ class _LoginscreenState extends State<Loginscreen> {
       if (response.statusCode == 200) {
         final jsonResponse = jsonDecode(response.body);
 
-        // Nếu API trả lỗi dạng {"error": "..."} thì xử lý tại đây
         if (jsonResponse is Map && jsonResponse.containsKey('error')) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -159,17 +191,13 @@ class _LoginscreenState extends State<Loginscreen> {
         await mySharedPreferences.setDataBool('rememberMe', _rememberMe);
         _loadRole();
 
-        // arrStatus = await statusSystemService.GetAllStatusSystem();
-        // AppState.instance.set("StatusSystem", arrStatus);
-        // AppState.instance.set(
-        //   "CreateAppendix",
-        //   arrStatus[0].getBool(arrStatus[0].typeStatus),
-        // );
         _saveSetting();
-        // ✅ Không cho quay lại login
-        navigationHelper.pushAndRemoveUntil(context, HomeScreen());
+        if (_selectedSystem!.id == 1) {
+          navigationHelper.pushAndRemoveUntil(context, HomeScreen());
+        } else {
+          navigationHelper.pushAndRemoveUntil(context, TestScreen());
+        }
       } else {
-        // Nếu server trả mã lỗi (400, 401, 500, v.v.)
         String message = "Đăng nhập thất bại (${response.statusCode})";
 
         try {
@@ -186,7 +214,6 @@ class _LoginscreenState extends State<Loginscreen> {
         );
       }
     } catch (e) {
-      // ❌ Bắt lỗi mạng, JSON hoặc server không phản hồi
       debugPrint("Lỗi login: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -200,7 +227,7 @@ class _LoginscreenState extends State<Loginscreen> {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-      onWillPop: () async => true, // ⛔ Chặn nút back
+      onWillPop: () async => true,
       child: Scaffold(
         body: Center(
           child: Padding(
@@ -227,6 +254,53 @@ class _LoginscreenState extends State<Loginscreen> {
                     ),
                   ),
                   const SizedBox(height: 26),
+
+                  // Dropdown chọn hệ thống
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade400),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<SystemOption>(
+                        value: _selectedSystem,
+                        isExpanded: true,
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Color(0xFF3B62FF),
+                        ),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF1C1C1C),
+                        ),
+                        hint: const Text('Chọn hệ thống'),
+                        items: _systems.map((SystemOption system) {
+                          return DropdownMenuItem<SystemOption>(
+                            value: system,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.business,
+                                  size: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 10),
+                                Text(system.name),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (SystemOption? newValue) {
+                          setState(() {
+                            _selectedSystem = newValue;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
 
                   CustomTextFieldIcon(
                     label: "Tên đăng nhập",
@@ -286,6 +360,20 @@ class _LoginscreenState extends State<Loginscreen> {
                       ),
                     ),
                   ),
+
+                  // Hiển thị hệ thống đang chọn
+                  if (_selectedSystem != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: Text(
+                        'Đang kết nối tới: ${_selectedSystem!.name}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

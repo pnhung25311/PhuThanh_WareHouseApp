@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';// sửa typo .sreen → .screen
+import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/Product/ProductDetailScreen.sreen.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/Product.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/VehicleTypeID.model.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
@@ -34,7 +34,6 @@ class _ProductItemState extends State<ProductItem> {
   }
 
   Future<void> _loadVehicleTypes() async {
-    // Lấy từ cache trước (AppState)
     final cached = AppState.instance.get<List<VehicleType>>("vehicleTypes");
 
     if (cached != null && cached.isNotEmpty) {
@@ -44,14 +43,18 @@ class _ProductItemState extends State<ProductItem> {
     }
 
     try {
-      final data = await _infoService.LoadDtataVehicleType(); // sửa typo nếu cần: LoadDataVehicleType
+      final data = await _infoService.LoadDtataVehicleType();
       AppState.instance.set("vehicleTypes", data);
+
       if (!mounted) return;
       setState(() => vehicles = data);
     } catch (e) {
-      // Có thể thêm thông báo lỗi nhẹ nếu muốn
       debugPrint("Load vehicle types failed: $e");
     }
+  }
+
+  bool _hasValue(String? value) {
+    return value != null && value.trim().isNotEmpty;
   }
 
   @override
@@ -59,15 +62,23 @@ class _ProductItemState extends State<ProductItem> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final item = widget.item;
-    final isAdminOrEditor = AppState.instance.get<bool>("role") == true; // giả sử role true = có quyền edit
+
+    final isAdminOrEditor = AppState.instance.get<bool>("role") == true;
+
+    final vehicleTypeName = _helper.getNamesFromIdsDynamic<VehicleType>(
+      ids: item.vehicleTypeID ?? "",
+      list: vehicles,
+      getId: (e) => e.VehicleTypeID.toString(),
+      getName: (e) => e.VehicleTypeName,
+    );
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      elevation: 1,
-      shadowColor: colorScheme.shadow.withOpacity(0.12),
+      elevation: 2,
+      shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.4)),
+        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.4), width: 5),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -87,196 +98,211 @@ class _ProductItemState extends State<ProductItem> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Product Name - nổi bật hơn
+
+              /// HEADER
               Text(
                 item.nameProduct,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: -0.2,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
 
               const SizedBox(height: 12),
-              const Divider(height: 1, thickness: 0.8),
 
-              const SizedBox(height: 10),
-
-              // Nhóm thông tin chính
-              _buildInfoRow(
-                visible: true,
-                icon: Icons.qr_code_2_rounded,
-                label: "Mã SP",
-                value: item.productID,
-                color: colorScheme.primary,
-              ),
-
-              _buildInfoRow(
-                visible: item.idKeeton.isNotEmpty == true,
-                icon: Icons.tag_rounded,
-                label: "Mã Keeton",
-                value: item.idKeeton,
-              ),
-
-              _buildInfoRow(
-                visible: item.idIndustrial.isNotEmpty == true,
-                icon: Icons.precision_manufacturing_rounded,
-                label: "Mã công nghiệp",
-                value: item.idIndustrial,
-              ),
-
-              _buildInfoRow(
-                visible: item.idPartNo.isNotEmpty == true,
-                icon: Icons.view_list_rounded,
-                label: "Part No",
-                value: item.idPartNo,
-              ),
-
-              _buildInfoRow(
-                visible: item.idReplacedPartNo.isNotEmpty == true,
-                icon: Icons.compare_arrows_rounded,
-                label: "Part No thay thế",
-                value: item.idReplacedPartNo,
-              ),
-
-              const SizedBox(height: 8),
-              const Divider(height: 1, thickness: 0.5),
-              const SizedBox(height: 8),
-
-              // Nhóm thông số & xe
-              _buildInfoRow(
-                visible: item.parameter.isNotEmpty == true,
-                icon: Icons.tune_rounded,
-                label: "Thông số",
-                value: item.parameter,
-              ),
-
-              _buildInfoRow(
-                visible: item.unitName?.isNotEmpty == true,
-                icon: Icons.straighten_rounded,
-                label: "ĐVT",
-                value: item.unitName,
-              ),
-
-              _buildInfoRow(
-                visible: item.vehicleDetail.isNotEmpty == true,
-                icon: Icons.directions_car_filled_rounded,
-                label: "Dòng xe",
-                value: item.vehicleDetail,
-                color: Colors.teal.shade700,
-              ),
-
-              _buildInfoRow(
-                visible: item.vehicleTypeID?.isNotEmpty == true,
-                icon: Icons.local_shipping_rounded,
-                label: "Hãng xe",
-                value: _helper.getNamesFromIdsDynamic<VehicleType>(
-                  ids: item.vehicleTypeID ?? "",
-                  list: vehicles,
-                  getId: (e) => e.VehicleTypeID.toString(),
-                  getName: (e) => e.VehicleTypeName,
+              /// PRODUCT INFO
+              if (_hasValue(item.productID) ||
+                  _hasValue(item.idKeeton) ||
+                  _hasValue(item.idIndustrial) ||
+                  _hasValue(item.idPartNo) ||
+                  _hasValue(item.idReplacedPartNo))
+                _section(
+                  "Thông tin sản phẩm",
+                  Colors.blue,
+                  [
+                    _info(Icons.qr_code, "Mã SP", item.productID),
+                    _info(Icons.tag, "Keeton", item.idKeeton),
+                    _info(Icons.precision_manufacturing, "CN", item.idIndustrial),
+                    _info(Icons.view_list, "Part No", item.idPartNo),
+                    _info(Icons.compare_arrows, "Part thay thế", item.idReplacedPartNo),
+                  ],
                 ),
-              ),
 
-              const SizedBox(height: 8),
-              const Divider(height: 1, thickness: 0.5),
-              const SizedBox(height: 8),
+              /// VEHICLE
+              if (_hasValue(item.vehicleDetail) || _hasValue(vehicleTypeName))
+                _section(
+                  "Thông tin xe",
+                  Colors.orange,
+                  [
+                    _info(Icons.directions_car, "Dòng xe", item.vehicleDetail),
+                    _info(Icons.local_shipping, "Hãng xe", vehicleTypeName),
+                  ],
+                ),
 
-              // Nhà cung cấp & khác
-              _buildInfoRow(
-                visible: item.manufacturerName?.isNotEmpty == true,
-                icon: Icons.factory_rounded,
-                label: "Nhà sản xuất",
-                value: item.manufacturerName,
-              ),
+              /// SPEC
+              if (_hasValue(item.parameter) || _hasValue(item.unitName))
+                _section(
+                  "Thông số",
+                  Colors.teal,
+                  [
+                    _info(Icons.tune, "Thông số", item.parameter),
+                    _info(Icons.straighten, "ĐVT", item.unitName),
+                  ],
+                ),
 
-              _buildInfoRow(
-                visible: item.countryName?.isNotEmpty == true,
-                icon: Icons.public_rounded,
-                label: "Nước SX",
-                value: item.countryName,
-              ),
+              /// MANUFACTURER
+              if (_hasValue(item.manufacturerName) || _hasValue(item.countryName))
+                _section(
+                  "Nhà sản xuất",
+                  Colors.green,
+                  [
+                    _info(Icons.factory, "NSX", item.manufacturerName),
+                    _info(Icons.public, "Nước", item.countryName),
+                  ],
+                ),
 
-              _buildInfoRow(
-                visible: item.supplierActualName?.isNotEmpty == true,
-                icon: Icons.store_rounded,
-                label: "NCC thực tế",
-                value: item.supplierActualName,
-              ),
+              /// SUPPLIER
+              if (_hasValue(item.supplierActualName) ||
+                  _hasValue(item.supplierName))
+                _section(
+                  "Nhà cung cấp",
+                  Colors.purple,
+                  [
+                    _info(Icons.store, "NCC thực tế", item.supplierActualName),
+                    _info(Icons.description, "NCC giấy tờ", item.supplierName),
+                  ],
+                ),
 
-              _buildInfoRow(
-                visible: item.supplierName?.isNotEmpty == true,
-                icon: Icons.description_rounded,
-                label: "NCC giấy tờ",
-                value: item.supplierName,
-              ),
-
-              _buildInfoRow(
-                visible: item.remark?.isNotEmpty == true,
-                icon: Icons.notes_rounded,
-                label: "Ghi chú",
-                value: item.remark,
-                style: const TextStyle(fontStyle: FontStyle.italic),
-              ),
+              /// NOTE
+              if (_hasValue(item.remark))
+                _section(
+                  "Ghi chú",
+                  Colors.grey,
+                  [
+                    _info(Icons.notes, "Ghi chú", item.remark),
+                  ],
+                ),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildInfoRow({
-    required bool visible,
-    required IconData icon,
-    required String label,
-    String? value,
-    Color? color,
-    TextStyle? style,
-  }) {
-    if (!visible || value == null || value.trim().isEmpty) {
-      return const SizedBox.shrink();
-    }
 
-    final defaultColor = Theme.of(context).colorScheme.onSurfaceVariant;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icon,
-            size: 18,
-            color: color ?? defaultColor.withOpacity(0.8),
+
+
+
+/// SECTION
+
+Widget _section(String title, Color color, List<Widget> children) {
+  final items = children.where((e) => e != const SizedBox.shrink()).toList();
+  if (items.isEmpty) return const SizedBox.shrink();
+
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: color.withOpacity(0.3)),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        /// HEADER
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(12),
+            ),
           ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 110, // điều chỉnh theo thiết kế của bạn
-            child: Text(
-              "$label:",
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: Text(
-              value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 13.5,
-                color: defaultColor,
-                height: 1.35,
-              ).merge(style),
-            ),
-          ),
-        ],
-      ),
-    );
+        ),
+
+        /// CONTENT
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(children: items),
+        ),
+      ],
+    ),
+  );
+}
+
+
+
+
+
+/// INFO ROW
+
+Widget _info(IconData icon, String label, String? value) {
+  if (value == null || value.trim().isEmpty) {
+    return const SizedBox.shrink();
   }
+
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    decoration: const BoxDecoration(
+      border: Border(
+        bottom: BorderSide(
+          color: Color(0xFFE5E5E5),
+          width: 0.6,
+        ),
+      ),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 16, color: Colors.blueGrey),
+        const SizedBox(width: 6),
+
+        SizedBox(
+          width: 110,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ),
+
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
 }

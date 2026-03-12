@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/warehouse/core/network/api_client.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionConvertHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 
 class ViewImageScreen extends StatefulWidget {
   final Product item;

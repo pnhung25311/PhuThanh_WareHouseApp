@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'package:phuthanh_warehouseapp/warehouse/core/network/api_client.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/system/StatusSystem.model.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/model/system/StatusSystem.model.dart';
 
 class StatusSystemService {
    Future<List<StatusSystem>> GetAllStatusSystem() async {

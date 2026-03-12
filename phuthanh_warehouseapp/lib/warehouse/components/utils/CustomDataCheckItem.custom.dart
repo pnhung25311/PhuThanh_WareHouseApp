@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/DataCheck.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/DataCheck.model.dart';
 
 class CustomDataCheckItem extends StatelessWidget {
   final DataCheck item;

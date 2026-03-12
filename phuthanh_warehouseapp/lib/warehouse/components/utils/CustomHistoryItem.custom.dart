@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FormatDateHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/ViewHistory.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/ViewHistory.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/history/HistoryDetailScreen.screen.dart';
 
 class HistoryItem extends StatelessWidget {
@@ -18,225 +18,219 @@ class HistoryItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isImport = history.qty > 0;
+
+    final Color mainColor =
+        isImport ? const Color(0xFF1B8F3A) : const Color(0xFFD32F2F);
+
+    final Color softColor =
+        isImport ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+
     Formatdatehelper formatdatehelper = Formatdatehelper();
     NavigationHelper navigationHelper = NavigationHelper();
 
-    /// 🎨 MÀU ĐẬM HƠN – RÕ RÀNG
-    final Color mainColor = isImport
-        ? const Color(0xFF0F7A2E)
-        : const Color(0xFFB71C1C);
-    final Color bgColor = isImport
-        ? const Color(0xFFE3F2E5)
-        : const Color(0xFFFCE4E4);
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(14),
-        onTap: () {
-          navigationHelper.push(
-            context,
-            HistoryDetailScreen(
-              item: warehouse,
-              itemHistory: history,
-              isReadOnlyHistory: true,
-              isCreateHistory: true,
-              readOnly: true,
-            ),
-          );
-        },
-        child: Container(
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border(
-              left: BorderSide(
-                color: mainColor,
-                width: 7, // 👈 dày + đậm hơn
-              ),
-            ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () {
+        navigationHelper.push(
+          context,
+          HistoryDetailScreen(
+            item: warehouse,
+            itemHistory: history,
+            isReadOnlyHistory: true,
+            isCreateHistory: true,
+            readOnly: true,
           ),
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              /// ================= HEADER =================
-              Row(
-                children: [
-                  _StatusIcon(isImport: isImport, color: mainColor),
-                  const SizedBox(width: 10),
-                  Expanded(
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+
+          /// gradient nhẹ
+          gradient: LinearGradient(
+            colors: [
+              Colors.white,
+              softColor.withOpacity(.25),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+
+          border: Border.all(color: softColor),
+
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+              color: Colors.black.withOpacity(0.04),
+            )
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+
+            /// ===== HEADER =====
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: softColor,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    isImport
+                        ? Icons.south_rounded
+                        : Icons.north_rounded,
+                    color: mainColor,
+                  ),
+                ),
+
+                const SizedBox(width: 10),
+
+                /// TYPE LABEL
+                Expanded(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: softColor,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     child: Text(
-                      "${isImport ? "NHẬP" : "XUẤT"} • ${warehouse.productID}",
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      isImport ? "NHẬP KHO" : "XUẤT KHO",
                       style: TextStyle(
-                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: mainColor,
+                        fontSize: 13,
                       ),
                     ),
                   ),
-                  _QtyBadge(qty: history.qty, color: mainColor),
-                ],
-              ),
-
-              const SizedBox(height: 10),
-
-              /// ================= MAIN INFO =================
-              _InfoLine(
-                icon: Icons.access_time,
-                label: "Thời gian",
-                value: formatdatehelper.formatDMY(
-                  formatdatehelper.parseDate(history.time.toString()),
-                ),
-              ),
-              _InfoLine(
-                icon: Icons.person,
-                label: "Nhân viên",
-                value: history.nameEmployee,
-              ),
-              _InfoLine(
-                icon: Icons.store,
-                label: "Đối tác",
-                value: history.partner,
-              ),
-              if (history.lastUser.isNotEmpty)
-                _InfoLine(
-                  icon: Icons.verified_user,
-                  label: "Người thao tác",
-                  value: history.lastUser,
                 ),
 
-              if (history.remark.isNotEmpty) const SizedBox(height: 8),
+                /// QTY BADGE
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: mainColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "${history.qty}",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
 
-              /// ================= REMARK =================
-              if (history.remark.isNotEmpty)
-                _NoteLine(icon: Icons.note, text: history.remark),
-            ],
-          ),
+            const SizedBox(height: 8),
+
+            /// ===== PRODUCT =====
+            Text(
+              warehouse.productID.toString(),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            /// ===== META ROW =====
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              children: [
+                _MetaChip(
+                  icon: Icons.access_time,
+                  text: formatdatehelper.formatDMY(
+                    formatdatehelper.parseDate(history.time.toString()),
+                  ),
+                ),
+
+                if (history.nameEmployee.isNotEmpty)
+                  _MetaChip(
+                    icon: Icons.person,
+                    text: history.nameEmployee,
+                  ),
+
+                if (history.partner.isNotEmpty)
+                  _MetaChip(
+                    icon: Icons.store,
+                    text: history.partner,
+                  ),
+              ],
+            ),
+
+            /// ===== REMARK =====
+            if (history.remark.isNotEmpty) ...[
+              const SizedBox(height: 12),
+
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey.shade100,
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.notes_outlined,
+                        size: 16, color: Colors.grey.shade700),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        history.remark,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ]
+          ],
         ),
       ),
     );
   }
 }
 
-/// ================= STATUS ICON =================
-class _StatusIcon extends StatelessWidget {
-  final bool isImport;
-  final Color color;
-
-  const _StatusIcon({required this.isImport, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 46,
-      height: 46,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Icon(
-        isImport ? Icons.arrow_downward : Icons.arrow_upward,
-        color: Colors.white,
-        size: 26,
-      ),
-    );
-  }
-}
-
-/// ================= QTY BADGE =================
-class _QtyBadge extends StatelessWidget {
-  final num qty;
-  final Color color;
-
-  const _QtyBadge({required this.qty, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: color, width: 1.8),
-      ),
-      child: Text(
-        qty.toString(),
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: color,
-          fontSize: 14,
-        ),
-      ),
-    );
-  }
-}
-
-/// ================= INFO LINE =================
-class _InfoLine extends StatelessWidget {
+class _MetaChip extends StatelessWidget {
   final IconData icon;
-  final String label;
-  final String value;
+  final String text;
 
-  const _InfoLine({
+  const _MetaChip({
     required this.icon,
-    required this.label,
-    required this.value,
+    required this.text,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.black87),
-          const SizedBox(width: 6),
+          Icon(icon, size: 14, color: Colors.grey.shade700),
+          const SizedBox(width: 4),
           Text(
-            "$label: ",
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13, color: Colors.black87),
-            ),
-          ),
+            text,
+            style: const TextStyle(fontSize: 13),
+          )
         ],
       ),
-    );
-  }
-}
-
-/// ================= NOTE LINE =================
-class _NoteLine extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _NoteLine({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: Colors.black87),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            text,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, color: Colors.black87),
-          ),
-        ),
-      ],
     );
   }
 }

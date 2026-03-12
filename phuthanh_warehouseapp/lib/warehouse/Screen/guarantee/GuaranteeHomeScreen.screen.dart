@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/guarantee/GuaranteeDetail.screen.dart';
 // import 'package:phuthanh_warehouseapp/components/utils/CustomDrawer.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomGuaranteeItem.custom.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/Guaranteet.model.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/Guaranteet.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 

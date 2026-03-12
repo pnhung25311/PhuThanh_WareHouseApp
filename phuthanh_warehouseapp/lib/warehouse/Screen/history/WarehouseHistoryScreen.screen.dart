@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomHistoryItem.custom.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/ViewHistory.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/ViewHistory.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/HistoryService.service.dart';
 
 class WarehouseHistoryScreen extends StatefulWidget {

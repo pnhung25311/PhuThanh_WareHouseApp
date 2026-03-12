@@ -1,4 +1,4 @@
-import 'package:phuthanh_warehouseapp/warehouse/model/auth/Acount.model.dart';
+import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 
 class LoginResponse {
   final Account account;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomWarehouseItem.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomWarehouseLongClick.custom.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
 class WarehouseListView extends StatefulWidget {

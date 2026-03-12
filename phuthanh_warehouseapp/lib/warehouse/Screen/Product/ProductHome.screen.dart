@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawer.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomProductItem.custom.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/Product.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 
 class ProductHome extends StatefulWidget {

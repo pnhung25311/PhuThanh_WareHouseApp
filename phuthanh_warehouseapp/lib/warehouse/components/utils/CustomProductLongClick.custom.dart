@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/Product/ViewImgProduct.screen.dart';
 import 'package:flutter/services.dart';
 

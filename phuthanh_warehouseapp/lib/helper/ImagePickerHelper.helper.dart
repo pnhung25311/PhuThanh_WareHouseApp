@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 // import 'package:phuthanh_warehouseapp/Screen/WareHouse/ViewImgWareHouse.screen.dart';
 // import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:phuthanh_warehouseapp/warehouse/core/network/api_client.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionConvertHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/SftpService.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 

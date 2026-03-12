@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/test.dart';
 
 class AppRouter {

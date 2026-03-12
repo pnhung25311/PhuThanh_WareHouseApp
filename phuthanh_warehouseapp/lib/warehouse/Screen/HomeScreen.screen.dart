@@ -3,7 +3,7 @@ import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/ScanBarcodeScre
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/WareHouseSearchScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/WareHouseScreenHome.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomBottomNavigator.custom.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,7 +15,11 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   NavigationHelper navigationHelper = NavigationHelper();
-
+@override
+void initState() {
+  super.initState();
+  print("HomeScreen loaded");
+}
   void _onTabChanged(int index) {
     setState(() {
       _selectedIndex = index;

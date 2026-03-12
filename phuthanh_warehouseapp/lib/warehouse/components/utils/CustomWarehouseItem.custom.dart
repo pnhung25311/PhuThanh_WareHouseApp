@@ -1,103 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/sharedPreferences.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/Location.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/VehicleTypeID.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/system/DisplaySetting.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
-// import 'package:phuthanh_warehouseapp/store/AppState.store.dart';
 
 class WarehouseItem extends StatefulWidget {
   final WareHouse item;
   final VoidCallback? onLongPress;
 
-  const WarehouseItem({super.key, required this.item, this.onLongPress});
+  const WarehouseItem({
+    super.key,
+    required this.item,
+    this.onLongPress,
+  });
 
   @override
   State<WarehouseItem> createState() => _WarehouseItemState();
 }
 
 class _WarehouseItemState extends State<WarehouseItem> {
-  bool showID_Keeton = true;
-  bool showIndustrial = true;
-  bool showID_PartNo = true;
-  bool showID_ReplacedPartNo = true;
-  bool showParameter = true;
-  bool showRemark = true;
-  bool showVehicleDetails = true;
-  bool showVehicleTypeName = true;
-  bool showUnitName = true;
-  bool showCountryName = true;
-  bool showManufacturerName = true;
-  bool showSupplierName = true;
-  bool showSupplierActualName = true;
-  DisplaySetting? displaySetting;
-  List<Location> loacation = [];
   List<VehicleType> vehicles = [];
-  InfoService infoService = InfoService();
-  NavigationHelper navigationHelper = NavigationHelper();
-  MySharedPreferences mySharedPreferences = MySharedPreferences();
+  final InfoService infoService = InfoService();
+  final NavigationHelper navigationHelper = NavigationHelper();
 
   @override
   void initState() {
     super.initState();
-    // _loadDisplaySettings();
-    // _loadDataLocation();
-    _loadDataVehicleType();
+    _loadVehicleTypes();
   }
 
-  // Future<void> _loadDataLocation() async {
-  //   List<Location> data;
-
-  //   data = await infoService.fetchLocations();
-
-  //   if (!mounted) return;
-  //   setState(() {
-  //     loacation = data;
-  //   });
-  // }
-
-  Future<void> _loadDataVehicleType() async {
-    List<VehicleType> data;
-
-    data = await infoService.LoadDtataVehicleType();
-
+  Future<void> _loadVehicleTypes() async {
+    final data = await infoService.LoadDtataVehicleType();
     if (!mounted) return;
+
     setState(() {
       vehicles = data;
     });
   }
 
-  // Future<void> _loadDisplaySettings() async {
-  //   if (!mounted) return;
-  //   final itemSetting = await mySharedPreferences.getDataObject(
-  //     "showhideWareHouse",
-  //   );
-  //   displaySetting = DisplaySetting.fromJson(itemSetting);
-  //   setState(() {
-  //     showID_PartNo = displaySetting!.showIDPartNo;
-  //     showID_ReplacedPartNo = displaySetting!.showIDReplacedPartNo;
-  //     showID_Keeton = displaySetting!.showIDKeeton;
-  //     showIndustrial = displaySetting!.showIndustrial;
-  //     showParameter = displaySetting!.showParameter;
-  //     showRemark = displaySetting!.showRemark;
-  //     showVehicleDetails = displaySetting!.showVehicleDetails;
-  //     showVehicleTypeName = displaySetting!.showVehicleTypeName;
-  //     showUnitName = displaySetting!.showUnitName;
-  //     showCountryName = displaySetting!.showCountryName;
-  //     showManufacturerName = displaySetting!.showManufacturerName;
-  //     showSupplierName = displaySetting!.showSupplierName;
-  //     showSupplierActualName = displaySetting!.showSupplierActualName;
-  //   });
-  // }
-  // bool _getBool(String key) {
-  //   final value = AppState.instance.get(key);
-  //   return value ?? true;
-  // }
+  bool _hasValue(dynamic value) {
+    return value != null && value.toString().trim().isNotEmpty;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,15 +51,23 @@ class _WarehouseItemState extends State<WarehouseItem> {
     final helper = FunctionHelper();
     final roles = AppState.instance.get("role");
 
+    final vehicleType = helper.getNamesFromIdsDynamic<VehicleType>(
+      ids: item.vehicleTypeID.toString(),
+      list: vehicles,
+      getId: (e) => e.VehicleTypeID.toString(),
+      getName: (e) => e.VehicleTypeName.toString(),
+    );
+
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      elevation: 2,
+      shadowColor: Colors.black12,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: Colors.grey.shade300, width: 5),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           navigationHelper.push(
             context,
@@ -131,17 +85,18 @@ class _WarehouseItemState extends State<WarehouseItem> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// 🔝 HEADER
+
+              /// HEADER
               Row(
                 children: [
                   Expanded(
                     child: Text(
-                      item.nameProduct ?? '',
-                      maxLines: 1,
+                      item.nameProduct ?? "",
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -149,113 +104,76 @@ class _WarehouseItemState extends State<WarehouseItem> {
                 ],
               ),
 
-              const SizedBox(height: 6),
+              const SizedBox(height: 12),
 
-              /// 🧾 MAIN INFO
-              _row(true, Icons.qr_code, "Mã sản phẩm", widget.item.productID),
-              _row(
-                false,
-                Icons.confirmation_number,
-                "Mã Keeton",
-                widget.item.idKeeton,
-              ),
-              _row(
-                false,
-                Icons.precision_manufacturing,
-                "Mã công nghiệp",
-                widget.item.idIndustrial,
-              ),
-              _row(true, Icons.view_list, "Danh điểm", widget.item.idPartNo),
-              _row(
-                true,
-                Icons.compare_arrows,
-                "Danh điểm TĐ",
-                widget.item.idReplacedPartNo,
-              ),
-              _row(true, Icons.tune, "Thông số", widget.item.parameter),
-              _row(true, Icons.straighten, "ĐVT", widget.item.unitName),
-              _row(
-                true,
-                Icons.factory,
-                "Nhà sản xuất",
-                widget.item.manufacturerName,
-              ),
-              _row(
-                false,
-                Icons.directions_car,
-                "Dòng xe",
-                widget.item.vehicleDetail,
-              ),
-              _row(
-                false,
-                Icons.local_shipping,
-                "Hãng xe",
-                helper.getNamesFromIdsDynamic<VehicleType>(
-                  ids: widget.item.vehicleTypeID.toString(),
-                  list: vehicles,
-                  getId: (e) => e.VehicleTypeID.toString(),
-                  getName: (e) => e.VehicleTypeName.toString(),
+              /// PRODUCT
+              if (_hasValue(item.productID) ||
+                  _hasValue(item.idKeeton) ||
+                  _hasValue(item.idIndustrial) ||
+                  _hasValue(item.idPartNo) ||
+                  _hasValue(item.idReplacedPartNo))
+                _section(
+                  "Thông tin sản phẩm",
+                  Colors.blue,
+                  [
+                    _info(Icons.qr_code, "Mã SP", item.productID),
+                    _info(Icons.confirmation_number, "Keeton", item.idKeeton),
+                    _info(Icons.precision_manufacturing, "CN", item.idIndustrial),
+                    _info(Icons.view_list, "Danh điểm", item.idPartNo),
+                    _info(Icons.compare_arrows, "Danh điểm TĐ", item.idReplacedPartNo),
+                  ],
                 ),
-              ),
-              _row(true, Icons.public, "Nước SX", widget.item.countryName),
-              _row(
-                false,
-                Icons.store,
-                "NCC thực tế",
-                widget.item.supplierActualName,
-              ),
-              _row(
-                false,
-                Icons.description,
-                "NCC giấy tờ",
-                widget.item.supplierName,
-              ),
-              _row(
-                true,
-                Icons.notes,
-                "Ghi chú",
-                widget.item.remarkOfDataWarehouse,
-              ),
-              _row(true, Icons.notes, "Mã hóa đơn", widget.item.idBill),
-              _row(true, Icons.notes, "Vị trí", widget.item.locationID),
-              // _row(
-              //   true,
-              //   Icons.location_on_sharp,
-              //   "Vị trí",
-              //   helper.getNamesFromIdsDynamic<Location>(
-              //     ids: widget.item.locationID.toString(),
-              //     list: loacation,
-              //     getId: (e) => e.LocationID.toString(),
-              //     getName: (e) => e.NameLocation.toString(),
-              //   ),
-              // ),
 
-              /// 🧩 EXTRA INFO (wrap chips)
-              const SizedBox(height: 6),
+              /// VEHICLE
+              if (_hasValue(item.vehicleDetail) || _hasValue(vehicleType))
+                _section(
+                  "Thông tin xe",
+                  Colors.orange,
+                  [
+                    _info(Icons.directions_car, "Dòng xe", item.vehicleDetail),
+                    _info(Icons.local_shipping, "Hãng xe", vehicleType),
+                  ],
+                ),
 
-              // Wrap(
-              //   spacing: 6,
-              //   runSpacing: 6,
-              //   children: [
-              //     if (showIndustrial) _Chip("CN: ${item.idIndustrial}"),
-              //     if (showUnitName) _Chip("ĐVT: ${item.unitName}"),
-              //     if (showCountryName) _Chip("Quốc gia: ${item.countryName}"),
-              //     if (showVehicleTypeName)
-              //       _Chip("Hãng xe: ${item.vehicleTypeName}"),
-              //     if (showVehicleDetails)
-              //       _Chip("Dòng xe: ${item.vehicleDetail}"),
-              //     if (showManufacturerName)
-              //       _Chip("Nhà SX: ${item.manufacturerName}"),
-              //     if (showSupplierActualName)
-              //       _Chip("NCC TT: ${item.supplierActualName}"),
-              //     if (showSupplierName) _Chip("NCC CT: ${item.supplierName}"),
-              //   ],
-              // ),
-              // if (showParameter || showRemark) const SizedBox(height: 8),
-              // if (showParameter)
-              //   _NoteLine(icon: Icons.tune, text: item.parameter),
-              // if (showRemark)
-              //   _NoteLine(icon: Icons.note, text: item.remarkOfDataWarehouse),
+              /// MANUFACTURER
+              if (_hasValue(item.manufacturerName) || _hasValue(item.countryName))
+                _section(
+                  "Nhà sản xuất",
+                  Colors.green,
+                  [
+                    _info(Icons.factory, "NSX", item.manufacturerName),
+                    _info(Icons.public, "Quốc gia", item.countryName),
+                  ],
+                ),
+
+              /// SUPPLIER
+              if (_hasValue(item.supplierActualName) || _hasValue(item.supplierName))
+                _section(
+                  "Nhà cung cấp",
+                  Colors.purple,
+                  [
+                    _info(Icons.store, "NCC thực tế", item.supplierActualName),
+                    _info(Icons.description, "NCC chứng từ", item.supplierName),
+                  ],
+                ),
+
+              /// OTHER
+              if (_hasValue(item.parameter) ||
+                  _hasValue(item.unitName) ||
+                  _hasValue(item.idBill) ||
+                  _hasValue(item.locationID) ||
+                  _hasValue(item.remarkOfDataWarehouse))
+                _section(
+                  "Thông tin khác",
+                  Colors.teal,
+                  [
+                    _info(Icons.tune, "Thông số", item.parameter),
+                    _info(Icons.straighten, "ĐVT", item.unitName),
+                    _info(Icons.receipt_long, "Hóa đơn", item.idBill),
+                    _info(Icons.location_on, "Vị trí", item.locationID),
+                    _info(Icons.notes, "Ghi chú", item.remarkOfDataWarehouse),
+                  ],
+                ),
             ],
           ),
         ),
@@ -264,109 +182,112 @@ class _WarehouseItemState extends State<WarehouseItem> {
   }
 }
 
-/// 🔢 QTY BADGE
-class _QtyBadge extends StatelessWidget {
-  final num? qty;
 
-  const _QtyBadge({this.qty});
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.blue.shade50,
-        borderRadius: BorderRadius.circular(20),
+/// SECTION UI
+
+Widget _section(String title, Color color, List<Widget> children) {
+  final items = children.where((e) => e != const SizedBox.shrink()).toList();
+  if (items.isEmpty) return const SizedBox.shrink();
+
+  return Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    decoration: BoxDecoration(
+      color: color.withOpacity(0.05),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: color.withOpacity(0.3),
       ),
-      child: Text(
-        "Tồn: ${qty ?? 0}",
-        style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.blue),
-      ),
-    );
-  }
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+
+        /// HEADER
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.12),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(12),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 16,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        /// CONTENT
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(children: items),
+        ),
+      ],
+    ),
+  );
 }
 
-/// ℹ️ INFO LINE
-// class _InfoLine extends StatelessWidget {
-//   final IconData icon;
-//   final String text;
 
-//   const _InfoLine({required this.icon, required this.text});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Padding(
-//       padding: const EdgeInsets.only(top: 4),
-//       child: Row(
-//         children: [
-//           Icon(icon, size: 20, color: Colors.grey),
-//           const SizedBox(width: 6),
-//           Expanded(
-//             child: Text(
-//               text,
-//               maxLines: 1,
-//               overflow: TextOverflow.ellipsis,
-//               style: const TextStyle(fontSize: 15),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+/// INFO LINE
 
-/// 🧩 CHIP
-// class _Chip extends StatelessWidget {
-//   final String? text;
-
-//   const _Chip(this.text);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     if (text == null || text!.isEmpty) return const SizedBox.shrink();
-//     return Container(
-//       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-//       decoration: BoxDecoration(
-//         color: Colors.grey.shade100,
-//         borderRadius: BorderRadius.circular(20),
-//       ),
-//       child: Text(
-//         text!,
-//         style: const TextStyle(fontSize: 15),
-//         overflow: TextOverflow.ellipsis,
-//         maxLines: 1,
-//       ),
-//     );
-//   }
-// }
-
-Widget _row(bool visible, IconData icon, String label, dynamic value) {
-  if (!visible || value == null || value.toString().isEmpty) {
+Widget _info(IconData icon, String label, dynamic value) {
+  if (value == null || value.toString().trim().isEmpty) {
     return const SizedBox.shrink();
   }
 
-  return Padding(
-    padding: const EdgeInsets.only(top: 6),
+  return Container(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    decoration: const BoxDecoration(
+      border: Border(
+        bottom: BorderSide(
+          color: Color(0xFFE5E5E5),
+          width: 0.6,
+        ),
+      ),
+    ),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: Colors.grey.shade600),
-        const SizedBox(width: 8),
+        Icon(icon, size: 16, color: Colors.blueGrey),
+        const SizedBox(width: 6),
+
         SizedBox(
-          width: 120,
+          width: 100,
           child: Text(
-            "$label:",
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
           ),
         ),
+
         Expanded(
           child: Text(
             value.toString(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, color: Colors.black54),
+            style: const TextStyle(
+              fontSize: 13,
+              color: Colors.black87,
+            ),
           ),
         ),
       ],
@@ -374,33 +295,42 @@ Widget _row(bool visible, IconData icon, String label, dynamic value) {
   );
 }
 
-/// 📝 NOTE LINE
-// class _NoteLine extends StatelessWidget {
-//   final IconData icon;
-//   final String? text;
 
-//   const _NoteLine({required this.icon, this.text});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     if (text == null || text!.isEmpty) return const SizedBox.shrink();
-//     return Padding(
-//       padding: const EdgeInsets.only(top: 4),
-//       child: Row(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         children: [
-//           Icon(icon, color: Colors.grey),
-//           const SizedBox(width: 6),
-//           Expanded(
-//             child: Text(
-//               text!,
-//               maxLines: 2,
-//               overflow: TextOverflow.ellipsis,
-//               style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+/// BADGE TỒN KHO
+
+class _QtyBadge extends StatelessWidget {
+  final num? qty;
+
+  const _QtyBadge({this.qty});
+
+  @override
+  Widget build(BuildContext context) {
+    final quantity = qty ?? 0;
+
+    Color color;
+
+    if (quantity == 0) {
+      color = Colors.red;
+    } else if (quantity < 10) {
+      color = Colors.orange;
+    } else {
+      color = Colors.green;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        "Tồn $quantity",
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: color,
+        ),
+      ),
+    );
+  }
+}

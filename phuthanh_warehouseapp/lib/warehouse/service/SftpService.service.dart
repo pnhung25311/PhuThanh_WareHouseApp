@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:phuthanh_warehouseapp/warehouse/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 // import 'package:http/http.dart' as http;
 
 class SftpService {

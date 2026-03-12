@@ -2,9 +2,9 @@
 
 import 'dart:convert';
 
-import 'package:phuthanh_warehouseapp/warehouse/core/network/api_client.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/DataCheck.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/Sheet.model.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/model/info/DataCheck.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Sheet.model.dart';
 
 class SheetService {
   Future<Map<String, dynamic>> AddSheetWh(String table, String body) async {

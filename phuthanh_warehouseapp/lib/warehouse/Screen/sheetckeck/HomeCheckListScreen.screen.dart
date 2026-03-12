@@ -4,7 +4,7 @@ import 'package:phuthanh_warehouseapp/warehouse/Screen/datacheck/HomeDataCheckSc
 import 'package:phuthanh_warehouseapp/warehouse/Screen/sheetckeck/CheckListWareHouseScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/sheetckeck/ScanDataCheckScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomBottomNavigatorSheetCheck.custom.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 
 class HomeCheckListScreen extends StatefulWidget {
   final int initialTab;

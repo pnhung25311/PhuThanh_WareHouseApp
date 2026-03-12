@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/Product/ProductDetailScreen.sreen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/info/DrawerItem.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/WareHouseService.service.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';

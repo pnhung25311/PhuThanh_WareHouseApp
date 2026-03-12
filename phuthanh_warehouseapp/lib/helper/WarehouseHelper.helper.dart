@@ -1,4 +1,4 @@
-import 'package:phuthanh_warehouseapp/warehouse/model/warehouse/WareHouse.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 
 
 class WareHouseHelper {

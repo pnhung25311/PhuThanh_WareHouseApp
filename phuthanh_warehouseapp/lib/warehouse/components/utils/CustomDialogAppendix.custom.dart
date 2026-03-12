@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/warehouse/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 
 Future<bool?> showAddDialogDynamic(
