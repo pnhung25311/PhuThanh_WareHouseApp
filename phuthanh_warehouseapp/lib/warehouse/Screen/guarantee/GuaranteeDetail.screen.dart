@@ -445,13 +445,13 @@ class _GuaranteeDetailScreenState extends State<GuaranteeDetailScreen> {
             CustomTextField(
               label: "Part No hỏng",
               controller: _partNoBrokenCtrl,
-              readOnly: widget.readOnly,
+              readOnly: true
             ),
             const SizedBox(height: 12),
             CustomTextField(
               label: "Tên sản phẩm hỏng",
               controller: _nameBrokenCtrl,
-              readOnly: widget.readOnly,
+              readOnly: true
             ),
             const SizedBox(height: 16),
 
@@ -532,13 +532,13 @@ class _GuaranteeDetailScreenState extends State<GuaranteeDetailScreen> {
             CustomTextField(
               label: "Part No bảo hành",
               controller: _partNoGuaranteeCtrl,
-              readOnly: widget.readOnly,
+              readOnly: true
             ),
             const SizedBox(height: 12),
             CustomTextField(
               label: "Tên sản phẩm bảo hành",
               controller: _nameGuaranteeCtrl,
-              readOnly: widget.readOnly,
+              readOnly: true
             ),
             const SizedBox(height: 16),
 
