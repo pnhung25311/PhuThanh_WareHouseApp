@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/business/test.dart';
+import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
 import 'package:phuthanh_warehouseapp/model/system/SystemOption.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
@@ -194,8 +194,9 @@ class _LoginscreenState extends State<Loginscreen> {
         _saveSetting();
         if (_selectedSystem!.id == 1) {
           navigationHelper.pushAndRemoveUntil(context, HomeScreen());
-        } else {
-          navigationHelper.pushAndRemoveUntil(context, TestScreen());
+        }
+        if (_selectedSystem!.id == 2) {
+          navigationHelper.pushAndRemoveUntil(context, HomeBusinessScreen());
         }
       } else {
         String message = "Đăng nhập thất bại (${response.statusCode})";

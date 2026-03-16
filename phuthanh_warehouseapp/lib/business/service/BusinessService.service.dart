@@ -26,9 +26,29 @@ class Businessservice {
     }
   }
 
-    Future<Map<String, dynamic>> getHistoryImport(String maVt) async {
+  Future<Map<String, dynamic>> getHistoryImport(String maVt) async {
     try {
       final response = await client.get("business/ct70y-history/$maVt");
+      final List<dynamic> data = jsonDecode(response.body);
+
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": data.map((e) => HistoryBusiness.fromJson(e)).toList(),
+      };
+    } catch (e) {
+      print(e);
+      return {
+        "isSuccess": false,
+        "statusCode": 0,
+        "body": <HistoryBusiness>[], // luôn trả list
+      };
+    }
+  }
+
+    Future<Map<String, dynamic>> getAllHistory(String table) async {
+    try {
+      final response = await client.get("business/$table");
       final List<dynamic> data = jsonDecode(response.body);
 
       return {

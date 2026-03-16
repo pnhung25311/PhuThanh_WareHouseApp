@@ -20,7 +20,7 @@ class HistoryItem extends StatelessWidget {
     final bool isImport = history.qty > 0;
 
     final Color mainColor =
-        isImport ? const Color(0xFF1B8F3A) : const Color(0xFFD32F2F);
+        isImport ? const Color(0xFF2E7D32) : const Color(0xFFC62828);
 
     final Color softColor =
         isImport ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
@@ -29,7 +29,7 @@ class HistoryItem extends StatelessWidget {
     NavigationHelper navigationHelper = NavigationHelper();
 
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       onTap: () {
         navigationHelper.push(
           context,
@@ -43,28 +43,16 @@ class HistoryItem extends StatelessWidget {
         );
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-
-          /// gradient nhẹ
-          gradient: LinearGradient(
-            colors: [
-              Colors.white,
-              softColor.withOpacity(.25),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-
-          border: Border.all(color: softColor),
-
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-              color: Colors.black.withOpacity(0.04),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(.05),
             )
           ],
         ),
@@ -72,49 +60,59 @@ class HistoryItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            /// ===== HEADER =====
+            /// HEADER
             Row(
               children: [
+
+                /// ICON
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  height: 42,
+                  width: 42,
                   decoration: BoxDecoration(
                     color: softColor,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
                     isImport
-                        ? Icons.south_rounded
-                        : Icons.north_rounded,
+                        ? Icons.arrow_downward_rounded
+                        : Icons.arrow_upward_rounded,
                     color: mainColor,
                   ),
                 ),
 
-                const SizedBox(width: 10),
+                const SizedBox(width: 12),
 
-                /// TYPE LABEL
+                /// TYPE + PRODUCT
                 Expanded(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: softColor,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      isImport ? "NHẬP KHO" : "XUẤT KHO",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: mainColor,
-                        fontSize: 13,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isImport ? "NHẬP KHO" : "XUẤT KHO",
+                        style: TextStyle(
+                          color: mainColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
+
+                      const SizedBox(height: 2),
+
+                      Text(
+                        warehouse.productID.toString(),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
 
-                /// QTY BADGE
+                /// QTY
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                   decoration: BoxDecoration(
                     color: mainColor,
                     borderRadius: BorderRadius.circular(20),
@@ -122,7 +120,6 @@ class HistoryItem extends StatelessWidget {
                   child: Text(
                     "${history.qty}",
                     style: const TextStyle(
-                      fontSize: 14,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
@@ -131,26 +128,15 @@ class HistoryItem extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(height: 14),
 
-            /// ===== PRODUCT =====
-            Text(
-              warehouse.productID.toString(),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            /// ===== META ROW =====
+            /// META INFO
             Wrap(
               spacing: 10,
-              runSpacing: 8,
+              runSpacing: 10,
               children: [
                 _MetaChip(
-                  icon: Icons.access_time,
+                  icon: Icons.schedule,
                   text: formatdatehelper.formatDMY(
                     formatdatehelper.parseDate(history.time.toString()),
                   ),
@@ -158,40 +144,47 @@ class HistoryItem extends StatelessWidget {
 
                 if (history.nameEmployee.isNotEmpty)
                   _MetaChip(
-                    icon: Icons.person,
+                    icon: Icons.person_outline,
                     text: history.nameEmployee,
                   ),
 
                 if (history.partner.isNotEmpty)
                   _MetaChip(
-                    icon: Icons.store,
+                    icon: Icons.storefront_outlined,
                     text: history.partner,
                   ),
               ],
             ),
 
-            /// ===== REMARK =====
+            /// REMARK
             if (history.remark.isNotEmpty) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey.shade100,
-                  border: Border.all(color: Colors.grey.shade200),
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.grey.shade200,
+                  ),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.notes_outlined,
-                        size: 16, color: Colors.grey.shade700),
-                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.sticky_note_2_outlined,
+                      size: 18,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         history.remark,
-                        style: const TextStyle(fontSize: 13),
+                        style: const TextStyle(
+                          fontSize: 13,
+                        ),
                       ),
-                    ),
+                    )
                   ],
                 ),
               ),
@@ -215,7 +208,7 @@ class _MetaChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(20),
@@ -223,11 +216,14 @@ class _MetaChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.grey.shade700),
-          const SizedBox(width: 4),
+          Icon(icon, size: 15, color: Colors.grey.shade700),
+          const SizedBox(width: 5),
           Text(
             text,
-            style: const TextStyle(fontSize: 13),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
           )
         ],
       ),

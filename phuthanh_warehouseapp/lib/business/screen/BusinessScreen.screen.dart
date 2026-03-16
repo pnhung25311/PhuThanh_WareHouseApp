@@ -1,19 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomBusinessLongClick.custom.dart';
+import 'package:phuthanh_warehouseapp/business/components/CustomDrawerBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomProductBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
-// import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/ScanBarcodeScreen.screen.dart'; // import màn scan
 
-class TestScreen extends StatefulWidget {
-  const TestScreen({super.key});
+class BusinessScreen extends StatefulWidget {
+  const BusinessScreen({super.key});
 
   @override
-  State<TestScreen> createState() => _TestScreenState();
+  State<BusinessScreen> createState() => _BusinessScreenState();
 }
 
-class _TestScreenState extends State<TestScreen> {
+class _BusinessScreenState extends State<BusinessScreen> {
   List<Business> _allProducts = [];
   List<Business> _filteredProducts = [];
   bool _isLoading = true;
@@ -204,6 +204,7 @@ class _TestScreenState extends State<TestScreen> {
           ),
         ],
       ),
+      drawer: CustomDrawerBusiness(),
       body: _isLoading
           ? _buildLoading()
           : _errorMessage != null

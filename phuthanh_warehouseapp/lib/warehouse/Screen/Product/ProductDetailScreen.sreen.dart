@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDialogAppendix.custom.dart';
+// import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDialogAppendix.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomSmartDropdown.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextField.custom.dart';
@@ -446,412 +446,303 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     if (loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
     if (isSaving) {
       return Scaffold(body: _buildLoading());
     }
+
     return Scaffold(
+      backgroundColor: const Color(0xfff4f6fa),
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         title: Text(
           widget.item.nameProduct.isEmpty
-              ? "Thêm sản phẩm mới"
-              : widget.item.nameProduct.toString(),
+              ? "Thêm sản phẩm"
+              : widget.item.nameProduct,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.blue,
       ),
+
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
-            //MÃ SẢN PHẨM
-            CustomTextField(
-              label: "Mã sản phẩm:",
-              controller: productIDController,
-              hintText: "Nhập mã sản phẩm",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 15),
-            //MÃ KEETON
-            CustomTextField(
-              label: "Mã keeton:",
-              controller: keetonController,
-              hintText: "Nhập mã keeton",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
-            //MÃ CÔNG NGHIỆP
-            CustomTextField(
-              label: "Mã công nghiệp:",
-              controller: industrialController,
-              hintText: "Nhập công nghiệp",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
-            //DANH ĐIỂM
-            CustomTextField(
-              label: "Danh điểm:",
-              controller: partNoController,
-              hintText: "Nhập danh điểm",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
-            //DANH ĐIỂM TƯƠNG ĐƯƠNG
-            CustomTextField(
-              label: "Danh điểm tương đương:",
-              controller: replacedPartNoController,
-              hintText: "Nhập danh điểm tương đương",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
-            //TÊN SẢN PHẨM
-            CustomTextField(
-              label: "Tên sản phẩm:",
-              controller: nameProductController,
-              hintText: "Tên sản phẩm",
-              readOnly: widget.readOnly,
-            ),
-            // const SizedBox(height: 10),
-            //SỐ LƯỢNG DỰ KIẾN
-            // CustomTextField(
-            //   label: "Số lượng dự kiến:",
-            //   controller: qtyExpectedController,
-            //   hintText: "Nhập số dự kiến",
-            //   keyboardType: TextInputType.numberWithOptions(
-            //     decimal: true,
-            //     signed: true,
-            //   ),
-            //   readOnly: widget.readOnly,
-            //   inputFormatters: [DotToMinusFormatter()],
-            // ),
-            // const SizedBox(height: 10),
-            // //MÃ HÓA ĐƠN
-            // CustomTextField(
-            //   label: "Mã số hóa đơn:",
-            //   controller: idBillController,
-            //   hintText: "Mã số hóa đơn",
-            //   readOnly: widget.readOnly,
-            // ),
-            const SizedBox(height: 10),
-            //THÔNG SỐ
-            CustomTextField(
-              label: "Thông số:",
-              controller: parameterController,
-              hintText: "Thông số",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
+            /// ===== THÔNG TIN SẢN PHẨM =====
+            _section("Thông tin sản phẩm", [
+              CustomTextField(
+                label: "Mã sản phẩm",
+                controller: productIDController,
+                readOnly: widget.readOnly,
+              ),
 
-            // ======= DROPDOWN =======
-            //LOẠI XE
-            Text(
-              "Hãng xe",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            SmartDropdown<VehicleType>(
-              key: dropdownKey,
-              labelBuilder: (loc) => loc.VehicleTypeName,
-              items: vehicles,
-              hint: "Chọn hãng xe",
-              isSearch: true,
-              isMultiSelect: true,
-              readOnly: widget.readOnly,
-              initialValues: selectVehicles, // ✅ dùng plural
-              onChanged: (values) => setState(() {
-                selectVehicles = List<VehicleType>.from(values as List);
-                selectedVehicelIds = selectVehicles
-                    .map((e) => e.VehicleTypeID)
-                    .toList();
-                // print(selectedVehicelIds);
-              }),
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 3);
-                if (result != null) {
-                  await _loadDataVehicel(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-              dropdownMaxHeight: 300,
-            ),
-            // CustomDropdownField(
-            //   label: "Hãng xe",
-            //   selectedValue: selectedVehicleType,
-            //   items: vehicles,
-            //   getLabel: (i) => i.VehicleTypeName.toString(),
-            //   onChanged: (v) => setState(() => selectedVehicleType = v),
-            //   readOnly: widget.readOnly,
-            //   isSearch: true,
-            //   isCreate: StatusCreate,
-            //   textCreate: "Thêm mới loại xe",
-            //   functionCreate: () async {
-            //     // 👇 Tắt dropdown tự động, mở dialog thêm mới
-            //     final result = await showAddDialogDynamic(context, model: 4);
-            //     if (result != null) {
-            //       await _loadAllData(); // reload danh sách
-            //       setState(() {}); // cập nhật lại UI
-            //     }
-            //   },
-            // ),
-            const SizedBox(height: 10),
-            //DÒNG XE
-            CustomTextField(
-              label: "Dòng xe:",
-              controller: vehicleDetailController,
-              hintText: "Nhập dòng xe",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
-            //CỤM XE
-            CustomTextField(
-              label: "Cụm xe:",
-              controller: vehicleClusterController,
-              hintText: "Cụm xe",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
-            //NHÀ SẢN XUẤT
-            CustomDropdownField(
-              label: "Nhà sản xuất",
-              selectedValue: selectedManufacturer,
-              items: manufacturers,
-              getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedManufacturer = v),
-              readOnly: widget.readOnly,
-              isSearch: true,
-              isCreate: StatusCreate,
-              textCreate: "Thêm mới nhà sản xuất",
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 4);
-                if (result != null) {
-                  await _loadAllData(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-            ),
-            const SizedBox(height: 15),
-            //QUỐC GIA
-            CustomDropdownField(
-              label: "Quốc gia",
-              selectedValue: selectedCountry,
-              items: countries,
-              getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedCountry = v),
-              readOnly: widget.readOnly,
-              isCreate: StatusCreate,
-              isSearch: true,
-              textCreate: "Thêm mới quốc gia",
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 1);
-                if (result != null) {
-                  await _loadAllData(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-            ),
+              const SizedBox(height: 12),
 
-            const SizedBox(height: 15),
-            //NHÀ PHÂN KHỐI THỰC TẾ
-            CustomDropdownField(
-              label: "Nhà phân phối thực tế",
-              selectedValue: selectedSupplierActual,
-              items: supplierActuals,
-              getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedSupplierActual = v),
-              readOnly: widget.readOnly,
-              isCreate: StatusCreate,
-              isSearch: true,
-              textCreate: "Thêm mới nhà phân phối",
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 5);
-                if (result != null) {
-                  await _loadAllData(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-            ),
-            const SizedBox(height: 15),
-            //NHÀ PHÂN KHỐI GIẤY TỜ
-            CustomDropdownField(
-              label: "Nhà phân phối giấy tờ",
-              selectedValue: selectedSupplier,
-              items: suppliers,
-              getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedSupplier = v),
-              readOnly: widget.readOnly,
-              isCreate: StatusCreate,
-              isSearch: true,
-              textCreate: "Thêm mới nhà phân phối",
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 5);
-                if (result != null) {
-                  await _loadAllData(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-            ),
-            const SizedBox(height: 15),
-            //ĐƠN VỊ TÍNH
-            CustomDropdownField(
-              label: "Đơn vị tính:",
-              selectedValue: selectedUnit,
-              items: units,
-              getLabel: (i) => i.Name.toString(),
-              onChanged: (v) => setState(() => selectedUnit = v),
-              readOnly: widget.readOnly,
-              isCreate: StatusCreate,
-              isSearch: true,
-              textCreate: "Thêm mới đơn vị tính",
-              functionCreate: () async {
-                // 👇 Tắt dropdown tự động, mở dialog thêm mới
-                final result = await showAddDialogDynamic(context, model: 6);
-                if (result != null) {
-                  await _loadAllData(); // reload danh sách
-                  setState(() {}); // cập nhật lại UI
-                }
-              },
-            ),
-            const SizedBox(height: 15),
-            //GHI CHÚ
-            CustomTextField(
-              label: "Ghi chú:",
-              controller: remarkController,
-              hintText: "Ghi chú",
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 10),
+              CustomTextField(
+                label: "Tên sản phẩm",
+                controller: nameProductController,
+                readOnly: widget.readOnly,
+              ),
 
-            // ======= ẢNH =======
-            CustomTextFieldIcon(
-              label: "Ảnh 1 sản phẩm",
-              controller: image1Controller, // sẽ chứa đường link sau khi upload
-              prefixIcon: Icons.image_outlined,
-              suffixIcon: Icons.camera_alt,
-              readOnly: true,
-              onSuffixIconPressed: () async {
-                // Gọi helper upload
-                await ImagePickerHelper().showImageOptions(
-                  context: context,
-                  currentImageUrl: image1Controller.text,
-                  productID: productIDController.text,
-                  isUpdate: widget.isUpDate || widget.isCreate,
-                  nameImg: "img1",
-                  // wh: ,
-                  onImageChanged: (url) {
-                    // Cập nhật TextField khi upload thành công
-                    setState(() {
-                      image1Controller.text = url ?? '';
-                    });
-                  },
-                  // wh: widget.item,
-                );
-              },
-            ),
+              const SizedBox(height: 12),
 
-            const SizedBox(height: 25),
-            CustomTextFieldIcon(
-              label: "Ảnh 2 sản phẩm: ",
-              controller: image2Controller,
-              prefixIcon: Icons.image_outlined,
-              suffixIcon: Icons.camera_alt,
-              readOnly: true,
-              onSuffixIconPressed: () async {
-                // Gọi helper upload
-                await ImagePickerHelper().showImageOptions(
-                  context: context,
-                  currentImageUrl: image2Controller.text,
-                  nameImg: "img2",
-                  isUpdate: widget.isUpDate,
-                  productID: productIDController.text,
-                  onImageChanged: (url) {
-                    // Cập nhật TextField khi upload thành công
-                    setState(() {
-                      image2Controller.text = url ?? '';
-                    });
-                  },
-                  // wh: widget.item,
-                );
-              },
-            ),
+              CustomTextField(
+                label: "Thông số",
+                controller: parameterController,
+                readOnly: widget.readOnly,
+              ),
+            ]),
 
-            const SizedBox(height: 25),
-            CustomTextFieldIcon(
-              label: "Ảnh 3 sản phẩm: ",
-              controller: image3Controller,
-              prefixIcon: Icons.image_outlined,
-              suffixIcon: Icons.camera_alt,
-              readOnly: true,
-              onSuffixIconPressed: () async {
-                // Gọi helper upload
-                await ImagePickerHelper().showImageOptions(
-                  context: context,
-                  currentImageUrl: image3Controller.text,
-                  productID: productIDController.text,
-                  nameImg: "img3",
-                  isUpdate: widget.isUpDate,
-                  onImageChanged: (url) {
-                    // Cập nhật TextField khi upload thành công
-                    setState(() {
-                      image3Controller.text = url ?? '';
-                    });
-                  },
-                  // wh: widget.item,
-                );
-              },
-            ),
+            /// ===== MÃ SẢN PHẨM =====
+            _section("Mã sản phẩm", [
+              CustomTextField(
+                label: "Mã Keeton",
+                controller: keetonController,
+                readOnly: widget.readOnly,
+              ),
 
-            const Divider(),
+              const SizedBox(height: 12),
 
-            const SizedBox(height: 25),
-            Center(
-              child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.center, // căn giữa hàng ngang
-                children: [
-                  ElevatedButton.icon(
+              CustomTextField(
+                label: "Mã công nghiệp",
+                controller: industrialController,
+                readOnly: widget.readOnly,
+              ),
+
+              const SizedBox(height: 12),
+
+              CustomTextField(
+                label: "Danh điểm",
+                controller: partNoController,
+                readOnly: widget.readOnly,
+              ),
+
+              const SizedBox(height: 12),
+
+              CustomTextField(
+                label: "Danh điểm tương đương",
+                controller: replacedPartNoController,
+                readOnly: widget.readOnly,
+              ),
+            ]),
+
+            /// ===== XE =====
+            _section("Thông tin xe", [
+              SmartDropdown<VehicleType>(
+                key: dropdownKey,
+                labelBuilder: (loc) => loc.VehicleTypeName,
+                items: vehicles,
+                hint: "Chọn hãng xe",
+                isSearch: true,
+                isMultiSelect: true,
+                readOnly: widget.readOnly,
+                initialValues: selectVehicles,
+                dropdownMaxHeight: 300,
+                onChanged: (values) => setState(() {
+                  selectVehicles = List<VehicleType>.from(values as List);
+                  selectedVehicelIds = selectVehicles
+                      .map((e) => e.VehicleTypeID)
+                      .toList();
+                }),
+              ),
+
+              const SizedBox(height: 12),
+
+              CustomTextField(
+                label: "Dòng xe",
+                controller: vehicleDetailController,
+                readOnly: widget.readOnly,
+              ),
+
+              const SizedBox(height: 12),
+
+              CustomTextField(
+                label: "Cụm xe",
+                controller: vehicleClusterController,
+                readOnly: widget.readOnly,
+              ),
+            ]),
+
+            /// ===== NHÀ CUNG CẤP =====
+            _section("Nhà cung cấp", [
+              CustomDropdownField(
+                label: "Nhà sản xuất",
+                selectedValue: selectedManufacturer,
+                items: manufacturers,
+                getLabel: (i) => i.Name,
+                onChanged: (v) => setState(() => selectedManufacturer = v),
+                readOnly: widget.readOnly,
+                isSearch: true,
+              ),
+
+              const SizedBox(height: 12),
+
+              CustomDropdownField(
+                label: "Nhà phân phối thực tế",
+                selectedValue: selectedSupplierActual,
+                items: supplierActuals,
+                getLabel: (i) => i.Name,
+                onChanged: (v) => setState(() => selectedSupplierActual = v),
+                readOnly: widget.readOnly,
+                isSearch: true,
+              ),
+
+              const SizedBox(height: 12),
+
+              CustomDropdownField(
+                label: "Nhà phân phối giấy tờ",
+                selectedValue: selectedSupplier,
+                items: suppliers,
+                getLabel: (i) => i.Name,
+                onChanged: (v) => setState(() => selectedSupplier = v),
+                readOnly: widget.readOnly,
+                isSearch: true,
+              ),
+            ]),
+
+            /// ===== QUỐC GIA =====
+            _section("Thông tin khác", [
+              CustomDropdownField(
+                label: "Quốc gia",
+                selectedValue: selectedCountry,
+                items: countries,
+                getLabel: (i) => i.Name,
+                onChanged: (v) => setState(() => selectedCountry = v),
+                readOnly: widget.readOnly,
+                isSearch: true,
+              ),
+
+              const SizedBox(height: 12),
+
+              CustomDropdownField(
+                label: "Đơn vị tính",
+                selectedValue: selectedUnit,
+                items: units,
+                getLabel: (i) => i.Name,
+                onChanged: (v) => setState(() => selectedUnit = v),
+                readOnly: widget.readOnly,
+                isSearch: true,
+              ),
+
+              const SizedBox(height: 12),
+
+              CustomTextField(
+                label: "Ghi chú",
+                controller: remarkController,
+                readOnly: widget.readOnly,
+              ),
+            ]),
+
+            /// ===== ẢNH =====
+            _section("Ảnh sản phẩm", [
+              _imageField("Ảnh 1", image1Controller, "img1"),
+              const SizedBox(height: 16),
+
+              _imageField("Ảnh 2", image2Controller, "img2"),
+              const SizedBox(height: 16),
+
+              _imageField("Ảnh 3", image3Controller, "img3"),
+            ]),
+
+            const SizedBox(height: 30),
+
+            /// ===== BUTTON =====
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 30,
-                        vertical: 12,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    onPressed:
-                        (widget.isUpDate ||
-                                widget.isCreate ||
-                                widget.isCreateHistory) &&
-                            !isSaving
+                    onPressed: (widget.isUpDate || widget.isCreate) && !isSaving
                         ? _upDateWareHouse
                         : null,
-                    icon: isSaving
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            // child: CircularProgressIndicator(
-                            //   strokeWidth: 2,
-                            //   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            // ),
-                            // child: _buildLoading(),
-                          )
-                        : const Icon(Icons.save),
-                    label: Text(isSaving ? "Đang lưu..." : "Lưu thay đổi"),
+                    icon: const Icon(Icons.save),
+                    label: Text(isSaving ? "Đang lưu..." : "Lưu"),
                   ),
-                  const SizedBox(width: 20), // khoảng cách giữa 2 nút
-                  ElevatedButton.icon(
+                ),
+
+                const SizedBox(width: 16),
+
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back),
                     label: const Text("Quay lại"),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
+
+            const SizedBox(height: 30),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _imageField(
+    String title,
+    TextEditingController controller,
+    String key,
+  ) {
+    return CustomTextFieldIcon(
+      label: title,
+      controller: controller,
+      prefixIcon: Icons.image_outlined,
+      suffixIcon: Icons.camera_alt,
+      readOnly: true,
+      onSuffixIconPressed: () async {
+        await ImagePickerHelper().showImageOptions(
+          context: context,
+          currentImageUrl: controller.text,
+          productID: productIDController.text,
+          nameImg: key,
+          isUpdate: widget.isUpDate,
+          onImageChanged: (url) {
+            setState(() {
+              controller.text = url ?? '';
+            });
+          },
+        );
+      },
+    );
+  }
+
+  Widget _section(String title, List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 12,
+            color: Colors.black.withOpacity(.05),
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
       ),
     );
   }
