@@ -39,4 +39,18 @@ class CodeHelper {
 
     return "BH-$day$month$year$second$minute$hour";
   }
+
+  String generateCodeCart() {
+    final now = DateTime.now();
+
+    // Cách 1: Dùng padding thủ công (giống Java nhất)
+    String day = now.day.toString().padLeft(2, '0');
+    String month = now.month.toString().padLeft(2, '0');
+    String year = now.year.toString();
+    String hour = now.hour.toString().padLeft(2, '0');
+    String minute = now.minute.toString().padLeft(2, '0');
+    String second = now.second.toString().padLeft(2, '0');
+
+    return "DH-$day$month$year$second$minute$hour";
+  }
 }
