@@ -618,6 +618,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
           item.wareHouseDataBase.toString(),
           aid.toString(),
           jsonEncode({
+            "LocationID": locationController.text.trim(),
             "Qty": QtyWhFrom,
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
           }),
@@ -689,6 +690,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             itemList?.wareHouseDataBase ?? "",
             targetWhAID.toString(),
             jsonEncode({
+              "LocationID": locationController.text.trim(),
               "Qty": QtyWhTo,
               "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
             }),
