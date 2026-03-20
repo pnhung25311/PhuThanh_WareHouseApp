@@ -5,6 +5,7 @@ import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/service/CartService.service.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 
 class CartItem extends StatelessWidget {
@@ -30,7 +31,12 @@ class CartItem extends StatelessWidget {
     final statusText = _getStatusText(cart.status);
 
     NavigationHelper nav = NavigationHelper();
+    MySharedPreferences prefs = MySharedPreferences();
     CartService cartService = CartService();
+    Future<int?> _getCurrentUserID() async {
+      final acc = await prefs.getDataObject("account");
+      return acc?["AccountID"];
+    }
 
     return Dismissible(
       key: ValueKey(cart.cartAID),
@@ -40,6 +46,16 @@ class CartItem extends StatelessWidget {
 
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.endToStart) {
+          final accountID = await _getCurrentUserID();
+          if (cart.accountID != accountID) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Bạn không phải người tạo đơn hàng!'),
+                duration: const Duration(milliseconds: 1500),
+              ),
+            );
+            return false;
+          }
           if (cart.status == true) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
