@@ -1,57 +1,77 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/components/CustomCartFilter.custom.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomCartItem.custom.dart';
 import 'package:phuthanh_warehouseapp/business/service/CartService.service.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 
 class CartListScreen extends StatefulWidget {
-  const CartListScreen({super.key});
+  final bool isBusiness;
+  const CartListScreen({super.key, required this.isBusiness});
 
   @override
   State<CartListScreen> createState() => _CartListScreenState();
 }
 
 class _CartListScreenState extends State<CartListScreen> {
-  List<Cart> _carts = []; // list lưu dữ liệu Cart
-  bool _isLoading = false; // trạng thái loading
+  List<Cart> _allCarts = []; // dữ liệu gốc
+  List<Cart> _carts = []; // dữ liệu hiển thị
+  bool _isLoading = false;
+  CartFilterResult? _currentFilter;
+  List<Supplier> suppliers = [];
+
   final CartService _cartService = CartService();
   NavigationHelper navigationHelper = NavigationHelper();
+  final InfoService infoService = InfoService();
+  final MySharedPreferences prefs = MySharedPreferences();
 
   @override
   void initState() {
     super.initState();
-    _loadData(); // load ngay khi màn hình mở
+    _loadData();
+    _loadSuppliers();
   }
 
+  Future<int?> _getCurrentUserID() async {
+    final acc = await prefs.getDataObject("account");
+    return acc?["AccountID"];
+  }
+
+  /// ================= LOAD DATA =================
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
 
     try {
-      final result = await _cartService.getAllCarts();
-
-      // Kiểm tra mã lỗi tương tự như code của bạn
+      final accountID = await _getCurrentUserID();
+      final result;
+      if (widget.isBusiness == true) {
+        result = await _cartService.getCartsToEmployee(
+          jsonEncode({"AccountID": accountID}),
+        );
+      } else {
+        result = await _cartService.getAllCarts();
+      }
       final statusCode = result["statusCode"] as int? ?? 0;
 
       if (statusCode == 403 || statusCode == 401 || statusCode == 0) {
-        // Đẩy về màn Login (giả sử bạn có navigationHelper giống code cũ)
         navigationHelper.pushAndRemoveUntil(context, const Loginscreen());
-        return; // dừng tiếp tục xử lý
+        return;
       }
 
-      // Thành công → cập nhật list
       final List<Cart> newCarts = result["body"] as List<Cart>;
 
       setState(() {
-        _carts.clear();
-        _carts.addAll(newCarts);
+        _allCarts = newCarts;
+        _carts = newCarts; // reset filter khi load
       });
-
-      print("Load thành công: ${_carts.length} giỏ hàng");
     } catch (e) {
-      print("Lỗi load giỏ hàng: $e");
-      // Có thể thêm SnackBar thông báo lỗi cho người dùng
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -61,12 +81,102 @@ class _CartListScreenState extends State<CartListScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  Future<void> _loadSuppliers() async {
+    try {
+      final suppList = await infoService.LoadDtataSupplier();
+
+      setState(() {
+        suppliers = suppList;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  /// ================= UI FILTER =================
+  Future<void> _openFilter() async {
+    final result = await showModalBottomSheet<CartFilterResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => CartFilterBottomSheet(
+        initial: _currentFilter, // 🔥 giữ state
+        suppliers: suppliers,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _currentFilter = result;
+      });
+
+      _applyFilterFromResult(result);
+    }
+  }
+
+  void _applyFilterFromResult(CartFilterResult f) {
+    List<Cart> filtered = _allCarts;
+
+    /// 🔎 Keyword
+    if (f.keyword != null && f.keyword!.isNotEmpty) {
+      filtered = filtered.where((c) {
+        return (c.productID ?? "").contains(f.keyword!) ||
+            (c.nameProduct ?? "").toLowerCase().contains(
+              f.keyword!.toLowerCase(),
+            ) ||
+            (c.idPartNo ?? "").contains(f.keyword!);
+      }).toList();
+    }
+
+    /// 📅 Date FIX
+    if (f.fromDate != null || f.toDate != null) {
+      filtered = filtered.where((c) {
+        if (c.deliveryTime == null) return false;
+
+        final d = _onlyDate(c.deliveryTime!);
+
+        if (f.fromDate != null && d.isBefore(_onlyDate(f.fromDate!)))
+          return false;
+
+        if (f.toDate != null && d.isAfter(_onlyDate(f.toDate!))) return false;
+
+        return true;
+      }).toList();
+    }
+
+    /// 👤 FullName
+    if (f.fullName != null && f.fullName!.isNotEmpty) {
+      filtered = filtered.where((c) {
+        return (c.fullName ?? "").toLowerCase().contains(
+          f.fullName!.toLowerCase(),
+        );
+      }).toList();
+    }
+
+    /// 🏢 Partner
+    if (f.partnerId != null) {
+      filtered = filtered.where((c) => c.partner == f.partnerId).toList();
+    }
+
+    /// 📌 Status
+    if (f.status != null) {
+      filtered = filtered.where((c) => c.status == f.status).toList();
+    }
+
+    setState(() {
+      _carts = filtered;
+    });
+  }
+
+  DateTime _onlyDate(DateTime d) {
+    return DateTime(d.year, d.month, d.day);
+  }
+
+  /// ================= UI =================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,83 +184,38 @@ class _CartListScreenState extends State<CartListScreen> {
         title: const Text('Danh sách giỏ hàng'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _loadData,
-            tooltip: 'Làm mới',
+            icon: const Icon(Icons.filter_list_alt),
+            onPressed: _openFilter,
           ),
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16),
-                  Text('Đang tải danh sách giỏ hàng...'),
-                ],
-              ),
-            )
+          ? const Center(child: CircularProgressIndicator())
           : _carts.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.shopping_cart_outlined,
-                    size: 80,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Chưa có giỏ hàng nào',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 16),
-                  OutlinedButton.icon(
-                    onPressed: _loadData,
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Tải lại'),
-                  ),
-                ],
-              ),
-            )
+          ? const Center(child: Text("Không có dữ liệu"))
           : RefreshIndicator(
               onRefresh: _loadData,
               child: ListView.builder(
-                padding: const EdgeInsets.only(top: 8, bottom: 80),
                 itemCount: _carts.length,
                 itemBuilder: (context, index) {
                   final cart = _carts[index];
                   return CartItem(
                     cart: cart,
-                    onTap: () {
-                      // TODO: mở chi tiết
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Chi tiết giỏ #${cart.cartAID}'),
-                        ),
-                      );
-                    },
-                    onSwipeLeft: () {
-                      // TODO: mở chi tiết
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Chạy hàm #${cart.cartAID}')),
-                      );
-                    },
+                    isEven: index % 2 == 0,
+                    onCallBack: _loadData,
                   );
                 },
               ),
             ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Tạo giỏ mới
-          navigationHelper.push(
+        onPressed: () async {
+          final result = await navigationHelper.push(
             context,
             CartDetailScreen(item: Cart.empty(), isCreate: true),
           );
+          if (result == true) _loadData();
         },
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.shopping_cart),
         label: const Text('Thêm phiếu'),
       ),
     );

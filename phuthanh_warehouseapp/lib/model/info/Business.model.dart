@@ -43,52 +43,56 @@ class Business {
   final double? tongSoLuongBanRa;
   final double? soLuongBanRaGanNhat;
   final String thoiGianBanRaGanNhat;
+  final double? hkdHoangVanDung;
+  final double? hkdLeVanThien;
 
   Business.fromJson(Map<String, dynamic> json)
-      : barcode = json['Barcode']?.toString() ?? '',
-        maKeeton = json['Mã Keeton']?.toString() ?? '',
-        maCongNghiep = json['Mã Công Nghiệp']?.toString() ?? '',
-        danhDiem = json['Danh điểm']?.toString() ?? '',
-        boDanhDiemTuongDuong = json['Bộ danh điểm tương đương']?.toString() ?? '',
-        tenHangHoa = json['Tên hàng hóa']?.toString() ?? '',
-        thongSoKyThuat = json['Thông số kĩ thuật']?.toString() ?? '',
-        hangXe = json['Hãng Xe']?.toString() ?? '',
-        dongXe = json['Dòng xe']?.toString() ?? '',
-        cumXe = json['Cụm xe']?.toString() ?? '',
-        hangSanXuat = json['Hãng Sản Xuất']?.toString() ?? '',
-        nuocSanXuat = json['Nước Sản Xuất']?.toString() ?? '',
-        nhaCungCapThucTe = json['Nhà cung cấp thực tế']?.toString() ?? '',
-        nhaCungCapHopDong = json['Nhà cung cấp hợp đồng']?.toString() ?? '',
-        donViTinh = json['Đơn vị tính']?.toString() ?? '',
-        hinhAnh1 = _cleanImageUrl(json['Hình ảnh 1']),
-        hinhAnh2 = _cleanImageUrl(json['Hình ảnh 2']),
-        hinhAnh3 = _cleanImageUrl(json['Hình ảnh 3']),
-        ghiChu = json['Ghi chú']?.toString() ?? '',
+    : barcode = json['Barcode']?.toString() ?? '',
+      maKeeton = json['Mã Keeton']?.toString() ?? '',
+      maCongNghiep = json['Mã Công Nghiệp']?.toString() ?? '',
+      danhDiem = json['Danh điểm']?.toString() ?? '',
+      boDanhDiemTuongDuong = json['Bộ danh điểm tương đương']?.toString() ?? '',
+      tenHangHoa = json['Tên hàng hóa']?.toString() ?? '',
+      thongSoKyThuat = json['Thông số kĩ thuật']?.toString() ?? '',
+      hangXe = json['Hãng Xe']?.toString() ?? '',
+      dongXe = json['Dòng xe']?.toString() ?? '',
+      cumXe = json['Cụm xe']?.toString() ?? '',
+      hangSanXuat = json['Hãng Sản Xuất']?.toString() ?? '',
+      nuocSanXuat = json['Nước Sản Xuất']?.toString() ?? '',
+      nhaCungCapThucTe = json['Nhà cung cấp thực tế']?.toString() ?? '',
+      nhaCungCapHopDong = json['Nhà cung cấp hợp đồng']?.toString() ?? '',
+      donViTinh = json['Đơn vị tính']?.toString() ?? '',
+      hinhAnh1 = _cleanImageUrl(json['Hình ảnh 1']),
+      hinhAnh2 = _cleanImageUrl(json['Hình ảnh 2']),
+      hinhAnh3 = _cleanImageUrl(json['Hình ảnh 3']),
+      ghiChu = json['Ghi chú']?.toString() ?? '',
 
-        // Parse số double, trả về null nếu không hợp lệ
-        giaVon1 = _parseDouble(json['Giá vốn 1']),
-        giaVon2 = _parseDouble(json['Giá vốn 2']),
-        vatVietY = _parseDouble(json['VAT Việt Ý']),
-        vatPhuThanh = _parseDouble(json['VAT Phú Thành']),
+      // Parse số double, trả về null nếu không hợp lệ
+      giaVon1 = _parseDouble(json['Giá vốn 1']),
+      giaVon2 = _parseDouble(json['Giá vốn 2']),
+      vatVietY = _parseDouble(json['VAT Việt Ý']),
+      vatPhuThanh = _parseDouble(json['VAT Phú Thành']),
 
-        khoChinh = _parseDouble(json['Kho chính']),
-        kho397 = _parseDouble(json['Kho 397']),
-        khoKheDay = _parseDouble(json['Kho Khe Dây']),
-        khoKhoangSan = _parseDouble(json['Kho Khoáng Sản']),
-        khoLangKhanh = _parseDouble(json['Kho Làng Khánh']),
+      khoChinh = _parseDouble(json['Kho chính']),
+      kho397 = _parseDouble(json['Kho 397']),
+      khoKheDay = _parseDouble(json['Kho Khe Dây']),
+      khoKhoangSan = _parseDouble(json['Kho Khoáng Sản']),
+      khoLangKhanh = _parseDouble(json['Kho Làng Khánh']),
 
-        ghiChuVat = json['Ghi chu VAT']?.toString() ?? '',
-        tenHangHoaTheoVat = json['Tên hàng hóa theo VAT']?.toString() ?? '',
-        coCqVietY = json['CoCq Việt Ý']?.toString() ?? '',
-        coCqPhuThanh = json['CoCq Phú Thành']?.toString() ?? '',
-        soLuongDuKien = json['Số lượng dự kiến']?.toString() ?? '',
-        maSoHoaDon = json['Mã số hóa đơn']?.toString() ?? '',
-        viTri = json['Vị trí']?.toString() ?? '',
+      ghiChuVat = json['Ghi chu VAT']?.toString() ?? '',
+      tenHangHoaTheoVat = json['Tên hàng hóa theo VAT']?.toString() ?? '',
+      coCqVietY = json['CoCq Việt Ý']?.toString() ?? '',
+      coCqPhuThanh = json['CoCq Phú Thành']?.toString() ?? '',
+      soLuongDuKien = json['Số lượng dự kiến']?.toString() ?? '',
+      maSoHoaDon = json['Mã số hóa đơn']?.toString() ?? '',
+      viTri = json['Vị trí']?.toString() ?? '',
 
-        tongSoLuongBanRa = _parseDouble(json['Tổng số lượng bán ra']),
-        soLuongBanRaGanNhat = _parseDouble(json['Số lượng bán ra gần nhất']),
-        thoiGianBanRaGanNhat =
-            json['Thời gian bán ra gần nhất']?.toString() ?? '';
+      tongSoLuongBanRa = _parseDouble(json['Tổng số lượng bán ra']),
+      soLuongBanRaGanNhat = _parseDouble(json['Số lượng bán ra gần nhất']),
+      thoiGianBanRaGanNhat =
+          json['Thời gian bán ra gần nhất']?.toString() ?? '',
+      hkdHoangVanDung = _parseDouble(json['HKD Hoàng Văn Dũng']),
+      hkdLeVanThien = _parseDouble(json['HKD Lê Văn Thiện']);
 
   static String? _cleanImageUrl(String? url) {
     if (url == null || url.trim().isEmpty || url.trim() == ' ') return null;
@@ -115,7 +119,9 @@ class Business {
   // Getter format giá (dùng khi hiển thị)
   String get formattedGiaVon1 {
     if (giaVon1 == null) return '-';
-    return giaVon1!.toStringAsFixed(0).replaceAllMapped(
+    return giaVon1!
+        .toStringAsFixed(0)
+        .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]},',
         );
@@ -123,7 +129,9 @@ class Business {
 
   String get formattedTongSoLuongBanRa {
     if (tongSoLuongBanRa == null) return '-';
-    return tongSoLuongBanRa!.toStringAsFixed(0).replaceAllMapped(
+    return tongSoLuongBanRa!
+        .toStringAsFixed(0)
+        .replaceAllMapped(
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]},',
         );

@@ -450,4 +450,35 @@ class InfoService {
       return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
+
+  Future<int?> reTurnAID(
+    String table,
+    String column,
+    String columnCondition,
+    String condition,
+  ) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.get(
+        "dynamic/getAID/" +
+            table +
+            "/" +
+            column +
+            "/" +
+            columnCondition +
+            "/" +
+            condition,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        return data;
+      } else {
+        return 0;
+      }
+    } catch (e) {
+      print("ERROR getItemhWareHouse: $e");
+      return 0;
+    }
+  }
 }

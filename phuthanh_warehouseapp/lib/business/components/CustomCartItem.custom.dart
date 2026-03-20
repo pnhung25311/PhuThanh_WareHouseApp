@@ -1,210 +1,319 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/service/CartService.service.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 
 class CartItem extends StatelessWidget {
   final Cart cart;
-  final VoidCallback? onTap;          // click để xem chi tiết
-  final VoidCallback? onDelete;       // hành động khi swipe left hoặc nhấn nút xóa
-  final VoidCallback? onSwipeLeft;    // hàm riêng khi trượt sang trái (nếu khác onDelete)
+  final bool isEven;
+  final VoidCallback? onTap;
+  final VoidCallback? onDelete;
+  final VoidCallback? onCallBack;
 
   const CartItem({
     super.key,
     required this.cart,
+    required this.isEven,
     this.onTap,
     this.onDelete,
-    this.onSwipeLeft,
+    this.onCallBack,
   });
 
   @override
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-    final statusColor = _getStatusColor(cart.status ?? 'UNKNOWN');
-    final partnerColor = _getPartnerColor(cart.partner);
+    final statusColor = _getStatusColor(cart.status);
+    final statusText = _getStatusText(cart.status);
+
+    NavigationHelper nav = NavigationHelper();
+    CartService cartService = CartService();
 
     return Dismissible(
-      key: ValueKey(cart.cartAID), // key duy nhất để Flutter nhận diện item
-      direction: DismissDirection.endToStart, // chỉ cho phép swipe từ phải sang trái
-      background: _buildSwipeBackground(), // nền đỏ khi swipe
+      key: ValueKey(cart.cartAID),
+      direction: DismissDirection.horizontal,
+      background: _buildLeftBackground(),
+      secondaryBackground: _buildRightBackground(),
+
       confirmDismiss: (direction) async {
-        // Có thể thêm dialog xác nhận trước khi xóa
-        if (onDelete != null || onSwipeLeft != null) {
-          final bool? confirm = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Xác nhận'),
-              content: Text('Bạn có chắc muốn xóa giỏ hàng #${cart.cartAID}?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Hủy'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  child: const Text('Xóa', style: TextStyle(color: Colors.red)),
-                ),
-              ],
-            ),
+        if (direction == DismissDirection.endToStart) {
+          if (cart.status == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Đơn hàng đã xác nhận không thể chỉnh sửa!'),
+                duration: const Duration(milliseconds: 1500),
+              ),
+            );
+            return false;
+          }
+          final result = await nav.push(
+            context,
+            CartDetailScreen(item: cart, isUpdate: true),
           );
-          return confirm ?? false;
+
+          if (result == true && onCallBack != null) {
+            onCallBack!();
+          }
+          return false;
+        } else if (direction == DismissDirection.startToEnd) {
+          if (cart.status == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Đơn hàng đã xác nhận!'),
+                duration: const Duration(milliseconds: 1500),
+              ),
+            );
+            return false;
+          }
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Xác nhận"),
+                content: const Text("Bạn có chắc muốn xác nhận đơn này không?"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text("Hủy"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text("Đồng ý"),
+                  ),
+                ],
+              );
+            },
+          );
+
+          if (confirm == true) {
+            // 👉 xử lý logic khi confirm
+            // if (onDelete != null) {
+            //   onDelete!();
+            // }
+            final response = await cartService.upDateCart(
+              "Cart",
+              cart.cartAID.toString(),
+              jsonEncode({"Status": true}),
+            );
+
+            if (response["statusCode"] == 200) {
+              if (onCallBack != null) {
+                onCallBack!();
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✅ Cập nhật thành công'),
+                  duration: const Duration(milliseconds: 500),
+                ),
+              );
+              return false;
+              // quay lại và báo màn trước refresh
+            }
+            if (response["statusCode"] == 401 ||
+                response["statusCode"] == 403 ||
+                response["statusCode"] == 0) {
+              nav.pushAndRemoveUntil(context, const Loginscreen());
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('❌ Lỗi cập nhật: ${response["statusCode"]}'),
+                  duration: const Duration(milliseconds: 500),
+                ),
+              );
+            }
+            // return true; // cho phép dismiss
+          }
+
+          return false; // không dismiss
         }
+
         return false;
       },
-      onDismissed: (direction) {
-        // Gọi hàm khi swipe hoàn tất
-        if (onSwipeLeft != null) {
-          onSwipeLeft!();
-        } else if (onDelete != null) {
-          onDelete!();
-        }
-      },
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        elevation: 3,
-        shadowColor: Colors.black.withOpacity(0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: InkWell(
-          onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isEven ? Colors.white : Colors.grey[50],
           borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Avatar Partner
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: partnerColor.withOpacity(0.2),
-                  child: Icon(
-                    _getPartnerIcon(cart.partner),
-                    color: partnerColor,
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 16),
-
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          border: Border(left: BorderSide(color: statusColor, width: 4)),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.05),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// HEADER
+                  Row(
                     children: [
-                      // Mã giỏ + Trạng thái
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              cart.cartID ?? 'Giỏ #${cart.cartAID}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 17,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
+                      Expanded(
+                        child: Text(
+                          cart.cartID ?? 'Cart #${cart.cartAID}',
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
                           ),
-                          const SizedBox(width: 12),
-                          _buildStatusBadge(statusColor, cart.status ?? 'UNKNOWN'),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 8),
+                      _buildStatusBadge(statusColor, statusText),
+                      const SizedBox(width: 6),
 
-                      // Người đặt hàng
-                      if (cart.fullName != null || cart.accountID != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: Row(
-                            children: [
-                              Icon(Icons.person, size: 16, color: Colors.grey[700]),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  cart.fullName?.isNotEmpty == true
-                                      ? cart.fullName!
-                                      : 'Tài khoản #${cart.accountID ?? '?'}',
-                                  style: TextStyle(
-                                    fontSize: 14.5,
-                                    color: Colors.grey[800],
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
+                      /// icon DONE
+                      if (cart.status == true)
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 20,
                         ),
-
-                      // Nhà cung cấp
-                      if (cart.supplierName != null || cart.supplierID != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: Row(
-                            children: [
-                              Icon(Icons.store, size: 16, color: Colors.grey[700]),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Đối tác: ${cart.supplierName}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                      // Thời gian
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 6),
-                          Text(
-                            cart.orderTime != null
-                                ? dateFormat.format(cart.orderTime!)
-                                : 'Chưa có TG tạo',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                          ),
-                          const SizedBox(width: 16),
-                          Icon(Icons.update, size: 14, color: Colors.grey[600]),
-                          const SizedBox(width: 6),
-                          Text(
-                            cart.lastTime != null
-                                ? dateFormat.format(cart.lastTime!)
-                                : 'Chưa cập nhật',
-                            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-
-                      // Ghi chú
-                      if (cart.remark != null && cart.remark!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 10),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.amber[50],
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.amber[200]!),
-                          ),
-                          child: Text(
-                            cart.remark!,
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              color: Colors.grey[800],
-                              height: 1.4,
-                            ),
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 12),
+
+                  /// PRODUCT
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: statusColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.inventory_2_outlined,
+                          color: statusColor,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              cart.nameProduct ?? "Không có tên sản phẩm",
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+
+                            /// ✅ chỉ giữ mã sản phẩm
+                            if (cart.productID?.trim().isNotEmpty == true) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                "Mã SP: ${cart.productID}",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+
+                            /// PartNo (ẩn nếu rỗng)
+                            if (cart.idPartNo?.trim().isNotEmpty == true) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                "Danh điểm: ${cart.idPartNo}",
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+
+                      /// Qty
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          "${cart.qty ?? 0}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  /// USER + SUPPLIER
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildMeta(
+                          icon: Icons.person_outline,
+                          text: cart.fullName ?? "Không có tên",
+                        ),
+                      ),
+                      Expanded(
+                        child: _buildMeta(
+                          icon: Icons.store_outlined,
+                          text: cart.supplierName ?? "Không có NCC",
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  /// TIME
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildMeta(
+                          icon: Icons.schedule,
+                          text: cart.deliveryTime != null
+                              ? dateFormat.format(cart.deliveryTime!)
+                              : "Chưa có ngày giao",
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  /// REMARK
+                  if (cart.remark?.trim().isNotEmpty == true) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        cart.remark!,
+                        style: TextStyle(fontSize: 13, color: Colors.grey[800]),
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 8),
+                  Container(height: 1, color: Colors.grey.withOpacity(0.1)),
+                ],
+              ),
             ),
           ),
         ),
@@ -212,64 +321,97 @@ class CartItem extends StatelessWidget {
     );
   }
 
-  Widget _buildStatusBadge(Color color, String status) {
+  /// UI
+
+  Widget _buildStatusBadge(Color color, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color, width: 1.4),
       ),
       child: Text(
-        status.toUpperCase(),
+        text,
         style: TextStyle(
           color: color,
-          fontSize: 12.5,
+          fontSize: 11.5,
           fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
         ),
       ),
     );
   }
 
-  Widget _buildSwipeBackground() {
+  Widget _buildMeta({required IconData icon, required String text}) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.grey[600]),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 12.5, color: Colors.grey[700]),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Swipe phải (DELETE)
+  Widget _buildLeftBackground() {
     return Container(
-      color: Colors.redAccent,
-      alignment: Alignment.centerRight,
-      padding: const EdgeInsets.only(right: 20),
-      child: const Icon(
-        Icons.delete_forever_rounded,
-        color: Colors.white,
-        size: 36,
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(left: 20),
+      decoration: BoxDecoration(
+        color: Colors.green,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.done, color: Colors.white),
+          SizedBox(width: 6),
+          Text(
+            "Xác nhận",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ],
       ),
     );
   }
 
-  Color _getStatusColor(String status) {
-    final upper = status.toUpperCase();
-    if (upper.contains('ACTIVE') || upper.contains('PENDING')) return Colors.blue;
-    if (upper.contains('COMPLETE') || upper.contains('PAID') || upper.contains('DONE')) return Colors.green;
-    if (upper.contains('CANCEL') || upper.contains('REJECT')) return Colors.red;
-    if (upper.contains('PROCESS') || upper.contains('SHIPPING') || upper.contains('DELIVER')) return Colors.orange;
-    return Colors.grey[700]!;
+  /// Swipe trái (EDIT)
+  Widget _buildRightBackground() {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      decoration: BoxDecoration(
+        color: Colors.blue,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Edit",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(width: 6),
+          Icon(Icons.edit, color: Colors.white),
+        ],
+      ),
+    );
   }
 
-  Color _getPartnerColor(int? partner) {
-    switch (partner) {
-      case 1: return Colors.blue;
-      case 2: return Colors.orangeAccent;
-      case 3: return Colors.purple;
-      case 4: return Colors.teal;
-      default: return Colors.grey;
-    }
+  /// LOGIC
+
+  String _getStatusText(bool? status) {
+    if (status == null) return "UNKNOWN";
+    return status ? "HOÀN THÀNH" : "CHƯA HOÀN THÀNH";
   }
 
-  IconData _getPartnerIcon(int? partner) {
-    switch (partner) {
-      case 1: return Icons.home_work_rounded;
-      case 2: return Icons.shopping_cart_rounded;
-      case 3: return Icons.local_mall_rounded;
-      default: return Icons.business_center_rounded;
-    }
+  Color _getStatusColor(bool? status) {
+    if (status == null) return Colors.grey;
+    return status ? Colors.green : Colors.orange;
   }
 }

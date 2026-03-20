@@ -5,6 +5,22 @@ import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 class CartService {
   final ApiClient client = const ApiClient();
 
+  Future<Map<String, dynamic>> LoadCart() async {
+    try {
+      final response = await client.get("dynamic/get-all/vwProduct");
+
+      final List<dynamic> data = jsonDecode(response.body);
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": data.map((e) => Cart.fromJson(e)).toList(),
+      };
+    } catch (e) {
+      print(e);
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
+    }
+  }
+
   /// Lấy tất cả giỏ hàng (hoặc theo filter nếu API hỗ trợ)
   Future<Map<String, dynamic>> getAllCarts() async {
     try {
@@ -16,6 +32,7 @@ class CartService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final carts = data.map((e) => Cart.fromJson(e)).toList();
+        print(data);
 
         return {
           "isSuccess": true,
@@ -35,10 +52,35 @@ class CartService {
     }
   }
 
-  // Nếu sau này bạn muốn lọc theo status, partner, supplier...
-  // Future<Map<String, dynamic>> getCartsByStatus(String status) async { ... }
+  Future<Map<String, dynamic>> getCartsToEmployee(String body) async {
+    try {
+      final response = await client.post("dynamic/find-array/vwCart", body);
 
-  Future<Map<String, dynamic>> createCart(String body ) async {
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        final carts = data.map((e) => Cart.fromJson(e)).toList();
+        print("==================>");
+        print(data);
+
+        return {
+          "isSuccess": true,
+          "statusCode": response.statusCode,
+          "body": carts,
+        };
+      } else {
+        return {
+          "isSuccess": false,
+          "statusCode": response.statusCode,
+          "body": <Cart>[],
+        };
+      }
+    } catch (e) {
+      print('Error fetching carts: $e');
+      return {"isSuccess": false, "statusCode": 0, "body": <Cart>[]};
+    }
+  }
+
+  Future<Map<String, dynamic>> createCart(String body) async {
     try {
       final response = await client.post(
         "cart", // thay bằng endpoint tạo giỏ hàng thật của bạn
@@ -53,6 +95,29 @@ class CartService {
     } catch (e) {
       print('Error creating cart: $e');
       return {"isSuccess": false, "statusCode": 0, "body": null};
+    }
+  }
+
+  Future<Map<String, dynamic>> upDateCart(
+    String table,
+    String id,
+    String body,
+  ) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.put(
+        "dynamic/update/" + table + "/CartAID/" + id.toString(),
+        body,
+      );
+
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
+    } catch (e) {
+      print(e);
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 }

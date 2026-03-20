@@ -189,6 +189,10 @@ class _LoginscreenState extends State<Loginscreen> {
         await mySharedPreferences.setDataString('username', username);
         await mySharedPreferences.setDataString('password', password);
         await mySharedPreferences.setDataBool('rememberMe', _rememberMe);
+        await mySharedPreferences.setDataString(
+          'selectedSystem',
+          _selectedSystem!.value,
+        );
         _loadRole();
 
         _saveSetting();

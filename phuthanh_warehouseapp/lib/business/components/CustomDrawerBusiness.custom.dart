@@ -140,6 +140,17 @@ class _CustomDrawerBusinessState extends State<CustomDrawerBusiness> {
           Expanded(
             child: ListView(
               children: [
+                ListTile(
+                  leading: const Icon(Icons.list_alt_outlined, color: Colors.blue),
+                  title: const Text('Danh sách sản phẩm'),
+                  onTap: () {
+                    navigationHelper.push(
+                      context,
+                      BusinessScreen(),
+                    );
+                  },
+                ),
+
                 /// LỊCH SỬ BÁN
                 ListTile(
                   leading: const Icon(Icons.point_of_sale, color: Colors.blue),
@@ -166,13 +177,10 @@ class _CustomDrawerBusinessState extends State<CustomDrawerBusiness> {
 
                 /// GIỎ HÀNG
                 ListTile(
-                  leading: const Icon(Icons.inventory_2, color: Colors.green),
+                  leading: const Icon(Icons.shopping_cart, color: Colors.green),
                   title: const Text('Giỏ hàng'),
                   onTap: () {
-                    navigationHelper.push(
-                      context,
-                      CartListScreen(),
-                    );
+                    navigationHelper.push(context, CartListScreen(isBusiness: true,));
                   },
                 ),
               ],

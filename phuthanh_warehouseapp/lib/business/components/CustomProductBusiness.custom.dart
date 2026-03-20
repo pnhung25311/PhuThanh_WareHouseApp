@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/product/ProductBusinessDetailsScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
 
 class ProductCard extends StatelessWidget {
@@ -15,6 +18,7 @@ class ProductCard extends StatelessWidget {
 
     final barcode = item.barcode.trim();
     final name = item.tenHangHoa.trim();
+    NavigationHelper nav = NavigationHelper();
 
     final images = [
       item.hinhAnh1,
@@ -30,185 +34,162 @@ class ProductCard extends StatelessWidget {
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => BusinessDetailScreen(item: item),
-                ),
-              );
-            },
-            onLongPress: onLongPress,
-            borderRadius: BorderRadius.circular(16),
-            child: Card(
-              elevation: 2,
-              shadowColor: Colors.black.withOpacity(0.08),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+          child: Dismissible(
+            key: ValueKey(item.barcode), // phải unique
+            direction: DismissDirection.horizontal, // chỉ swipe trái
+            // nền khi kéo
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(16), // match Card của bạn
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Hero section: Image + Name + Barcode
-                  // Stack(
-                  //   children: [
-                  //     if (hasImages)
-                  //       ClipRRect(
-                  //         borderRadius: const BorderRadius.vertical(
-                  //           top: Radius.circular(16),
-                  //         ),
-                  //         child: Image.network(
-                  //           images.first,
-                  //           height: isNarrow ? 160 : 180,
-                  //           width: double.infinity,
-                  //           fit: BoxFit.cover,
-                  //           errorBuilder: (_, __, ___) => _placeholderImage(),
-                  //         ),
-                  //       )
-                  //     else
-                  //       Container(
-                  //         height: isNarrow ? 140 : 160,
-                  //         width: double.infinity,
-                  //         decoration: BoxDecoration(
-                  //           color: Colors.grey.shade100,
-                  //           borderRadius: const BorderRadius.vertical(
-                  //             top: Radius.circular(16),
-                  //           ),
-                  //         ),
-                  //         child: const Icon(
-                  //           Icons.image,
-                  //           size: 60,
-                  //           color: Colors.grey,
-                  //         ),
-                  //       ),
+              child: const Icon(
+                Icons.add_shopping_cart,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
 
-                  //     // Barcode badge
-                  //     Positioned(
-                  //       top: 12,
-                  //       left: 12,
-                  //       child: Container(
-                  //         padding: const EdgeInsets.symmetric(
-                  //           horizontal: 10,
-                  //           vertical: 5,
-                  //         ),
-                  //         decoration: BoxDecoration(
-                  //           color: Colors.black.withOpacity(0.75),
-                  //           borderRadius: BorderRadius.circular(12),
-                  //         ),
-                  //         child: Text(
-                  //           barcode,
-                  //           style: const TextStyle(
-                  //             color: Colors.white,
-                  //             fontSize: 13,
-                  //             fontWeight: FontWeight.w600,
-                  //             letterSpacing: 0.5,
-                  //           ),
-                  //         ),
-                  //       ),
-                  //     ),
-                  //   ],
-                  // ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          barcode,
-                          style: textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            height: 1.25,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        // Product name
-                        Text(
-                          name,
-                          style: textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            height: 1.25,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+            // xác nhận (có thể bỏ nếu không cần)
+            confirmDismiss: (direction) async {
+              if (direction == DismissDirection.endToStart) {
+                Cart cart = Cart(
+                  cartAID: 0,
+                  productID: item.barcode.trim(),
+                  idPartNo: item.danhDiem,
+                  nameProduct: item.tenHangHoa,
+                );
+                nav.push(context, CartDetailScreen(item: cart, isCreate: true));
+                return false;
+              } else if (direction == DismissDirection.startToEnd) {
+                return false; // không dismiss
+              }
+              return false;
+            },
 
-                        const SizedBox(height: 12),
-
-                        // Key specs - compact grid
-                        _buildKeyInfoRow(context),
-
-                        const SizedBox(height: 16),
-
-                        // Price & VAT
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: _buildPriceSection()),
-                            const SizedBox(width: 12),
-                            Expanded(child: _buildVatSection()),
-                          ],
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Stock chips
-                        _buildStockChips(isNarrow: isNarrow),
-
-                        const SizedBox(height: 16),
-
-                        // Co/Cq tags
-                        Row(
-                          children: [
-                            if (item.coCqVietY.trim().isNotEmpty == true)
-                              _buildTag('Co/Cq Việt Ý', item.coCqVietY),
-                            const SizedBox(width: 8),
-                            if (item.coCqPhuThanh.trim().isNotEmpty == true)
-                              _buildTag('Co/Cq Phú Thành', item.coCqPhuThanh),
-                          ],
-                        ),
-
-                        if (images.length > 1) ...[
-                          const SizedBox(height: 20),
-                          Text(
-                            'Hình ảnh khác',
-                            style: textTheme.labelMedium?.copyWith(
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            height: 86,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: images.length - 1,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(width: 12),
-                              itemBuilder: (context, index) {
-                                final url = images[index + 1];
-                                return ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    url,
-                                    width: 120,
-                                    height: 86,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
-                                        _placeholderImage(
-                                          width: 120,
-                                          height: 86,
-                                        ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
+            child: InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BusinessDetailScreen(item: item),
                   ),
-                ],
+                );
+              },
+              onLongPress: onLongPress,
+              borderRadius: BorderRadius.circular(16),
+              child: Card(
+                elevation: 2,
+                shadowColor: Colors.black.withOpacity(0.08),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            barcode,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              height: 1.25,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          // Product name
+                          Text(
+                            name,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              height: 1.25,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Key specs - compact grid
+                          _buildKeyInfoRow(context),
+
+                          const SizedBox(height: 16),
+
+                          // Price & VAT
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(child: _buildPriceSection()),
+                              const SizedBox(width: 12),
+                              Expanded(child: _buildVatSection()),
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Stock chips
+                          _buildStockChips(isNarrow: isNarrow),
+
+                          const SizedBox(height: 16),
+
+                          // Co/Cq tags
+                          Row(
+                            children: [
+                              if (item.coCqVietY.trim().isNotEmpty == true)
+                                _buildTag('Co/Cq Việt Ý', item.coCqVietY),
+                              const SizedBox(width: 8),
+                              if (item.coCqPhuThanh.trim().isNotEmpty == true)
+                                _buildTag('Co/Cq Phú Thành', item.coCqPhuThanh),
+                            ],
+                          ),
+
+                          if (images.length > 1) ...[
+                            const SizedBox(height: 20),
+                            Text(
+                              'Hình ảnh khác',
+                              style: textTheme.labelMedium?.copyWith(
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              height: 86,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemCount: images.length - 1,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(width: 12),
+                                itemBuilder: (context, index) {
+                                  final url = images[index + 1];
+                                  return ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      url,
+                                      width: 120,
+                                      height: 86,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          _placeholderImage(
+                                            width: 120,
+                                            height: 86,
+                                          ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -304,6 +285,7 @@ class ProductCard extends StatelessWidget {
   Widget _buildVatSection() {
     final vy = item.vatVietY ?? 0;
     final pt = item.vatPhuThanh ?? 0;
+    if ((vy) <= 0 && (pt) <= 0) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -323,14 +305,16 @@ class ProductCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          Text(
-            'Việt Ý: ${vy.toStringAsFixed(1)}',
-            style: const TextStyle(fontSize: 13.5),
-          ),
-          Text(
-            'Phú Thành: ${pt.toStringAsFixed(1)}',
-            style: const TextStyle(fontSize: 13.5),
-          ),
+          if (vy > 0)
+            Text(
+              'Việt Ý: ${vy.toStringAsFixed(1)}',
+              style: const TextStyle(fontSize: 13.5),
+            ),
+          if (pt > 0)
+            Text(
+              'Phú Thành: ${pt.toStringAsFixed(1)}',
+              style: const TextStyle(fontSize: 13.5),
+            ),
         ],
       ),
     );
@@ -343,33 +327,38 @@ class ProductCard extends StatelessWidget {
       _Stock('Kho Khe Dây', item.khoKheDay, Colors.teal),
       _Stock('Kho Khoáng Sản', item.khoKhoangSan, Colors.cyan),
       _Stock('Kho Làng Khánh', item.khoLangKhanh, Colors.green),
+
+      _Stock('HKD H.V Dũng', item.hkdHoangVanDung, Colors.orange),
+      _Stock('HKD L.V Thiện', item.hkdLeVanThien, Colors.deepOrange),
     ];
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: stocks.map((s) {
-        final qty = s.qty ?? 0;
-        final hasStock = qty > 0;
-        final color = hasStock ? s.color : Colors.red.shade400;
+      children: stocks
+          .where((s) => (s.qty ?? 0) > 0) // 👈 lọc chỉ lấy cái có tồn kho
+          .map((s) {
+            final qty = s.qty ?? 0;
+            final color = s.color;
 
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.12),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: color.withOpacity(0.4)),
-          ),
-          child: Text(
-            '${s.label}: ${_formatQuantity(qty)}',
-            style: TextStyle(
-              fontSize: 12.5,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        );
-      }).toList(),
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: color.withOpacity(0.4)),
+              ),
+              child: Text(
+                '${s.label}: ${_formatQuantity(qty)}',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            );
+          })
+          .toList(),
     );
   }
 

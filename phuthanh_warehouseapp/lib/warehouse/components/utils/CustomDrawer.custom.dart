@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/screen/BusinessScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
@@ -249,6 +250,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       );
                     },
                   ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.shopping_cart, color: Colors.green),
+            title: const Text('Giỏ hàng'),
+            onTap: () {
+              navigationHelper.push(context, CartListScreen(isBusiness: false));
+            },
           ),
 
           const Divider(),

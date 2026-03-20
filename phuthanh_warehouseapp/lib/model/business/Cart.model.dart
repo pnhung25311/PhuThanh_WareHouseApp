@@ -1,27 +1,40 @@
+import 'package:intl/intl.dart';
+
 class Cart {
   final int cartAID;
   final String? cartID;
   final int? accountID;
-  final int? partner;
-  final int? supplierID;
-  final String? supplierName;
   final String? fullName;
-  final String? status;
+
+  final int? productAID;
+  final String? productID;
+  final String? idPartNo;
+  final String? nameProduct;
+
+  final double? qty;
+  final int? partner;
+  final String? supplierName;
+
+  final bool? status;
   final String? remark;
-  final DateTime? orderTime;
+  final DateTime? deliveryTime;
   final DateTime? lastTime;
 
   Cart({
     required this.cartAID,
     this.cartID,
     this.accountID,
-    this.partner,
-    this.supplierID,
-    this.supplierName,
     this.fullName,
+    this.productAID,
+    this.productID,
+    this.idPartNo,
+    this.nameProduct,
+    this.qty,
+    this.partner,
+    this.supplierName,
     this.status,
     this.remark,
-    this.orderTime,
+    this.deliveryTime,
     this.lastTime,
   });
 
@@ -30,27 +43,39 @@ class Cart {
       cartAID: _toInt(json['CartAID']),
       cartID: json['CartID']?.toString(),
       accountID: _toInt(json['AccountID']),
-      partner: _toInt(json['Partner']),
-      supplierID: _toInt(json['SupplierID']),
-      supplierName: json['SupplierName']?.toString(),
       fullName: json['FullName']?.toString(),
-      status: json['Status']?.toString(),
+
+      productAID: _toInt(json['ProductAID']),
+      productID: json['ProductID']?.toString(),
+      idPartNo: json['ID_PartNo']?.toString(),
+      nameProduct: json['NameProduct']?.toString(),
+
+      qty: _toDouble(json['Qty']),
+      partner: _toInt(json['Partner']),
+      supplierName: json['Name']?.toString(),
+
+      status: _toBool(json['Status']),
       remark: json['Remark']?.toString(),
-      orderTime: _toDate(json['OrderTime']),
+      deliveryTime: _toDate(json['DeliveryTime']),
       lastTime: _toDate(json['LastTime']),
     );
   }
 
   Map<String, dynamic> toJson() {
+    final formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
+
     return {
-      // 'CartAID': cartAID,
       'CartID': cartID,
       'AccountID': accountID,
+      'ProductAID': productAID,
+      'Qty': qty,
       'Partner': partner,
-      'Status': status,
+      'Status': status == true ? 1 : 0,
       'Remark': remark,
-      'OrderTime': orderTime,
-      'LastTime': lastTime?.toIso8601String(),
+      'DeliveryTime': deliveryTime != null
+          ? formatter.format(deliveryTime!)
+          : null,
+      'LastTime': lastTime != null ? formatter.format(lastTime!) : null,
     };
   }
 
@@ -59,40 +84,53 @@ class Cart {
       cartAID: 0,
       cartID: '',
       accountID: 0,
-      partner: 0,
-      supplierID: 0,
-      supplierName: '',
       fullName: '',
-      status: '',
+      productAID: 0,
+      productID: '',
+      idPartNo: '',
+      nameProduct: '',
+      qty: 0,
+      partner: 0,
+      supplierName: '',
+      status: false,
       remark: '',
-      orderTime: null,
+      deliveryTime: null,
       lastTime: null,
     );
   }
+
   Cart copyWith({
     int? cartAID,
     String? cartID,
     int? accountID,
-    int? partner,
-    int? supplierID,
-    String? supplierName,
     String? fullName,
-    String? status,
+    int? productAID,
+    String? productID,
+    String? idPartNo,
+    String? nameProduct,
+    double? qty,
+    int? partner,
+    String? supplierName,
+    bool? status,
     String? remark,
-    DateTime? orderTime,
+    DateTime? deliveryTime,
     DateTime? lastTime,
   }) {
     return Cart(
       cartAID: cartAID ?? this.cartAID,
       cartID: cartID ?? this.cartID,
       accountID: accountID ?? this.accountID,
-      partner: partner ?? this.partner,
-      supplierID: supplierID ?? this.supplierID,
-      supplierName: supplierName ?? this.supplierName,
       fullName: fullName ?? this.fullName,
+      productAID: productAID ?? this.productAID,
+      productID: productID ?? this.productID,
+      idPartNo: idPartNo ?? this.idPartNo,
+      nameProduct: nameProduct ?? this.nameProduct,
+      qty: qty ?? this.qty,
+      partner: partner ?? this.partner,
+      supplierName: supplierName ?? this.supplierName,
       status: status ?? this.status,
       remark: remark ?? this.remark,
-      orderTime: orderTime ?? this.orderTime,
+      deliveryTime: deliveryTime ?? this.deliveryTime,
       lastTime: lastTime ?? this.lastTime,
     );
   }
@@ -105,8 +143,25 @@ class Cart {
     return int.tryParse(value.toString()) ?? 0;
   }
 
+  static double _toDouble(dynamic value) {
+    if (value == null) return 0;
+    if (value is double) return value;
+    return double.tryParse(value.toString()) ?? 0;
+  }
+
+  static bool _toBool(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is int) return value == 1;
+    return value.toString() == '1';
+  }
+
   static DateTime? _toDate(dynamic value) {
     if (value == null) return null;
-    return DateTime.tryParse(value.toString());
+    try {
+      return DateTime.parse(value.toString());
+    } catch (_) {
+      return null;
+    }
   }
 }

@@ -218,6 +218,9 @@ class BusinessDetailScreen extends StatelessWidget {
                   _buildStockChip('Khe Dây', item.khoKheDay),
                   _buildStockChip('Khoáng Sản', item.khoKhoangSan),
                   _buildStockChip('Làng Khánh', item.khoLangKhanh),
+
+                  _buildStockChip('HKD Hoàng Văn Dũng', item.hkdHoangVanDung),
+                  _buildStockChip('HKD Lê Văn Thiện', item.hkdLeVanThien),
                 ],
               ),
             ],

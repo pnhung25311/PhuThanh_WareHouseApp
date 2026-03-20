@@ -46,7 +46,7 @@ class Businessservice {
     }
   }
 
-    Future<Map<String, dynamic>> getAllHistory(String table) async {
+  Future<Map<String, dynamic>> getAllHistory(String table) async {
     try {
       final response = await client.get("business/$table");
       final List<dynamic> data = jsonDecode(response.body);
@@ -63,6 +63,29 @@ class Businessservice {
         "statusCode": 0,
         "body": <HistoryBusiness>[], // luôn trả list
       };
+    }
+  }
+
+  Future<Map<String, dynamic>> upDateCart(
+    String table,
+    String id,
+    String body,
+  ) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.put(
+        "dynamic/update/" + table + "/CartAID/" + id.toString(),
+        body,
+      );
+
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
+    } catch (e) {
+      print(e);
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
 }

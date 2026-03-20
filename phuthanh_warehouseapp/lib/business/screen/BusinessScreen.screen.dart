@@ -4,7 +4,9 @@ import 'package:phuthanh_warehouseapp/business/components/CustomBusinessLongClic
 import 'package:phuthanh_warehouseapp/business/components/CustomDrawerBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomProductBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/ScanBarcodeScreen.screen.dart';
 
 class BusinessScreen extends StatefulWidget {
   const BusinessScreen({super.key});
@@ -21,6 +23,8 @@ class _BusinessScreenState extends State<BusinessScreen> {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   BusinessLongClick businessLongClick = BusinessLongClick();
+  NavigationHelper nav = NavigationHelper();
+
 
   @override
   void initState() {
@@ -100,15 +104,15 @@ class _BusinessScreenState extends State<BusinessScreen> {
   }
 
   Future<void> _onScanResult() async {
-    // final result = await Navigator.push(
-    //   context,
-    //   MaterialPageRoute(builder: (_) => const ScanBarcodeScreen(isUpdate: false)),
-    // );
+    final result = await nav.push(
+      context,
+       const ScanScreen(isUpdate: false),
+    );
 
-    // if (result != null && result is String && mounted) {
-    //   _searchController.text = result;
-    //   // _onSearchChanged() tự chạy nhờ listener
-    // }
+    if (result != null && result is String && mounted) {
+      _searchController.text = result;
+      _onSearchChanged();
+    }
   }
 
   Widget _buildLoading() {

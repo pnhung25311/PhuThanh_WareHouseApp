@@ -1,19 +1,20 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
+
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/service/BusinessService.service.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/formatters/DotToMinusFormatte.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextField.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/GenerateCodeAID.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/ImagePickerHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/WareHouseService.service.dart';
-import 'package:collection/collection.dart';
 
 class CartDetailScreen extends StatefulWidget {
   final Cart item;
@@ -34,29 +35,29 @@ class CartDetailScreen extends StatefulWidget {
 }
 
 class _CartDetailScreenState extends State<CartDetailScreen> {
-  // ── Services & Helpers ───────────────────────────────────────────────
+  final _formKey = GlobalKey<FormState>();
+
   final InfoService infoService = InfoService();
   final Warehouseservice warehouseService = Warehouseservice();
+  final Businessservice businessservice = Businessservice();
   final Formatdatehelper formatdatehelper = Formatdatehelper();
   final NavigationHelper nav = NavigationHelper();
   final MySharedPreferences prefs = MySharedPreferences();
-  final ImagePickerHelper imageHelper = ImagePickerHelper();
   final CodeHelper generateCodeAID = CodeHelper();
 
-  // ── Controllers ──────────────────────────────────────────────────────
   final TextEditingController _cartIDCtrl = TextEditingController();
   final TextEditingController _fullnameCtrl = TextEditingController();
-  final TextEditingController _statusCtrl = TextEditingController();
+  final TextEditingController _productIDCtrl = TextEditingController();
+  final TextEditingController _productNameCtrl = TextEditingController();
+  final TextEditingController _productPartNoCtrl = TextEditingController();
+  final TextEditingController _qtyCtrl = TextEditingController();
   final TextEditingController _remarkCtrl = TextEditingController();
 
-  // ── Date fields ──────────────────────────────────────────────────────
-  DateTime? _oderTime;
+  DateTime? _deliveryTime;
 
-  // ── Dropdown data ────────────────────────────────────────────────────
   List<Supplier> suppliers = [];
   Supplier? selectedSupplier;
 
-  // ── State ────────────────────────────────────────────────────────────
   bool _isLoading = true;
   bool _isSaving = false;
 
@@ -64,29 +65,29 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
   void initState() {
     super.initState();
 
-    // Fill controllers
     _cartIDCtrl.text = widget.item.cartID ?? '';
     _fullnameCtrl.text = widget.item.fullName ?? '';
-    _statusCtrl.text = widget.item.status ?? '';
+    _productIDCtrl.text = widget.item.productID?.toString() ?? '';
+    _productNameCtrl.text = widget.item.nameProduct ?? '';
+    _productPartNoCtrl.text = widget.item.idPartNo ?? '';
+    _qtyCtrl.text = widget.item.qty?.toString() ?? '';
     _remarkCtrl.text = widget.item.remark ?? '';
 
+    _deliveryTime = widget.item.deliveryTime ?? DateTime.now();
+
     _initAsync();
+    _txtListener();
   }
 
   Future<void> _initAsync() async {
     if (widget.isCreate) {
       _cartIDCtrl.text = generateCodeAID.generateCodeCart();
-
-      final fullName = await _getCurrentUserFullName(); // ✅ await
-      _fullnameCtrl.text = fullName ?? '';
+      _fullnameCtrl.text = await _getCurrentUserFullName() ?? '';
     }
-
-    await _initData();
+    await _loadData();
   }
 
-  Future<void> _initData() async {
-    setState(() => _isLoading = true);
-
+  Future<void> _loadData() async {
     try {
       final suppList = await infoService.LoadDtataSupplier();
       setState(() {
@@ -97,161 +98,224 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      print("Lỗi load suppliers: $e");
+      _showError("Lỗi load supplier");
       setState(() => _isLoading = false);
     }
   }
 
   Future<String?> _getCurrentUserFullName() async {
-    final account = await prefs.getDataObject("account");
-    return account?["FullName"] as String?;
+    final acc = await prefs.getDataObject("account");
+    return acc?["FullName"];
   }
 
-  // Future<int?> _getCurrentUserID() async {
-  //   final account = await prefs.getDataObject("account");
-  //   return account?["FullName"] as String?;
-  // }
+  Future<int?> _getCurrentUserID() async {
+    final acc = await prefs.getDataObject("account");
+    return acc?["AccountID"];
+  }
 
-  Future<void> _saveGuarantee() async {
+  // ================= SAVE =================
+  Future<void> _saveCart() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_productIDCtrl.text.trim().isEmpty) {
+      _showError("Nhập mã sản phẩm");
+      return;
+    }
+
+    if (selectedSupplier == null) {
+      _showError("Chọn nhà cung cấp");
+      return;
+    }
+
     if (_isSaving) return;
     setState(() => _isSaving = true);
 
     try {
-      // Chuẩn bị object Guarantee
-      final cartCreate = widget.item.copyWith(
-        cartID: _cartIDCtrl.text.trim(),
-        accountID: 0,
-        partner: selectedSupplier?.SupplierID ?? 0,
-        status: 'PENDING',
-        remark: _remarkCtrl.text,
-        orderTime: _oderTime,
-        lastTime: formatdatehelper.toSqlDateTime(DateTime.now()),
+      final accountID = await _getCurrentUserID();
+
+      int? proAID = await infoService.reTurnAID(
+        "Product",
+        "ProductAID",
+        "ProductID",
+        _productIDCtrl.text.trim(),
       );
-      print(jsonEncode(cartCreate));
+
+      final cart = widget.item.copyWith(
+        cartID: _cartIDCtrl.text.trim(),
+        accountID: accountID,
+        productAID: proAID ?? 0,
+        qty: double.tryParse(_qtyCtrl.text) ?? 0,
+        partner: selectedSupplier!.SupplierID,
+        status: widget.isCreate ? false : (widget.item.status ?? false),
+        remark: _remarkCtrl.text.trim(),
+        deliveryTime: _deliveryTime,
+        lastTime: DateTime.now(),
+      );
+
+      final body = jsonEncode(cart.toJson());
+      print("SEND: $body");
+
+      Map response;
 
       if (widget.isCreate) {
-        // Kiểm tra mã trùng (nếu backend hỗ trợ)
-        final checkPayload = jsonEncode({"Cart": cartCreate.cartID});
-        final exists = await infoService.checkProductID(
+        response = await warehouseService.addWarehouseRow("Cart", body);
+      } else {
+        response = await businessservice.upDateCart(
           "Cart",
-          checkPayload,
-        ); // giả định hàm này dùng chung
-        if (exists) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Mã phiếu bảo hành đã tồn tại!")),
-          );
-          return;
-        } else {
-          final response = await warehouseService.addWarehouseRow(
-            "Cart",
-            jsonEncode(cartCreate),
-          );
-          if (response["statusCode"] == 403 ||
-              response["statusCode"] == 401 ||
-              response["statusCode"] == 0) {
-            // nav.pushAndRemoveUntil(context, const Loginscreen());
-
-            return;
-          }
-
-          if (response["isSuccess"]) {
-            if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('✅ Thêm mới thành công'),
-                duration: const Duration(milliseconds: 500),
-              ),
-            );
-            nav.pop(context, true); // quay lại và báo màn trước refresh
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('❌ Lỗi thêm mới: '),
-                duration: const Duration(milliseconds: 500),
-              ),
-            );
-          }
-        }
-
-        // response = await warehouseService.addWarehouseRow("Guarantee", jsonEncode(jsonBody));
+          widget.item.cartAID.toString(),
+          body,
+        );
       }
-      // if (widget.isUpdate) {
-      //   print(jsonEncode(guaranteeUpdate));
 
-      //   final response = await warehouseService.upDateGuarantee(
-      //     "Guarantee",
-      //     widget.item.guaranteeAID.toString(),
-      //     jsonEncode(guaranteeUpdate),
-      //   );
-      //   if (response["statusCode"] == 403 ||
-      //       response["statusCode"] == 401 ||
-      //       response["statusCode"] == 0) {
-      //     nav.pushAndRemoveUntil(context, const Loginscreen());
+      if (_isAuthError(response)) return;
 
-      //     return;
-      //   }
-
-      //   if (response["isSuccess"]) {
-      //     if (!mounted) return;
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       const SnackBar(
-      //         content: Text('✅ Cập nhật thành công'),
-      //         duration: const Duration(milliseconds: 500),
-      //       ),
-      //     );
-      //     nav.pop(context, true); // quay lại và báo màn trước refresh
-      //   } else {
-      //     ScaffoldMessenger.of(context).showSnackBar(
-      //       SnackBar(
-      //         content: Text('❌ Lỗi cập nhật: '),
-      //         duration: const Duration(milliseconds: 500),
-      //       ),
-      //     );
-      //   }
-
-      // }
+      if (response["isSuccess"]) {
+        _showSuccess(
+          widget.isCreate ? "✅ Thêm thành công" : "✅ Cập nhật thành công",
+        );
+      } else {
+        _showError("❌ Lưu thất bại");
+      }
     } catch (e) {
-      print(e);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Lỗi khi lưu: $e")));
+      _showError("Lỗi: $e");
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
   }
 
-  Future<void> _pickDate({
-    required DateTime? initial,
-    required Function(DateTime) onPicked,
-    // String title = "Chọn ngày",
-  }) async {
+  bool _isAuthError(Map res) {
+    if ([0, 401, 403].contains(res["statusCode"])) {
+      nav.pushAndRemoveUntil(context, const Loginscreen());
+      return true;
+    }
+    return false;
+  }
+
+  void _showSuccess(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), duration: Duration(milliseconds: 500)),
+    );
+    nav.pop(context, true);
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  Future<void> _txtListener() async {
+    _productIDCtrl.addListener(() async {
+      final proBroken = await infoService.findProduct(
+        _productIDCtrl.text.trim(),
+      );
+      final pro = proBroken["body"];
+      _productNameCtrl.text = pro.nameProduct;
+      _productPartNoCtrl.text = pro.idPartNo;
+    });
+  }
+
+  Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: initial ?? DateTime.now(),
+      initialDate: _deliveryTime ?? DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2035),
     );
+
     if (picked != null) {
-      onPicked(picked);
-      setState(() {});
+      setState(() => _deliveryTime = picked);
     }
   }
 
-  Widget _buildDateTile(String label, DateTime? value, VoidCallback onTap) {
+  Widget _buildDate() {
     return GestureDetector(
-      onTap: widget.readOnly ? null : onTap,
+      onTap: widget.readOnly ? null : _pickDate,
       child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 16,
-          ),
+        decoration: const InputDecoration(
+          labelText: "Ngày giao hàng *",
+          border: OutlineInputBorder(),
         ),
         child: Text(
-          value != null ? formatdatehelper.formatDMY(value) : "Chưa chọn",
-          style: TextStyle(color: value == null ? Colors.grey : null),
+          _deliveryTime != null
+              ? formatdatehelper.formatDMY(_deliveryTime!)
+              : "Chưa chọn",
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    final isCreate = widget.isCreate;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isCreate
+            ? Colors.blue.withOpacity(0.1)
+            : Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isCreate ? Icons.add_circle : Icons.edit,
+            color: isCreate ? Colors.blue : Colors.green,
+          ),
+          const SizedBox(width: 10),
+          Text(
+            isCreate ? "Tạo đơn hàng mới" : "Cập nhật đơn hàng",
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: isCreate ? Colors.blue : Colors.green,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection({
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: _isSaving ? null : _saveCart,
+          child: _isSaving
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Text(widget.isCreate ? "Tạo đơn hàng" : "Cập nhật"),
         ),
       ),
     );
@@ -263,140 +327,106 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (_isSaving) {
-      return Scaffold(
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text("Đang lưu phiếu bảo hành..."),
-            ],
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          widget.isCreate
-              ? "Thêm phiếu đơn hàng"
-              : widget.item.cartID?.isNotEmpty == true
-              ? "Phiếu ${widget.item.cartID}"
-              : "Chi tiết đơn hàng",
-        ),
-        backgroundColor: Colors.blue,
+        title: Text(widget.isCreate ? "Thêm đơn hàng" : "Chi tiết đơn hàng"),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Thông tin phiếu ───────────────────────────────────────
-            CustomTextField(
-              label: "Mã phiếu bảo hành *",
-              controller: _cartIDCtrl,
-              readOnly: true,
-            ),
-            const SizedBox(height: 16),
+      body: Stack(
+        children: [
+          Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  const SizedBox(height: 16),
 
-            CustomTextField(
-              label: "Người tạo phiếu",
-              controller: _fullnameCtrl,
-              readOnly: true,
-            ),
-
-            const Divider(height: 32),
-            Text(
-              "Sản phẩm hỏng / khiếu nại",
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-
-            _buildDateTile(
-              "Ngày Oder",
-              _oderTime,
-              () =>
-                  _pickDate(initial: _oderTime, onPicked: (d) => _oderTime = d),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              "Nhà cung cấp / Đối tác",
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-
-            CustomDropdownField<Supplier>(
-              label: "Nhà cung cấp",
-              selectedValue: selectedSupplier,
-              items: suppliers,
-              getLabel: (s) => s.Name.toString(),
-              onChanged: (v) => setState(() => selectedSupplier = v),
-              isSearch: true,
-              readOnly: widget.readOnly,
-            ),
-            const SizedBox(height: 16),
-
-            // ── Ghi chú & Hình ảnh ────────────────────────────────────
-            const Divider(height: 32),
-            Text(
-              "Ghi chú & Minh chứng",
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-
-            CustomTextField(
-              label: "Ghi chú",
-              controller: _remarkCtrl,
-              // maxLines: 4,
-              readOnly: widget.readOnly,
-            ),
-
-            const SizedBox(height: 40),
-
-            // ── Action buttons ───────────────────────────────────────────
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 14,
-                    ),
+                  _buildSection(
+                    title: "Sản phẩm",
+                    children: [
+                      CustomTextField(
+                        label: "Mã SP",
+                        controller: _productIDCtrl,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        label: "Tên",
+                        controller: _productNameCtrl,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        label: "Danh điểm",
+                        controller: _productPartNoCtrl,
+                        readOnly: true,
+                      ),
+                    ],
                   ),
-                  onPressed:
-                      (widget.isCreate || widget.isUpdate) &&
-                          !_isSaving &&
-                          !widget.readOnly
-                      ? _saveGuarantee
-                      : null,
-                  icon: _isSaving
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.save),
-                  label: Text(_isSaving ? "Đang lưu..." : "Lưu phiếu"),
-                ),
-                const SizedBox(width: 24),
-                ElevatedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text("Quay lại"),
-                ),
-              ],
+
+                  const SizedBox(height: 16),
+
+                  _buildSection(
+                    title: "Đơn hàng",
+                    children: [
+                      CustomTextField(
+                        label: "Mã phiếu",
+                        controller: _cartIDCtrl,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        label: "Người tạo",
+                        controller: _fullnameCtrl,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        label: "Số lượng",
+                        controller: _qtyCtrl,
+                        keyboardType: TextInputType.numberWithOptions(
+                          decimal: true,
+                          signed: true,
+                        ),inputFormatters: [DotToMinusFormatter()],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildDate(),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildSection(
+                    title: "Nhà cung cấp",
+                    children: [
+                      CustomDropdownField<Supplier>(
+                        label: "Chọn NCC",
+                        selectedValue: selectedSupplier,
+                        items: suppliers,
+                        getLabel: (s) => s.Name.toString(),
+                        onChanged: (v) => setState(() => selectedSupplier = v),
+                        isSearch: true,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  _buildSection(
+                    title: "Ghi chú",
+                    children: [
+                      CustomTextField(
+                        label: "Ghi chú",
+                        controller: _remarkCtrl,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 32),
-          ],
-        ),
+          ),
+          _buildBottomBar(),
+        ],
       ),
     );
   }
@@ -405,7 +435,10 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
   void dispose() {
     _cartIDCtrl.dispose();
     _fullnameCtrl.dispose();
-    _statusCtrl.dispose();
+    _productIDCtrl.dispose();
+    _productNameCtrl.dispose();
+    _productPartNoCtrl.dispose();
+    _qtyCtrl.dispose();
     _remarkCtrl.dispose();
     super.dispose();
   }
