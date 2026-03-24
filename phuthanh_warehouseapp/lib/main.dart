@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
-// import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseTransfer.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
-// import 'package:phuthanh_warehouseapp/router/AppRouter.router.dart';
+import 'package:phuthanh_warehouseapp/service/notification_service.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await NotificationService.init(); // 🔥 thêm dòng này
+
   AppState.instance.init();
+
   runApp(const MyApp());
 }
 
@@ -19,7 +22,6 @@ class MyApp extends StatelessWidget {
       title: 'Demo 2025',
       debugShowCheckedModeBanner: false,
       home: Loginscreen(),
-      // home: WareHouseTransfer(),
     );
   }
 }
