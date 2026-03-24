@@ -2,11 +2,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
+// import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/service/CartService.service.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
 class CartItem extends StatelessWidget {
   final Cart cart;
@@ -38,6 +39,8 @@ class CartItem extends StatelessWidget {
       return acc?["AccountID"];
     }
 
+    final isAdminOrEditor = AppState.instance.get<bool>("role") == true;
+
     return Dismissible(
       key: ValueKey(cart.cartAID),
       direction: DismissDirection.horizontal,
@@ -45,8 +48,17 @@ class CartItem extends StatelessWidget {
       secondaryBackground: _buildRightBackground(),
 
       confirmDismiss: (direction) async {
-        if (direction == DismissDirection.endToStart) {
+        if (direction == DismissDirection.startToEnd) {
           final accountID = await _getCurrentUserID();
+          if (cart.status == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Đơn hàng đã xác nhận không thể xóa!'),
+                duration: const Duration(milliseconds: 1500),
+              ),
+            );
+            return false;
+          }
           if (cart.accountID != accountID) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -56,25 +68,71 @@ class CartItem extends StatelessWidget {
             );
             return false;
           }
-          if (cart.status == true) {
+
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Xác nhận"),
+                content: const Text("Bạn có chắc muốn xóa đơn này không?"),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text("Hủy"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text("Đồng ý"),
+                  ),
+                ],
+              );
+            },
+          );
+
+          if (confirm == true) {
+            final response = await cartService.deleteCart(
+              "Cart",
+              jsonEncode({"CartAID": cart.cartAID}),
+            );
+
+            if (response["statusCode"] == 200) {
+              if (onCallBack != null) {
+                onCallBack!();
+              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('✅ Xóa đơn hàng thành công!'),
+                  duration: const Duration(milliseconds: 500),
+                ),
+              );
+              return false;
+              // quay lại và báo màn trước refresh
+            }
+            if (response["statusCode"] == 401 ||
+                response["statusCode"] == 403 ||
+                response["statusCode"] == 0) {
+              // nav.pushAndRemoveUntil(context, const Loginscreen());
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('❌ Lỗi xóa: ${response["statusCode"]}'),
+                  duration: const Duration(milliseconds: 500),
+                ),
+              );
+            }
+            // return true; // cho phép dismiss
+          }
+          return false;
+        } else if (direction == DismissDirection.endToStart) {
+          if (!isAdminOrEditor) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Đơn hàng đã xác nhận không thể chỉnh sửa!'),
+                content: Text('Bạn không có quyền xác nhận!'),
                 duration: const Duration(milliseconds: 1500),
               ),
             );
             return false;
           }
-          final result = await nav.push(
-            context,
-            CartDetailScreen(item: cart, isUpdate: true),
-          );
-
-          if (result == true && onCallBack != null) {
-            onCallBack!();
-          }
-          return false;
-        } else if (direction == DismissDirection.startToEnd) {
           if (cart.status == true) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -174,7 +232,7 @@ class CartItem extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          cart.cartID ?? 'Cart #${cart.cartAID}',
+                          cart.productID ?? 'Cart #${cart.cartAID}',
                           style: const TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w800,
@@ -226,16 +284,16 @@ class CartItem extends StatelessWidget {
                             ),
 
                             /// ✅ chỉ giữ mã sản phẩm
-                            if (cart.productID?.trim().isNotEmpty == true) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                "Mã SP: ${cart.productID}",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
+                            // if (cart.productID?.trim().isNotEmpty == true) ...[
+                            //   const SizedBox(height: 4),
+                            //   Text(
+                            //     "Mã SP: ${cart.productID}",
+                            //     style: TextStyle(
+                            //       fontSize: 12,
+                            //       color: Colors.grey[600],
+                            //     ),
+                            //   ),
+                            // ],
 
                             /// PartNo (ẩn nếu rỗng)
                             if (cart.idPartNo?.trim().isNotEmpty == true) ...[
@@ -276,23 +334,44 @@ class CartItem extends StatelessWidget {
                   const SizedBox(height: 14),
 
                   /// USER + SUPPLIER
-                  Row(
+                  Column(
                     children: [
-                      Expanded(
-                        child: _buildMeta(
-                          icon: Icons.person_outline,
-                          text: cart.fullName ?? "Không có tên",
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildMeta(
+                              icon: Icons.person_outline,
+                              text: cart.fullName ?? "Không có tên",
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildMeta(
+                              icon: Icons.store_outlined,
+                              text: cart.supplierName ?? "Không có NCC",
+                            ),
+                          ),
+                        ],
                       ),
-                      Expanded(
-                        child: _buildMeta(
-                          icon: Icons.store_outlined,
-                          text: cart.supplierName ?? "Không có NCC",
-                        ),
+                      const SizedBox(height: 10),
+
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildMeta(
+                              icon: Icons.precision_manufacturing,
+                              text: cart.manufacturerName ?? "Không có Hãng SX",
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildMeta(
+                              icon: Icons.public,
+                              text: cart.countryName ?? "Không có Nước SX",
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 10),
 
                   /// TIME
@@ -379,16 +458,16 @@ class CartItem extends StatelessWidget {
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.only(left: 20),
       decoration: BoxDecoration(
-        color: Colors.green,
+        color: Colors.red,
         borderRadius: BorderRadius.circular(16),
       ),
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.done, color: Colors.white),
+          Icon(Icons.delete_forever_outlined, color: Colors.white),
           SizedBox(width: 6),
           Text(
-            "Xác nhận",
+            "Xóa",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ],
@@ -402,18 +481,18 @@ class CartItem extends StatelessWidget {
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: 20),
       decoration: BoxDecoration(
-        color: Colors.blue,
+        color: Colors.green,
         borderRadius: BorderRadius.circular(16),
       ),
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            "Edit",
+            "Xác nhận",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           SizedBox(width: 6),
-          Icon(Icons.edit, color: Colors.white),
+          Icon(Icons.done, color: Colors.white),
         ],
       ),
     );
@@ -423,7 +502,7 @@ class CartItem extends StatelessWidget {
 
   String _getStatusText(bool? status) {
     if (status == null) return "UNKNOWN";
-    return status ? "HOÀN THÀNH" : "CHƯA HOÀN THÀNH";
+    return status ? "HOÀN THÀNH" : "CHỜ XÁC NHẬN";
   }
 
   Color _getStatusColor(bool? status) {

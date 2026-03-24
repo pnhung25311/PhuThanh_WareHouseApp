@@ -156,6 +156,7 @@ class _LoginscreenState extends State<Loginscreen> {
 
     // Lưu hệ thống được chọn vào AppState để sử dụng trong toàn bộ app
     AppState.instance.set("selectedSystem", _selectedSystem!.value);
+    AppState.instance.set("selectedSystemName", _selectedSystem!.name);
     // AppState.instance.set("apiUrl", _selectedSystem!.apiUrl);
 
     final api = const ApiClient();

@@ -38,19 +38,8 @@ class ProductCard extends StatelessWidget {
             key: ValueKey(item.barcode), // phải unique
             direction: DismissDirection.horizontal, // chỉ swipe trái
             // nền khi kéo
-            background: Container(
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: BoxDecoration(
-                color: Colors.green,
-                borderRadius: BorderRadius.circular(16), // match Card của bạn
-              ),
-              child: const Icon(
-                Icons.add_shopping_cart,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
+            background: _buildLeftBackground(),
+            secondaryBackground: _buildRightBackground(),
 
             // xác nhận (có thể bỏ nếu không cần)
             confirmDismiss: (direction) async {
@@ -60,11 +49,22 @@ class ProductCard extends StatelessWidget {
                   productID: item.barcode.trim(),
                   idPartNo: item.danhDiem,
                   nameProduct: item.tenHangHoa,
+                  manufacturerName: item.hangSanXuat,
+                  countryName: item.nuocSanXuat,
                 );
                 nav.push(context, CartDetailScreen(item: cart, isCreate: true));
                 return false;
               } else if (direction == DismissDirection.startToEnd) {
-                return false; // không dismiss
+                Cart cart = Cart(
+                  cartAID: 0,
+                  productID: item.barcode.trim(),
+                  idPartNo: item.danhDiem,
+                  nameProduct: item.tenHangHoa,
+                  manufacturerName: item.hangSanXuat,
+                  countryName: item.nuocSanXuat,
+                );
+                nav.push(context, CartDetailScreen(item: cart, isCreate: true));
+                return false;
               }
               return false;
             },
@@ -359,6 +359,51 @@ class ProductCard extends StatelessWidget {
             );
           })
           .toList(),
+    );
+  }
+
+  Widget _buildLeftBackground() {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(left: 20),
+      decoration: BoxDecoration(
+        color: Colors.green,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.add_shopping_cart, color: Colors.white),
+          SizedBox(width: 6),
+          Text(
+            "Thêm giỏ hàng",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // /// Swipe trái (EDIT)
+  Widget _buildRightBackground() {
+    return Container(
+      alignment: Alignment.centerRight,
+      padding: const EdgeInsets.only(right: 20),
+      decoration: BoxDecoration(
+        color: Colors.green,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "Thêm giỏ hàng",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(width: 6),
+          Icon(Icons.add_shopping_cart, color: Colors.white),
+        ],
+      ),
     );
   }
 

@@ -11,10 +11,10 @@ class ApiClient {
   const ApiClient();
 
   Future<String> getBaseUrl() async {
-    String localIP = 'http://192.168.1.54:2010/api/';
-    String puclicIP = 'http://14.224.207.115:2010/api/';
-    // String localIP = 'http://192.168.1.11:8080/api/';
-    // String puclicIP = 'http://14.224.207.115:8080/api/';
+    // String localIP = 'http://192.168.1.54:2010/api/';
+    // String puclicIP = 'http://14.224.207.115:2010/api/';
+    String localIP = 'http://192.168.1.11:8080/api/';
+    String puclicIP = 'http://14.224.207.115:8080/api/';
     try {
       final url = Uri.parse('http://checkip.amazonaws.com/');
       final result = await http.get(url);
@@ -86,6 +86,7 @@ class ApiClient {
     final baseUrl = await getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
     final token = AppState.instance.get("token");
+    print(url);
 
     final headers = {'Authorization': 'Bearer $token'};
     final request = http.MultipartRequest('POST', url)..headers.addAll(headers);
@@ -108,7 +109,23 @@ class ApiClient {
   }
 
   // Delete
-  Future<http.Response> delete(String endpoint) async {
+  Future<http.Response> delete(String endpoint, String body) async {
+    final baseUrl = await getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+    final token = AppState.instance.get("token");
+
+    return await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: body
+    );
+  }
+
+    // Delete
+  Future<http.Response> deleteFile(String endpoint) async {
     final baseUrl = await getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
     final token = AppState.instance.get("token");

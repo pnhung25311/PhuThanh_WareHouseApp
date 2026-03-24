@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Location.model.dart';
@@ -22,6 +23,23 @@ class InfoService {
         return data.map((e) => Country.fromJson(e)).toList();
       } else {
         // throw Exception("Failed to load data (${response.statusCode})");
+        return [];
+      }
+    } catch (e) {
+      print(e);
+      return [];
+    }
+  }
+
+  Future<List<Account>> LoadDtataAccount() async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.get("dynamic/get-all/Account");
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => Account.fromJson(e)).toList();
+      } else {
         return [];
       }
     } catch (e) {
@@ -249,7 +267,7 @@ class InfoService {
     try {
       const apiClient = ApiClient();
       final response = await apiClient.get(
-        "dynamic/find/Product/ProductID/$condition",
+        "dynamic/find/vwProduct/ProductID/$condition",
       );
 
       final List<dynamic> data = jsonDecode(response.body);
@@ -481,4 +499,28 @@ class InfoService {
       return 0;
     }
   }
+
+  Future<Map<String, dynamic>> upDateAccount(
+    String id,
+    String body,
+  ) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.put(
+        "dynamic/update/Account/AccountID/" + id.toString(),
+        body,
+      );
+
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
+    } catch (e) {
+      print(e);
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
+    }
+  }
+
+
 }

@@ -5,6 +5,7 @@ class Account {
   final String FullName;
   final String Role;
   final String Status;
+  String Avatar;
   Account({
     required this.AccountID,
     required this.UserName,
@@ -12,6 +13,7 @@ class Account {
     required this.FullName,
     required this.Role,
     required this.Status,
+    required this.Avatar,
   });
 
   factory Account.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,7 @@ class Account {
       Role: json['Role'] ?? '',
       FullName: json['FullName'] ?? '',
       Status: json['Status'] ?? '',
+      Avatar: json['Avatar'] ?? '',
     );
   }
 
@@ -32,7 +35,27 @@ class Account {
       'UserName': UserName,
       'FullName': FullName,
       'Role': Role,
-      'Status':Status
+      'Status': Status,
+      'Avatar': Avatar,
     };
+  }
+
+  Account copyWith({
+    String? Avatar,
+    String? UserName,
+    String? PassWord,
+    String? FullName,
+    String? Role,
+    String? Status,
+  }) {
+    return Account(
+      AccountID: AccountID,
+      UserName: UserName ?? this.UserName,
+      PassWord: PassWord ?? this.PassWord,
+      FullName: FullName ?? this.FullName,
+      Role: Role ?? this.Role,
+      Status: Status ?? this.Status,
+      Avatar: Avatar ?? this.Avatar,
+    );
   }
 }

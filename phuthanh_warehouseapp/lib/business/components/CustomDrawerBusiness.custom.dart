@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/UserProfile.screen.dart';
+import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
+// import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/history/HistoryBusinessScreenALL.screen.dart';
-import 'package:phuthanh_warehouseapp/business/screen/BusinessScreen.screen.dart';
+// import 'package:phuthanh_warehouseapp/business/screen/BusinessScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
 class CustomDrawerBusiness extends StatefulWidget {
   final VoidCallback? onWarehouseSelected;
@@ -78,7 +81,7 @@ class _CustomDrawerBusinessState extends State<CustomDrawerBusiness> {
                   navigationHelper.pop(context);
                   navigationHelper.pushAndRemoveUntil(
                     context,
-                    const BusinessScreen(),
+                    const HomeBusinessScreen(),
                   );
                 },
               ),
@@ -99,11 +102,15 @@ class _CustomDrawerBusinessState extends State<CustomDrawerBusiness> {
             future: mySharedPreferences.getDataObject('account'),
             builder: (context, snapshot) {
               String fullname = "User";
+              // String avatarUrl = '';
+              Account? account;
 
               if (snapshot.hasData && snapshot.data != null) {
-                final account = Account.fromJson(snapshot.data!);
+                account = Account.fromJson(snapshot.data!);
                 fullname = account.FullName;
+                // avatarUrl = account.Avatar;
               }
+              final NameSys = AppState.instance.get("selectedSystemName");
 
               return DrawerHeader(
                 padding: EdgeInsets.zero,
@@ -116,11 +123,49 @@ class _CustomDrawerBusinessState extends State<CustomDrawerBusiness> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 30,
-                        child: Icon(Icons.person, color: Colors.blue, size: 35),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              if (account != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        UserProfileScreen(account: account!),
+                                  ),
+                                );
+                              }
+                            },
+                            child: CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.white,
+                              backgroundImage:
+                                  (account?.Avatar.isNotEmpty ?? false)
+                                  ? NetworkImage(account!.Avatar)
+                                  : null,
+                              child: (account?.Avatar.isEmpty ?? true)
+                                  ? const Icon(
+                                      Icons.person,
+                                      color: Colors.blue,
+                                      size: 35,
+                                    )
+                                  : null,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+
+                          Text(
+                            NameSys.toString() + '!',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 10),
                       Text(
                         'Xin chào, $fullname!',
@@ -141,13 +186,13 @@ class _CustomDrawerBusinessState extends State<CustomDrawerBusiness> {
             child: ListView(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.list_alt_outlined, color: Colors.blue),
+                  leading: const Icon(
+                    Icons.list_alt_outlined,
+                    color: Colors.blue,
+                  ),
                   title: const Text('Danh sách sản phẩm'),
                   onTap: () {
-                    navigationHelper.push(
-                      context,
-                      BusinessScreen(),
-                    );
+                    navigationHelper.push(context, HomeBusinessScreen());
                   },
                 ),
 
@@ -176,13 +221,13 @@ class _CustomDrawerBusinessState extends State<CustomDrawerBusiness> {
                 ),
 
                 /// GIỎ HÀNG
-                ListTile(
-                  leading: const Icon(Icons.shopping_cart, color: Colors.green),
-                  title: const Text('Giỏ hàng'),
-                  onTap: () {
-                    navigationHelper.push(context, CartListScreen(isBusiness: true,));
-                  },
-                ),
+                // ListTile(
+                //   leading: const Icon(Icons.shopping_cart, color: Colors.green),
+                //   title: const Text('Giỏ hàng'),
+                //   onTap: () {
+                //     navigationHelper.push(context, CartListScreen(isBusiness: true,));
+                //   },
+                // ),
               ],
             ),
           ),

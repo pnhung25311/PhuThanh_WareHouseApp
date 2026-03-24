@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/business/cart/ScanBusinessBarcodeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomBusinessLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomDrawerBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomProductBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/ScanBarcodeScreen.screen.dart';
 
 class BusinessScreen extends StatefulWidget {
   const BusinessScreen({super.key});
@@ -106,7 +106,7 @@ class _BusinessScreenState extends State<BusinessScreen> {
   Future<void> _onScanResult() async {
     final result = await nav.push(
       context,
-       const ScanScreen(isUpdate: false),
+      ScanBusinessCartScreen(isCart: false),
     );
 
     if (result != null && result is String && mounted) {

@@ -17,6 +17,7 @@ dependencies:
   mobile_scanner: ^7.1.4
   shared_preferences: ^2.5.3
   show_hide_password: ^0.0.2
+  stomp_dart_client: ^3.0.1
 
 
 dev_dependencies:

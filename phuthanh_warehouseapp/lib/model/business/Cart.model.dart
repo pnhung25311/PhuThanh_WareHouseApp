@@ -15,6 +15,12 @@ class Cart {
   final int? partner;
   final String? supplierName;
 
+  final int? manufacturerID;
+  final String? manufacturerName;
+
+  final int? countryID;
+  final String? countryName;
+
   final bool? status;
   final String? remark;
   final DateTime? deliveryTime;
@@ -32,6 +38,10 @@ class Cart {
     this.qty,
     this.partner,
     this.supplierName,
+    this.manufacturerID,
+    this.manufacturerName,
+    this.countryID,
+    this.countryName,
     this.status,
     this.remark,
     this.deliveryTime,
@@ -53,6 +63,10 @@ class Cart {
       qty: _toDouble(json['Qty']),
       partner: _toInt(json['Partner']),
       supplierName: json['Name']?.toString(),
+      manufacturerID: _toInt(json['ManufacturerID']),
+      manufacturerName: json['ManufacturerName']?.toString(),
+      countryID: _toInt(json['CountryID']),
+      countryName: json['CountryName']?.toString(),
 
       status: _toBool(json['Status']),
       remark: json['Remark']?.toString(),
@@ -92,6 +106,10 @@ class Cart {
       qty: 0,
       partner: 0,
       supplierName: '',
+      manufacturerID: 0,
+      manufacturerName: '',
+      countryID: 0,
+      countryName: '',
       status: false,
       remark: '',
       deliveryTime: null,
@@ -111,6 +129,10 @@ class Cart {
     double? qty,
     int? partner,
     String? supplierName,
+    int? manufacturerID,
+    String? manufacturerName,
+    int? countryID,
+    String? countryName,
     bool? status,
     String? remark,
     DateTime? deliveryTime,
@@ -128,6 +150,10 @@ class Cart {
       qty: qty ?? this.qty,
       partner: partner ?? this.partner,
       supplierName: supplierName ?? this.supplierName,
+      manufacturerID: manufacturerID ?? this.manufacturerID,
+      manufacturerName: manufacturerName ?? this.manufacturerName,
+      countryID: partner ?? this.countryID,
+      countryName: supplierName ?? this.countryName,
       status: status ?? this.status,
       remark: remark ?? this.remark,
       deliveryTime: deliveryTime ?? this.deliveryTime,

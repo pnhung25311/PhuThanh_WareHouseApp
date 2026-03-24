@@ -4,7 +4,9 @@ import 'package:collection/collection.dart';
 
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/service/BusinessService.service.dart';
+import 'package:phuthanh_warehouseapp/business/service/CartService.service.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/formatters/DotToMinusFormatte.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextField.custom.dart';
@@ -39,6 +41,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
 
   final InfoService infoService = InfoService();
   final Warehouseservice warehouseService = Warehouseservice();
+  final CartService cartService = CartService();
   final Businessservice businessservice = Businessservice();
   final Formatdatehelper formatdatehelper = Formatdatehelper();
   final NavigationHelper nav = NavigationHelper();
@@ -50,6 +53,9 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
   final TextEditingController _productIDCtrl = TextEditingController();
   final TextEditingController _productNameCtrl = TextEditingController();
   final TextEditingController _productPartNoCtrl = TextEditingController();
+  final TextEditingController _productManufacturerCtrl =
+      TextEditingController();
+  final TextEditingController _productCountryCtrl = TextEditingController();
   final TextEditingController _qtyCtrl = TextEditingController();
   final TextEditingController _remarkCtrl = TextEditingController();
 
@@ -72,6 +78,8 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
     _productPartNoCtrl.text = widget.item.idPartNo ?? '';
     _qtyCtrl.text = widget.item.qty?.toString() ?? '';
     _remarkCtrl.text = widget.item.remark ?? '';
+    _productManufacturerCtrl.text = widget.item.manufacturerName ?? '';
+    _productCountryCtrl.text = widget.item.countryName ?? '';
 
     _deliveryTime = widget.item.deliveryTime ?? DateTime.now();
 
@@ -158,7 +166,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
       Map response;
 
       if (widget.isCreate) {
-        response = await warehouseService.addWarehouseRow("Cart", body);
+        response = await cartService.addCart(body);
       } else {
         response = await businessservice.upDateCart(
           "Cart",
@@ -207,9 +215,11 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
       final proBroken = await infoService.findProduct(
         _productIDCtrl.text.trim(),
       );
-      final pro = proBroken["body"];
+      final Product pro = proBroken["body"];
       _productNameCtrl.text = pro.nameProduct;
       _productPartNoCtrl.text = pro.idPartNo;
+      _productCountryCtrl.text = pro.countryName ?? '';
+      _productManufacturerCtrl.text = pro.manufacturerName ?? '';
     });
   }
 
@@ -239,36 +249,6 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
               ? formatdatehelper.formatDMY(_deliveryTime!)
               : "Chưa chọn",
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    final isCreate = widget.isCreate;
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: isCreate
-            ? Colors.blue.withOpacity(0.1)
-            : Colors.green.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isCreate ? Icons.add_circle : Icons.edit,
-            color: isCreate ? Colors.blue : Colors.green,
-          ),
-          const SizedBox(width: 10),
-          Text(
-            isCreate ? "Tạo đơn hàng mới" : "Cập nhật đơn hàng",
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: isCreate ? Colors.blue : Colors.green,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -315,7 +295,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
           onPressed: _isSaving ? null : _saveCart,
           child: _isSaving
               ? const CircularProgressIndicator(color: Colors.white)
-              : Text(widget.isCreate ? "Tạo đơn hàng" : "Cập nhật"),
+              : Text(widget.isCreate ? "Lưu" : "Lưu"),
         ),
       ),
     );
@@ -339,19 +319,16 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
               child: Column(
                 children: [
-                  _buildHeader(),
-                  const SizedBox(height: 16),
-
                   _buildSection(
                     title: "Sản phẩm",
                     children: [
                       CustomTextField(
-                        label: "Mã SP",
+                        label: "Mã sản phẩm",
                         controller: _productIDCtrl,
                       ),
                       const SizedBox(height: 12),
                       CustomTextField(
-                        label: "Tên",
+                        label: "Tên sản phẩm",
                         controller: _productNameCtrl,
                         readOnly: true,
                       ),
@@ -359,6 +336,18 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                       CustomTextField(
                         label: "Danh điểm",
                         controller: _productPartNoCtrl,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        label: "Hãng SX",
+                        controller: _productManufacturerCtrl,
+                        readOnly: true,
+                      ),
+                      const SizedBox(height: 12),
+                      CustomTextField(
+                        label: "Nước SX",
+                        controller: _productCountryCtrl,
                         readOnly: true,
                       ),
                     ],
@@ -369,11 +358,6 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                   _buildSection(
                     title: "Đơn hàng",
                     children: [
-                      CustomTextField(
-                        label: "Mã phiếu",
-                        controller: _cartIDCtrl,
-                        readOnly: true,
-                      ),
                       const SizedBox(height: 12),
                       CustomTextField(
                         label: "Người tạo",
@@ -387,18 +371,13 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                         keyboardType: TextInputType.numberWithOptions(
                           decimal: true,
                           signed: true,
-                        ),inputFormatters: [DotToMinusFormatter()],
+                        ),
+                        inputFormatters: [DotToMinusFormatter()],
                       ),
                       const SizedBox(height: 12),
                       _buildDate(),
-                    ],
-                  ),
+                      const SizedBox(height: 12),
 
-                  const SizedBox(height: 16),
-
-                  _buildSection(
-                    title: "Nhà cung cấp",
-                    children: [
                       CustomDropdownField<Supplier>(
                         label: "Chọn NCC",
                         selectedValue: selectedSupplier,
@@ -407,20 +386,15 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                         onChanged: (v) => setState(() => selectedSupplier = v),
                         isSearch: true,
                       ),
-                    ],
-                  ),
+                      const SizedBox(height: 12),
 
-                  const SizedBox(height: 16),
-
-                  _buildSection(
-                    title: "Ghi chú",
-                    children: [
                       CustomTextField(
                         label: "Ghi chú",
                         controller: _remarkCtrl,
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),

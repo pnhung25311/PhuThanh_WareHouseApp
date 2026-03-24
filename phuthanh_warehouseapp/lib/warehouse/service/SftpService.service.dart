@@ -35,7 +35,7 @@ class SftpService {
   /// 🗑️ Xóa file (gọi ApiClient.delete)
   Future<bool> deleteFile(String imageUrl, String productID) async {
     final fileName = imageUrl.split('/').last.split('.').first;
-    final response = await api.delete("delete/$productID?fileName=$fileName");
+    final response = await api.deleteFile("delete/$productID?fileName=$fileName");
 
     if (response.statusCode == 200) {
       return true;
@@ -47,7 +47,7 @@ class SftpService {
 
     Future<bool> deleteFileGuarantee(String imageUrl, String productID) async {
     final fileName = imageUrl.split('/').last.split('.').first;
-    final response = await api.delete("delete-guarantee/$productID?fileName=$fileName");
+    final response = await api.deleteFile("delete-guarantee/$productID?fileName=$fileName");
 
     if (response.statusCode == 200) {
       return true;

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/cart/ScanBusinessBarcodeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/screen/BusinessScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomBottomNavigator.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
@@ -34,6 +36,7 @@ class _HomeBusinessScreenState extends State<HomeBusinessScreen> {
         BusinessScreen(),
         SizedBox(), // Scan không phải tab
         // SearchScreen(),
+        CartListScreen(isBusiness: true)
       ],
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -41,12 +44,13 @@ class _HomeBusinessScreenState extends State<HomeBusinessScreen> {
           icon: Icon(Icons.qr_code_scanner),
           label: 'Scan',
         ),
+        BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Giỏ hàng'),
         // BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
       ],
-      // scanIndex: 1,
-      // onScanTap: () {
-      //   navigationHelper.push(context, ScanScreen(isUpdate: true));
-      // },
+      scanIndex: 1,
+      onScanTap: () {
+        navigationHelper.push(context, ScanBusinessCartScreen(isCart: true));
+      },
     );
   }
 }

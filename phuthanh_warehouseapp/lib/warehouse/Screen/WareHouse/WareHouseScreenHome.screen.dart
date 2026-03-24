@@ -184,7 +184,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
                 },
               ),
             ),
-          if (item.wareHouseCategory == 0)
+          if (item.wareHouseCategory == -1)
             Padding(
               padding: const EdgeInsets.only(right: 10),
               child: IconButton(

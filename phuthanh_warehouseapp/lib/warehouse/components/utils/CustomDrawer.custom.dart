@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/business/screen/BusinessScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
+// import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
+// import 'package:phuthanh_warehouseapp/business/screen/BusinessScreen.screen.dart';r
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawerLongClick.custom.dart';
@@ -145,7 +146,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   navigationHelper.pop(context);
                   navigationHelper.pushAndRemoveUntil(
                     context,
-                    const BusinessScreen(),
+                    const HomeBusinessScreen(),
                   );
                 },
               ),
@@ -171,6 +172,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 final account = Account.fromJson(snapshot.data!);
                 fullname = account.FullName;
               }
+              final NameSys = AppState.instance.get("selectedSystemName");
 
               return DrawerHeader(
                 padding: EdgeInsets.zero,
@@ -183,11 +185,29 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 30,
-                        child: Icon(Icons.person, color: Colors.blue, size: 35),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: Colors.white,
+                            radius: 30,
+                            child: Icon(
+                              Icons.person,
+                              color: Colors.blue,
+                              size: 35,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            NameSys.toString() + '!',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
                       ),
+
                       const SizedBox(height: 10),
                       Text(
                         'Xin chào, $fullname!',
@@ -251,14 +271,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     },
                   ),
           ),
-          ListTile(
-            leading: const Icon(Icons.shopping_cart, color: Colors.green),
-            title: const Text('Giỏ hàng'),
-            onTap: () {
-              navigationHelper.push(context, CartListScreen(isBusiness: false));
-            },
-          ),
 
+          // ListTile(
+          //   leading: const Icon(Icons.shopping_cart, color: Colors.green),
+          //   title: const Text('Giỏ hàng'),
+          //   onTap: () {
+          //     navigationHelper.push(context, CartListScreen(isBusiness: false));
+          //   },
+          // ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.change_circle, color: Colors.green),
