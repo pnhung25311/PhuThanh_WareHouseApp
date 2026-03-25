@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/service/notification_service.service.dart';
 import 'websocket_service.dart';
@@ -15,18 +17,23 @@ class NotificationManager {
 
   void init(BuildContext context) {
     _ws.connect((data) {
-      notifications.insert(0, data);
-      NotificationService.show(
-        title: "Thông báo",
-        body: data['message'] ?? "",
-        payload: data.toString(),
-      );
-      // 🔥 Popup realtime
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(data['message'] ?? "")));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifications.insert(0, data);
 
-      print("📩 Notification: $data");
+        // 🔔 Notification
+        NotificationService.show(
+          title: "Thông báo",
+          body: data['message'].toString(),
+          payload: jsonEncode(data)
+        );
+
+        // 🔥 SnackBar
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text(data['message'] ?? "")),
+        // );
+
+        print("📩 Notification: $data");
+      });
     });
   }
 

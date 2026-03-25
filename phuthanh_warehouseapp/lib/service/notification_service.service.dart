@@ -4,34 +4,52 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  /// 🔥 Init
+  /// 🔥 INIT
   static Future<void> init() async {
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const settings = InitializationSettings(
-      android: android,
+    const ios = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+
+      // ✅ Hiện khi app đang mở (QUAN TRỌNG)
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
     );
 
+    const settings = InitializationSettings(android: android, iOS: ios);
+
     await _plugin.initialize(
-      settings: settings, // ✅ version mới dùng 'settings'
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
+      settings: settings,
+      onDidReceiveNotificationResponse: (response) {
         print("🔔 Click notification: ${response.payload}");
       },
     );
 
-    // ✅ Android 13+
+    /// ✅ Android 13+
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.requestNotificationsPermission();
+
+    /// ✅ iOS (version mới dùng Darwin)
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >() // ✅ dùng cái này
+        ?.requestPermissions(alert: true, badge: true, sound: true);
   }
 
-  /// 🔔 Show notification
+  /// 🔔 SHOW NOTIFICATION
   static Future<void> show({
     required String title,
     required String body,
     String? payload,
   }) async {
+    /// ANDROID
     const androidDetails = AndroidNotificationDetails(
       'channel_id',
       'Thông báo',
@@ -40,10 +58,23 @@ class NotificationService {
       priority: Priority.high,
     );
 
-    const details = NotificationDetails(android: androidDetails);
+    /// IOS (QUAN TRỌNG)
+    const iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+
+    );
+
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+
+    print("👉 SHOW NOTIFICATION");
 
     await _plugin.show(
-      id: DateTime.now().millisecondsSinceEpoch ~/ 1000, // ✅ bắt buộc
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: title,
       body: body,
       notificationDetails: details,
