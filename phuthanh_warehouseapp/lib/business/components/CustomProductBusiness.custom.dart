@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/product/ProductBusinessDetailsScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/StockAllocatorHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
 
@@ -135,6 +136,9 @@ class ProductCard extends StatelessWidget {
 
                           // Stock chips
                           _buildStockChips(isNarrow: isNarrow),
+                          const SizedBox(height: 8),
+
+                          _buildStockVAT(isNarrow: isNarrow),
 
                           const SizedBox(height: 16),
 
@@ -247,7 +251,7 @@ class ProductCard extends StatelessWidget {
     final p1 = item.giaVon1;
     final p2 = item.giaVon2;
 
-    if ((p1 ?? 0) <= 0 && (p2 ?? 0) <= 0) return const SizedBox.shrink();
+    // if ((p1 ?? 0) <= 0 && (p2 ?? 0) <= 0) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -267,16 +271,29 @@ class ProductCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (p1 != null && p1 > 0)
+          if (p1 != null && p1 > 0) ...[
             Text(
               'Giá vốn 1: ${_formatPrice(p1)}',
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
             ),
-          if (p2 != null && p2 > 0)
+          ] else ...[
+            Text(
+              'Giá vốn 1: 0₫',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            ),
+          ],
+
+          if (p2 != null && p2 > 0) ...[
             Text(
               'Giá vốn 2: ${_formatPrice(p2)}',
               style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
             ),
+          ] else ...[
+            Text(
+              'Giá vốn 2: 0₫',
+              style: TextStyle(fontSize: 13, color: Colors.grey.shade800),
+            ),
+          ],
         ],
       ),
     );
@@ -285,7 +302,7 @@ class ProductCard extends StatelessWidget {
   Widget _buildVatSection() {
     final vy = item.vatVietY ?? 0;
     final pt = item.vatPhuThanh ?? 0;
-    if ((vy) <= 0 && (pt) <= 0) return const SizedBox.shrink();
+    // if ((vy) <= 0 && (pt) <= 0) return const SizedBox.shrink();
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -305,16 +322,16 @@ class ProductCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          if (vy > 0)
-            Text(
-              'Việt Ý: ${vy.toStringAsFixed(1)}',
-              style: const TextStyle(fontSize: 13.5),
-            ),
-          if (pt > 0)
-            Text(
-              'Phú Thành: ${pt.toStringAsFixed(1)}',
-              style: const TextStyle(fontSize: 13.5),
-            ),
+          // if (pt > 0)
+          Text(
+            'Phú Thành: ${pt.toStringAsFixed(1)}',
+            style: const TextStyle(fontSize: 13.5),
+          ),
+          // if (vy > 0)
+          Text(
+            'Việt Ý: ${vy.toStringAsFixed(1)}',
+            style: const TextStyle(fontSize: 13.5),
+          ),
         ],
       ),
     );
@@ -359,6 +376,85 @@ class ProductCard extends StatelessWidget {
             );
           })
           .toList(),
+    );
+  }
+
+  Widget _buildStockVAT({required bool isNarrow}) {
+    final allocator = StockAllocator();
+
+    int VATpt = item.vatPhuThanh?.toInt() ?? 0;
+    int VATvy = item.vatVietY?.toInt() ?? 0;
+    int khoC = item.khoChinh?.toInt() ?? 0;
+    int khoLK = item.khoLangKhanh?.toInt() ?? 0;
+    int khoKS = item.khoKhoangSan?.toInt() ?? 0;
+    int khoKD = item.khoKheDay?.toInt() ?? 0;
+    int kho397 = item.kho397?.toInt() ?? 0;
+
+    int total = kho397 + khoKD + khoKS + khoC + khoLK;
+
+    Map<String, int> input = {"VATpt": VATpt, "VATvy": VATvy};
+
+    final result = allocator.allocate(input, total);
+
+    /// 🔥 Chuẩn hóa data theo row
+    final rows = [
+      [
+        _Stock(
+          'VAT Phú Thành K1',
+          (result['VATpt']?.co ?? 0).toDouble(),
+          Colors.green,
+        ),
+        _Stock(
+          'VAT Việt Ý K1',
+          (result['VATvy']?.co ?? 0).toDouble(),
+          Colors.green,
+        ),
+      ],
+      [
+        _Stock(
+          'VAT Phú Thành K0',
+          (result['VATpt']?.ko ?? 0).toDouble(),
+          Colors.green,
+        ),
+        _Stock(
+          'VAT Việt Ý K0',
+          (result['VATvy']?.ko ?? 0).toDouble(),
+          Colors.green,
+        ),
+      ],
+    ];
+
+    Widget buildItem(_Stock s) {
+      final qty = s.qty ?? 0;
+      final color = qty > 0 ? s.color : Colors.red;
+
+      return Container(
+        margin: const EdgeInsets.all(4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.4)),
+        ),
+        child: Text(
+          '${s.label}: ${_formatQuantity(qty)}',
+          style: TextStyle(
+            fontSize: 12.5,
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: rows.map((row) {
+        return Row(
+          children: row
+              .map((item) => Expanded(child: buildItem(item)))
+              .toList(),
+        );
+      }).toList(),
     );
   }
 
