@@ -400,24 +400,24 @@ class ProductCard extends StatelessWidget {
     final rows = [
       [
         _Stock(
-          'VAT Phú Thành K1',
+          'VAT PT K1',
           (result['VATpt']?.co ?? 0).toDouble(),
           Colors.green,
         ),
         _Stock(
-          'VAT Việt Ý K1',
+          'VAT VY K1',
           (result['VATvy']?.co ?? 0).toDouble(),
           Colors.green,
         ),
       ],
       [
         _Stock(
-          'VAT Phú Thành K0',
+          'VAT PT K0',
           (result['VATpt']?.ko ?? 0).toDouble(),
           Colors.green,
         ),
         _Stock(
-          'VAT Việt Ý K0',
+          'VAT VY K0',
           (result['VATvy']?.ko ?? 0).toDouble(),
           Colors.green,
         ),

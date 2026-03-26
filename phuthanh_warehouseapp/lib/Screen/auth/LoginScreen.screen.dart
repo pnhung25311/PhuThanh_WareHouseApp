@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/system/SystemOption.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
@@ -35,17 +36,28 @@ class _LoginscreenState extends State<Loginscreen> {
 
   // Hệ thống được chọn
   SystemOption? _selectedSystem;
+  bool? statusConnect; // null = chưa load xong
 
   List<StatusSystem> arrStatus = [];
   StatusSystemService statusSystemService = StatusSystemService();
   NavigationHelper navigationHelper = NavigationHelper();
   MySharedPreferences mySharedPreferences = MySharedPreferences();
+  FunctionConvertHelper functionConvertHelper = FunctionConvertHelper();
 
   @override
   void initState() {
     super.initState();
     _selectedSystem = _systems[0]; // Mặc định chọn hệ thống đầu tiên
     _loadSavedInfo();
+    checkNetwork();
+  }
+
+  void checkNetwork() async {
+    final api = ApiClient();
+    bool result = await api.isInternalNetwork();
+    setState(() {
+      statusConnect = result;
+    });
   }
 
   Future<void> _loadSavedInfo() async {
@@ -232,6 +244,11 @@ class _LoginscreenState extends State<Loginscreen> {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl =
+        'http://192.168.1.54:2010/PYS%20Images/IMG_SYSTEM/loginImg.png';
+    final finalUrl = statusConnect == true
+        ? imageUrl
+        : functionConvertHelper.convertToPublicIP(imageUrl);
     return WillPopScope(
       onWillPop: () async => true,
       child: Scaffold(
@@ -241,23 +258,11 @@ class _LoginscreenState extends State<Loginscreen> {
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  const Text(
-                    'Welcome',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 26,
-                      color: Color(0xFF1C1C1C),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Sign In to continue',
-                    style: TextStyle(
-                      fontFamily: 'Poppins',
-                      fontSize: 18,
-                      color: Color(0xFF1C1C1C),
-                    ),
+                  Image.network(
+                    finalUrl,
+                    width: 200,
+                    height: 150,
+                    fit: BoxFit.cover,
                   ),
                   const SizedBox(height: 26),
 
