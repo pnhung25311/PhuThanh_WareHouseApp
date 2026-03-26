@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/service/notification_service.service.dart';
 import 'websocket_service.dart';
@@ -13,10 +12,11 @@ class NotificationManager {
   final WebSocketService _ws = WebSocketService();
 
   final List<Map<String, dynamic>> notifications = [];
-
+  bool _connected = false;
   void init(BuildContext context) {
+    if (_connected) return;
+    _connected = true;
     _ws.connect((data) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
         notifications.insert(0, data);
 
         // 🔔 Notification
@@ -32,7 +32,6 @@ class NotificationManager {
 
         print("📩 Notification: $data");
       });
-    });
   }
 
   void dispose() {
