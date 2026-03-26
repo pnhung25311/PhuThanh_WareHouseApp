@@ -244,11 +244,10 @@ class _LoginscreenState extends State<Loginscreen> {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl =
-        'http://192.168.1.54:2010/PYS%20Images/IMG_SYSTEM/loginImg.png';
+    final imageUrl = 'http://192.168.1.54:2010/PYS%20Images/IMG_SYSTEM/loginImg.png';
     final finalUrl = statusConnect == true
-        ? imageUrl
-        : functionConvertHelper.convertToPublicIP(imageUrl);
+                    ? imageUrl
+                    : functionConvertHelper.convertToPublicIP(imageUrl);
     return WillPopScope(
       onWillPop: () async => true,
       child: Scaffold(
@@ -260,11 +259,10 @@ class _LoginscreenState extends State<Loginscreen> {
                 children: [
                   Image.network(
                     finalUrl,
-                    width: 200,
-                    height: 150,
+                    width: 300,
+                    height: 225,
                     fit: BoxFit.cover,
-                  ),
-                  const SizedBox(height: 26),
+                  ),const SizedBox(height: 26),
 
                   // Dropdown chọn hệ thống
                   Container(
