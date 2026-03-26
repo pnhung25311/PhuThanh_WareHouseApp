@@ -1,14 +1,16 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin _plugin =
+  final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
   /// 🔥 INIT
-  static Future<void> init() async {
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+  Future<void> init() async {
+    const AndroidInitializationSettings android = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
 
-    const ios = DarwinInitializationSettings(
+    const DarwinInitializationSettings ios = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
@@ -19,13 +21,17 @@ class NotificationService {
       defaultPresentSound: true,
     );
 
-    const settings = InitializationSettings(android: android, iOS: ios);
+    const InitializationSettings settings = InitializationSettings(
+      android: android,
+      iOS: ios,
+    );
 
     await _plugin.initialize(
       settings: settings,
-      onDidReceiveNotificationResponse: (response) {
-        print("🔔 Click notification: ${response.payload}");
-      },
+      // settings: settings,
+      // onDidReceiveNotificationResponse: (response) {
+      //   print("🔔 Click notification: ${response.payload}");
+      // },
     );
 
     /// ✅ Android 13+
@@ -44,29 +50,29 @@ class NotificationService {
   }
 
   /// 🔔 SHOW NOTIFICATION
-  static Future<void> show({
+  Future<void> show({
     required String title,
     required String body,
     String? payload,
   }) async {
     /// ANDROID
-    const androidDetails = AndroidNotificationDetails(
-      'channel_id',
-      'Thông báo',
-      channelDescription: 'Notification channel',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'channel_id',
+          'Thông báo',
+          channelDescription: 'Notification channel',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
 
     /// IOS (QUAN TRỌNG)
-    const iosDetails = DarwinNotificationDetails(
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-
     );
 
-    const details = NotificationDetails(
+    const NotificationDetails details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -80,5 +86,43 @@ class NotificationService {
       notificationDetails: details,
       payload: payload,
     );
+  }
+
+  Future<void> showNotification({
+    int id = 0,
+    String title = 'Thông báo',
+    String body = 'Thông báo',
+  }) async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'channel_id',
+          'Thông báo',
+          channelDescription: 'Notification channel',
+          importance: Importance.max,
+          priority: Priority.high,
+          showWhen: true,
+        );
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    const NotificationDetails details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+    );
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: details,
+    );
+  }
+  Future<void> cancelNotification(int id) async {
+    await _plugin.cancel(id: id);
+  }
+
+  Future<void> cancelAllNotification() async {
+    await _plugin.cancelAll();
   }
 }

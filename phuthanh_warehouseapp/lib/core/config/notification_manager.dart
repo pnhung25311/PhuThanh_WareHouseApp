@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/service/notification_service.service.dart';
@@ -21,10 +20,9 @@ class NotificationManager {
         notifications.insert(0, data);
 
         // 🔔 Notification
-        NotificationService.show(
+        NotificationService().showNotification(
           title: "Thông báo",
           body: data['message'].toString(),
-          payload: jsonEncode(data)
         );
 
         // 🔥 SnackBar

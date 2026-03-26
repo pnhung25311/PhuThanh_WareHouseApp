@@ -6,7 +6,7 @@ import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await NotificationService.init(); // 🔥 thêm dòng này
+  await NotificationService().init(); // 🔥 thêm dòng này
 
   AppState.instance.init();
 

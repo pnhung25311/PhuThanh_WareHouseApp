@@ -61,7 +61,7 @@ class Cart {
       nameProduct: json['NameProduct']?.toString(),
 
       qty: _toDouble(json['Qty']),
-      partner: _toInt(json['Partner']),
+      partner: _toInt(json['PartnerID']),
       supplierName: json['Name']?.toString(),
       manufacturerID: _toInt(json['ManufacturerID']),
       manufacturerName: json['ManufacturerName']?.toString(),
@@ -83,7 +83,7 @@ class Cart {
       'AccountID': accountID,
       'ProductAID': productAID,
       'Qty': qty,
-      'Partner': partner,
+      'PartnerID': partner,
       'Status': status == true ? 1 : 0,
       'Remark': remark,
       'DeliveryTime': deliveryTime != null
