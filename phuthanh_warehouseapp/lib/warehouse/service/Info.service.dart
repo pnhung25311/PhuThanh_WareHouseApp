@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Bill.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Location.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Payment.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Unit.model.dart';
@@ -56,6 +58,40 @@ class InfoService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         return data.map((e) => Supplier.fromJson(e)).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print(e);
+      return [];
+    }
+  }
+
+  Future<List<Bill>> LoadDtataBill() async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.get("dynamic/get-all/Bill");
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => Bill.fromJson(e)).toList();
+      } else {
+        return [];
+      }
+    } catch (e) {
+      print(e);
+      return [];
+    }
+  }
+
+  Future<List<Payment>> LoadDtataPayment() async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.get("dynamic/get-all/Payment");
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        return data.map((e) => Payment.fromJson(e)).toList();
       } else {
         return [];
       }

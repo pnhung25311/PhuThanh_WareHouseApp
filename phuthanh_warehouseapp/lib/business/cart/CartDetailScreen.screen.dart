@@ -1,35 +1,35 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:collection/collection.dart';
-
-import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/service/BusinessService.service.dart';
 import 'package:phuthanh_warehouseapp/business/service/CartService.service.dart';
+import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
+import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Bill.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Payment.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/formatters/DotToMinusFormatte.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextField.custom.dart';
-import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/GenerateCodeAID.helper.dart';
-import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
-import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
-import 'package:phuthanh_warehouseapp/warehouse/service/WareHouseService.service.dart';
+
+const gapH12 = SizedBox(height: 12);
 
 class CartDetailScreen extends StatefulWidget {
   final Cart item;
-  final bool isCreate;
-  final bool isUpdate;
   final bool readOnly;
+  final String typeSave;
 
   const CartDetailScreen({
     super.key,
     required this.item,
-    this.isCreate = false,
-    this.isUpdate = false,
     this.readOnly = false,
+    this.typeSave = "",
   });
 
   @override
@@ -40,380 +40,642 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final InfoService infoService = InfoService();
-  final Warehouseservice warehouseService = Warehouseservice();
   final CartService cartService = CartService();
   final Businessservice businessservice = Businessservice();
-  final Formatdatehelper formatdatehelper = Formatdatehelper();
-  final NavigationHelper nav = NavigationHelper();
   final MySharedPreferences prefs = MySharedPreferences();
-  final CodeHelper generateCodeAID = CodeHelper();
+  final NavigationHelper nav = NavigationHelper();
+  final Formatdatehelper formatdatehelper = Formatdatehelper();
 
-  final TextEditingController _cartIDCtrl = TextEditingController();
-  final TextEditingController _fullnameCtrl = TextEditingController();
-  final TextEditingController _productIDCtrl = TextEditingController();
-  final TextEditingController _productNameCtrl = TextEditingController();
-  final TextEditingController _productPartNoCtrl = TextEditingController();
-  final TextEditingController _productManufacturerCtrl =
-      TextEditingController();
-  final TextEditingController _productCountryCtrl = TextEditingController();
-  final TextEditingController _qtyCtrl = TextEditingController();
-  final TextEditingController _remarkCtrl = TextEditingController();
+  // ================= CONTROLLERS =================
+
+  final _fullnameCtrl = TextEditingController();
+  final _productIDCtrl = TextEditingController();
+  final _productNameCtrl = TextEditingController();
+  final _productPartNoCtrl = TextEditingController();
+  final _manufacturerCtrl = TextEditingController();
+  final _countryCtrl = TextEditingController();
+  final _unitCtrl = TextEditingController();
+
+  final _qtyCtrl = TextEditingController();
+  final _priceCtrl = TextEditingController();
+  final _totalCtrl = TextEditingController();
+
+  final _qtyCtrlSynthetic = TextEditingController();
+  final _priceCtrlSynthetic = TextEditingController();
+  final _totalCtrlSynthetic = TextEditingController();
+  final _priceVATCtrl = TextEditingController();
+  final _priceNETCtrl = TextEditingController();
+
+  final _employeeCtrl = TextEditingController();
+  final _statusCtrl = TextEditingController();
+  final _remarkCtrl = TextEditingController();
 
   DateTime? _deliveryTime;
 
-  List<Supplier> suppliers = [];
-  Supplier? selectedSupplier;
+  List<Bill> bills = [];
+  List<Supplier> sources = [];
+  List<Supplier> deliveries = [];
+  List<Payment> payments = [];
+  List<Employee> employees = [];
 
-  bool _isLoading = true;
-  bool _isSaving = false;
+  Bill? selectedBill;
+  Supplier? selectedSource;
+  Supplier? selectedDelivery;
+  Payment? selectedPayment;
+  Employee? selectedEmployee;
+
+  bool _loading = true;
+  bool _saving = false;
+  Timer? _productDebounce;
+
+  // ================= INIT =================
 
   @override
   void initState() {
     super.initState();
-
-    _cartIDCtrl.text = widget.item.cartID ?? '';
-    _fullnameCtrl.text = widget.item.fullName ?? '';
-    _productIDCtrl.text = widget.item.productID?.toString() ?? '';
-    _productNameCtrl.text = widget.item.nameProduct ?? '';
-    _productPartNoCtrl.text = widget.item.idPartNo ?? '';
-    _qtyCtrl.text = widget.item.qty?.toString() ?? '';
-    _remarkCtrl.text = widget.item.remark ?? '';
-    _productManufacturerCtrl.text = widget.item.manufacturerName ?? '';
-    _productCountryCtrl.text = widget.item.countryName ?? '';
-
-    _deliveryTime = widget.item.deliveryTime ?? DateTime.now();
-
-    _initAsync();
-    _txtListener();
+    _bindItemToControllers();
+    _qtyCtrl.addListener(_calcTotal);
+    _priceCtrl.addListener(_calcTotal);
+    _qtyCtrlSynthetic.addListener(_calcTotalSynthetic);
+    _priceCtrlSynthetic.addListener(_calcTotalSynthetic);
+    _productIDCtrl.addListener(_onProductChanged);
+    _loadUser();
+    _loadAllData();
   }
 
-  Future<void> _initAsync() async {
-    if (widget.isCreate) {
-      _cartIDCtrl.text = generateCodeAID.generateCodeCart();
-      _fullnameCtrl.text = await _getCurrentUserFullName() ?? '';
-    }
-    await _loadData();
+  void _bindItemToControllers() {
+    final i = widget.item;
+
+    _productIDCtrl.text = i.productID ?? '';
+    _productNameCtrl.text = i.nameProduct ?? '';
+    _productPartNoCtrl.text = i.idPartNo ?? '';
+    _manufacturerCtrl.text = i.manufacturerName ?? '';
+    _countryCtrl.text = i.countryName ?? '';
+    _unitCtrl.text = i.unitName ?? '';
+    _priceCtrl.text = (i.price ?? 0).toString();
+    _qtyCtrl.text = (i.qty ?? 0).toString();
+    _totalCtrl.text = (i.total ?? 0).toString();
+    _priceVATCtrl.text = (i.priceVAT ?? 0).toString();
+    _priceNETCtrl.text = (i.priceNET ?? 0).toString();
+    _employeeCtrl.text = i.nameEmployee ?? '';
+    _statusCtrl.text = i.nameStatus ?? '';
+    _remarkCtrl.text = i.remark ?? '';
+    _deliveryTime = i.deliveryTime;
   }
 
-  Future<void> _loadData() async {
-    try {
-      final suppList = await infoService.LoadDtataSupplier();
-      setState(() {
-        suppliers = suppList;
-        selectedSupplier = suppliers.firstWhereOrNull(
-          (s) => s.SupplierID == widget.item.partner,
-        );
-        _isLoading = false;
-      });
-    } catch (e) {
-      _showError("Lỗi load supplier");
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<String?> _getCurrentUserFullName() async {
+  Future<void> _loadUser() async {
     final acc = await prefs.getDataObject("account");
-    return acc?["FullName"];
+    _fullnameCtrl.text = acc?["FullName"] ?? "";
   }
 
-  Future<int?> _getCurrentUserID() async {
+  Future<int?> _getUserID() async {
     final acc = await prefs.getDataObject("account");
     return acc?["AccountID"];
   }
 
+  // ================= LOAD MASTER DATA =================
+
+  Future<void> _loadAllData() async {
+    setState(() => _loading = true);
+
+    final results = await Future.wait([
+      infoService.LoadDtataBill(),
+      infoService.LoadDtataSupplier(),
+      infoService.LoadDtataPayment(),
+      infoService.LoadDtataEmployee(),
+    ]);
+
+    bills = results[0] as List<Bill>;
+    sources = results[1] as List<Supplier>;
+    deliveries = results[1] as List<Supplier>;
+    payments = results[2] as List<Payment>;
+    employees = results[3] as List<Employee>;
+
+    selectedBill = bills.firstWhereOrNull(
+      (e) => e.BillID.toString() == widget.item.billID.toString(),
+    );
+    selectedSource = sources.firstWhereOrNull(
+      (e) => e.SupplierID.toString() == widget.item.sourceID.toString(),
+    );
+    selectedDelivery = deliveries.firstWhereOrNull(
+      (e) => e.SupplierID.toString() == widget.item.deliveryID.toString(),
+    );
+    selectedPayment = payments.firstWhereOrNull(
+      (e) => e.PaymentID.toString() == widget.item.paymentID.toString(),
+    );
+    selectedEmployee = employees.firstWhereOrNull(
+      (e) => e.EmployeeID.toString() == widget.item.employeeID.toString(),
+    );
+
+    setState(() => _loading = false);
+  }
+
+  // ================= PRODUCT AUTO LOAD =================
+
+  void _onProductChanged() {
+    if (_productDebounce?.isActive ?? false) _productDebounce!.cancel();
+
+    _productDebounce = Timer(const Duration(milliseconds: 600), () async {
+      final id = _productIDCtrl.text.trim();
+      if (id.isEmpty || id.length <= 9) return;
+
+      final res = await infoService.findProduct(id);
+      final Product pro = res["body"];
+
+      setState(() {
+        _productNameCtrl.text = pro.nameProduct;
+        _productPartNoCtrl.text = pro.idPartNo;
+        _manufacturerCtrl.text = pro.manufacturerName ?? '';
+        _countryCtrl.text = pro.countryName ?? '';
+        _unitCtrl.text = pro.unitName ?? '';
+      });
+    });
+  }
+
+  // ================= CALC TOTAL =================
+
+  void _calcTotal() {
+    final qty = double.tryParse(_qtyCtrl.text) ?? 0;
+    final price = double.tryParse(_priceCtrl.text) ?? 0;
+    final total = (qty < 0) ? qty * -1 : qty;
+    _totalCtrl.text = (total * price).toStringAsFixed(2);
+  }
+
+  void _calcTotalSynthetic() {
+    final qty = double.tryParse(_qtyCtrlSynthetic.text) ?? 0;
+    final price = double.tryParse(_priceCtrlSynthetic.text) ?? 0;
+    final total = (qty < 0) ? qty * -1 : qty;
+    _totalCtrlSynthetic.text = (total * price).toStringAsFixed(2);
+  }
+
   // ================= SAVE =================
+
   Future<void> _saveCart() async {
     if (!_formKey.currentState!.validate()) return;
+    if (_saving) return;
 
-    if (_productIDCtrl.text.trim().isEmpty) {
-      _showError("Nhập mã sản phẩm");
-      return;
-    }
-
-    if (selectedSupplier == null) {
-      _showError("Chọn nhà cung cấp");
-      return;
-    }
-
-    if (_isSaving) return;
-    setState(() => _isSaving = true);
+    setState(() => _saving = true);
 
     try {
-      final accountID = await _getCurrentUserID();
+      int? accID = await _getUserID();
 
-      int? proAID = await infoService.reTurnAID(
+      int? productAID = await infoService.reTurnAID(
         "Product",
         "ProductAID",
         "ProductID",
-        _productIDCtrl.text.trim(),
+        _productIDCtrl.text,
       );
 
       final cart = widget.item.copyWith(
-        cartID: _cartIDCtrl.text.trim(),
-        accountID: accountID,
-        productAID: proAID ?? 0,
-        qty: double.tryParse(_qtyCtrl.text) ?? 0,
-        partner: selectedSupplier!.SupplierID,
-        status: widget.isCreate ? false : (widget.item.status ?? false),
-        remark: _remarkCtrl.text.trim(),
+        accountID: accID,
+        productAID: productAID ?? 0,
+        qty: double.tryParse(_qtyCtrl.text),
+        price: double.tryParse(_priceCtrl.text),
+        total: double.tryParse(_totalCtrl.text),
+        priceVAT: double.tryParse(_priceVATCtrl.text),
+        priceNET: double.tryParse(_priceNETCtrl.text),
+        paymentID: selectedPayment?.PaymentID ?? 0,
+        employeeID: selectedEmployee?.EmployeeID ?? 0,
+        statusID: 0,
+        billID: selectedBill?.BillID ?? 0,
+        sourceID: selectedSource?.SupplierID ?? 0,
+        deliveryID: selectedDelivery?.SupplierID ?? 0,
+        remark: _remarkCtrl.text,
+        deliveryTime: _deliveryTime,
+        lastTime: DateTime.now(),
+      );
+
+      final cartTransferImport = widget.item.copyWith(
+        accountID: accID,
+        productAID: productAID ?? 0,
+        qty: double.tryParse(_qtyCtrl.text),
+        price: double.tryParse(_priceCtrl.text),
+        total: double.tryParse(_totalCtrl.text),
+        priceVAT: double.tryParse(_priceVATCtrl.text),
+        priceNET: double.tryParse(_priceNETCtrl.text),
+        paymentID: selectedPayment?.PaymentID ?? 0,
+        employeeID: selectedEmployee?.EmployeeID ?? 0,
+        statusID: 0,
+        billID: selectedBill?.BillID ?? 0,
+        sourceID: selectedSource?.SupplierID ?? 0,
+        deliveryID: 239,
+        remark: _remarkCtrl.text,
+        deliveryTime: _deliveryTime,
+        lastTime: DateTime.now(),
+      );
+
+      final cartTransferExport = widget.item.copyWith(
+        accountID: accID,
+        productAID: productAID ?? 0,
+        qty: (double.tryParse(_qtyCtrl.text) ?? 0) * -1,
+        price: double.tryParse(_priceCtrl.text),
+        total: double.tryParse(_totalCtrl.text),
+        priceVAT: double.tryParse(_priceVATCtrl.text),
+        priceNET: double.tryParse(_priceNETCtrl.text),
+        paymentID: selectedPayment?.PaymentID ?? 0,
+        employeeID: selectedEmployee?.EmployeeID ?? 0,
+        statusID: 0,
+        billID: selectedBill?.BillID ?? 0,
+        sourceID: 239,
+        deliveryID: selectedDelivery?.SupplierID ?? 0,
+        remark: _remarkCtrl.text,
+        deliveryTime: _deliveryTime,
+        lastTime: DateTime.now(),
+      );
+
+      final cartSyntheticImport = widget.item.copyWith(
+        accountID: accID,
+        productAID: productAID ?? 0,
+        qty: double.tryParse(_qtyCtrl.text),
+        price: double.tryParse(_priceCtrl.text),
+        total: double.tryParse(_totalCtrl.text),
+        priceVAT: double.tryParse(_priceVATCtrl.text),
+        priceNET: double.tryParse(_priceNETCtrl.text),
+        paymentID: selectedPayment?.PaymentID ?? 0,
+        employeeID: selectedEmployee?.EmployeeID ?? 0,
+        statusID: 0,
+        billID: selectedBill?.BillID ?? 0,
+        sourceID: selectedSource?.SupplierID ?? 0,
+        deliveryID: selectedDelivery?.SupplierID ?? 0,
+        remark: _remarkCtrl.text,
+        deliveryTime: _deliveryTime,
+        lastTime: DateTime.now(),
+      );
+
+      final cartSyntheticExport = widget.item.copyWith(
+        accountID: accID,
+        productAID: productAID ?? 0,
+        qty: (double.tryParse(_qtyCtrlSynthetic.text) ?? 0) * -1,
+        price: double.tryParse(_priceCtrlSynthetic.text),
+        total: double.tryParse(_totalCtrlSynthetic.text),
+        priceVAT: double.tryParse(_priceVATCtrl.text),
+        priceNET: double.tryParse(_priceNETCtrl.text),
+        paymentID: selectedPayment?.PaymentID ?? 0,
+        employeeID: selectedEmployee?.EmployeeID ?? 0,
+        statusID: 0,
+        billID: selectedBill?.BillID ?? 0,
+        sourceID: selectedSource?.SupplierID ?? 0,
+        deliveryID: selectedDelivery?.SupplierID ?? 0,
+        remark: _remarkCtrl.text,
         deliveryTime: _deliveryTime,
         lastTime: DateTime.now(),
       );
 
       final body = jsonEncode(cart.toJson());
-      print("SEND: $body");
+      Map res = {};
+      switch (widget.typeSave) {
+        case "CREATE":
+          res = await cartService.addCart(body);
+          break;
 
-      Map response;
-
-      if (widget.isCreate) {
-        response = await cartService.addCart(body);
-      } else {
-        response = await businessservice.upDateCart(
-          "Cart",
-          widget.item.cartAID.toString(),
-          body,
-        );
+        case "UPDATE":
+          res = await businessservice.upDateCart(
+            "Cart",
+            widget.item.cartAID.toString(),
+            body,
+          );
+        case "TRANSFER":
+          res = await cartService.addCartBatch(
+            jsonEncode([
+              cartTransferImport.toJson(),
+              cartTransferExport.toJson(),
+            ]),
+          );
+          break;
+        case "SYNTHETIC":
+          res = await cartService.addCartBatch(
+            jsonEncode([
+              cart.toJson(),
+              cartSyntheticImport.toJson(),
+              cartSyntheticExport.toJson(),
+            ]),
+          );
+          break;
+        default:
+          break;
       }
 
-      if (_isAuthError(response)) return;
-
-      if (response["isSuccess"]) {
-        _showSuccess(
-          widget.isCreate ? "✅ Thêm thành công" : "✅ Cập nhật thành công",
-        );
+      if (res["isSuccess"]) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Lưu thành công")));
+        nav.pop(context, true);
       } else {
-        _showError("❌ Lưu thất bại");
+        throw Exception("Lưu thất bại");
       }
     } catch (e) {
-      _showError("Lỗi: $e");
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
+
+    setState(() => _saving = false);
   }
 
-  bool _isAuthError(Map res) {
-    if ([0, 401, 403].contains(res["statusCode"])) {
-      nav.pushAndRemoveUntil(context, const Loginscreen());
-      return true;
-    }
-    return false;
-  }
+  // ================= UI SECTIONS =================
 
-  void _showSuccess(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), duration: Duration(milliseconds: 500)),
-    );
-    nav.pop(context, true);
-  }
-
-  void _showError(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  }
-
-  Future<void> _txtListener() async {
-    _productIDCtrl.addListener(() async {
-      final proBroken = await infoService.findProduct(
-        _productIDCtrl.text.trim(),
-      );
-      final Product pro = proBroken["body"];
-      _productNameCtrl.text = pro.nameProduct;
-      _productPartNoCtrl.text = pro.idPartNo;
-      _productCountryCtrl.text = pro.countryName ?? '';
-      _productManufacturerCtrl.text = pro.manufacturerName ?? '';
-    });
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _deliveryTime ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2035),
-    );
-
-    if (picked != null) {
-      setState(() => _deliveryTime = picked);
-    }
-  }
-
-  Widget _buildDate() {
-    return GestureDetector(
-      onTap: widget.readOnly ? null : _pickDate,
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: "Ngày giao hàng *",
-          border: OutlineInputBorder(),
-        ),
-        child: Text(
-          _deliveryTime != null
-              ? formatdatehelper.formatDMY(_deliveryTime!)
-              : "Chưa chọn",
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSection({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-          const SizedBox(height: 12),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomBar() {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10),
+  Widget _card(String title, IconData icon, List<Widget> children) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Theme.of(context).primaryColor),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            ...children,
           ],
         ),
-        child: ElevatedButton(
-          onPressed: _isSaving ? null : _saveCart,
-          child: _isSaving
-              ? const CircularProgressIndicator(color: Colors.white)
-              : Text(widget.isCreate ? "Lưu" : "Lưu"),
-        ),
       ),
     );
   }
+
+  Widget _gap() => const SizedBox(height: 12);
+
+  // ================= BUILD =================
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
+    if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.isCreate ? "Thêm đơn hàng" : "Chi tiết đơn hàng"),
+        title: Text(
+          widget.typeSave == "CREATE" ? "Tạo đơn hàng" : "Chi tiết đơn hàng",
+        ),
+        centerTitle: true,
       ),
       body: Stack(
         children: [
           Form(
             key: _formKey,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-              child: Column(
-                children: [
-                  _buildSection(
-                    title: "Sản phẩm",
-                    children: [
-                      CustomTextField(
-                        label: "Mã sản phẩm",
-                        controller: _productIDCtrl,
-                      ),
-                      const SizedBox(height: 12),
-                      CustomTextField(
-                        label: "Tên sản phẩm",
-                        controller: _productNameCtrl,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 12),
-                      CustomTextField(
-                        label: "Danh điểm",
-                        controller: _productPartNoCtrl,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 12),
-                      CustomTextField(
-                        label: "Hãng SX",
-                        controller: _productManufacturerCtrl,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 12),
-                      CustomTextField(
-                        label: "Nước SX",
-                        controller: _productCountryCtrl,
-                        readOnly: true,
-                      ),
-                    ],
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              children: [
+                // USER
+                _card("Người tạo", Icons.person, [
+                  CustomTextField(
+                    label: 'Tên người tạo',
+                    controller: _fullnameCtrl,
+                    readOnly: true,
                   ),
-
-                  const SizedBox(height: 16),
-
-                  _buildSection(
-                    title: "Đơn hàng",
-                    children: [
-                      const SizedBox(height: 12),
-                      CustomTextField(
-                        label: "Người tạo",
-                        controller: _fullnameCtrl,
-                        readOnly: true,
-                      ),
-                      const SizedBox(height: 12),
-                      CustomTextField(
-                        label: "Số lượng",
-                        controller: _qtyCtrl,
-                        keyboardType: TextInputType.numberWithOptions(
-                          decimal: true,
-                          signed: true,
-                        ),
-                        inputFormatters: [DotToMinusFormatter()],
-                      ),
-                      const SizedBox(height: 12),
-                      _buildDate(),
-                      const SizedBox(height: 12),
-
-                      CustomDropdownField<Supplier>(
-                        label: "Chọn NCC",
-                        selectedValue: selectedSupplier,
-                        items: suppliers,
-                        getLabel: (s) => s.Name.toString(),
-                        onChanged: (v) => setState(() => selectedSupplier = v),
-                        isSearch: true,
-                      ),
-                      const SizedBox(height: 12),
-
-                      CustomTextField(
-                        label: "Ghi chú",
-                        controller: _remarkCtrl,
-                      ),
-                    ],
+                  _gap(),
+                  CustomDropdownField<Employee>(
+                    label: "Nhân viên của đơn hàng",
+                    items: employees,
+                    selectedValue: selectedEmployee,
+                    getLabel: (i) => i.NameEmployee.toString(),
+                    onChanged: (v) => setState(() => selectedEmployee = v),
+                    isSearch: true,
                   ),
-                  const SizedBox(height: 16),
-                ],
+                ]),
+
+                // PRODUCT
+                _card("Sản phẩm", Icons.inventory, [
+                  CustomTextField(
+                    label: "Mã sản phẩm",
+                    controller: _productIDCtrl,
+                    validator: (v) =>
+                        v == null || v.isEmpty ? "Nhập mã sản phẩm" : null,
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Tên sản phẩm",
+                    controller: _productNameCtrl,
+                    readOnly: true,
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Danh điểm",
+                    controller: _productPartNoCtrl,
+                    readOnly: true,
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Hãng",
+                    controller: _manufacturerCtrl,
+                    readOnly: true,
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Nước",
+                    controller: _countryCtrl,
+                    readOnly: true,
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Đơn vị",
+                    controller: _unitCtrl,
+                    readOnly: true,
+                  ),
+                ]),
+
+                // PRICE
+                _card("Giá", Icons.payments, [
+                  CustomTextField(
+                    label: "Số lượng",
+                    controller: _qtyCtrl,
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: true,
+                    ),
+                    inputFormatters: [DotToMinusFormatter()],
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Đơn giá",
+                    controller: _priceCtrl,
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: true,
+                    ),
+                    inputFormatters: [DotToMinusFormatter()],
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Thành tiền",
+                    controller: _totalCtrl,
+                    readOnly: true,
+                  ),
+                  _gap(),
+                  if (widget.typeSave == "SYNTHETIC") ...[
+                    CustomTextField(
+                      label: "Số lượng",
+                      controller: _qtyCtrlSynthetic,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Giá tổng hợp",
+                      controller: _priceCtrlSynthetic,
+                      // readOnly: true,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Thành tiền tổng hợp",
+                      controller: _totalCtrlSynthetic,
+                      readOnly: true,
+                    ),
+                  ],
+
+                  _gap(),
+                  CustomTextField(
+                    label: "Giá VAT",
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: true,
+                    ),
+                    controller: _priceVATCtrl,
+                    inputFormatters: [DotToMinusFormatter()],
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Giá NET",
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: true,
+                    ),
+                    inputFormatters: [DotToMinusFormatter()],
+                    controller: _priceNETCtrl,
+                  ),
+                ]),
+
+                // BILL
+                _card("Thanh toán & hóa đơn", Icons.receipt, [
+                  CustomDropdownField<Bill>(
+                    label: "Hóa đơn",
+                    items: bills,
+                    selectedValue: selectedBill,
+                    getLabel: (i) => i.Name.toString(),
+                    onChanged: (v) => setState(() => selectedBill = v),
+                    isSearch: true,
+                    validator: (v) =>
+                        v == null ? "Bắt buộc chọn hóa đơn" : null,
+                  ),
+                  CustomDropdownField<Payment>(
+                    label: "Phương thức thanh toán",
+                    items: payments,
+                    selectedValue: selectedPayment,
+                    getLabel: (i) => i.Name.toString(),
+                    onChanged: (v) => setState(() => selectedPayment = v),
+                    isSearch: true,
+                    validator: (v) => v == null
+                        ? "Bắt buộc chọn phương thức thanh toán"
+                        : null,
+                  ),
+                ]),
+
+                // SHIPPING
+                _card("Vận chuyển", Icons.local_shipping, [
+                  CustomDropdownField<Supplier>(
+                    label: "Nguồn",
+                    items: sources,
+                    selectedValue: selectedSource,
+                    getLabel: (i) => i.Name.toString(),
+                    onChanged: (v) => setState(() => selectedSource = v),
+                    isSearch: true,
+                    validator: (v) => v == null ? "Bắt buộc chọn nguồn" : null,
+                  ),
+                  _gap(),
+                  CustomDropdownField<Supplier>(
+                    label: "Đơn vị vận chuyển",
+                    items: deliveries,
+                    selectedValue: selectedDelivery,
+                    getLabel: (i) => i.Name.toString(),
+                    onChanged: (v) => setState(() => selectedDelivery = v),
+                    isSearch: true,
+                    validator: (v) =>
+                        v == null ? "Bắt buộc chọn vận chuyển" : null,
+                  ),
+                  _gap(),
+                  _buildDateField(),
+                ]),
+
+                // NOTE
+                _card("Ghi chú", Icons.notes, [
+                  CustomTextField(label: "Ghi chú", controller: _remarkCtrl),
+                ]),
+              ],
+            ),
+          ),
+
+          // SAVE BUTTON
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [BoxShadow(blurRadius: 12, color: Colors.black12)],
+              ),
+              child: SafeArea(
+                child: SizedBox(
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _saving ? null : _saveCart,
+                    child: _saving
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text("LƯU"),
+                  ),
+                ),
               ),
             ),
           ),
-          _buildBottomBar(),
         ],
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _cartIDCtrl.dispose();
-    _fullnameCtrl.dispose();
-    _productIDCtrl.dispose();
-    _productNameCtrl.dispose();
-    _productPartNoCtrl.dispose();
-    _qtyCtrl.dispose();
-    _remarkCtrl.dispose();
-    super.dispose();
+  Widget _buildDateField() {
+    return InkWell(
+      onTap: () async {
+        final d = await showDatePicker(
+          context: context,
+          firstDate: DateTime(2022),
+          lastDate: DateTime(2035),
+          initialDate: DateTime.now(),
+        );
+        if (d != null) setState(() => _deliveryTime = d);
+      },
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          labelText: "Ngày giao hàng",
+          suffixIcon: Icon(Icons.calendar_today),
+          border: OutlineInputBorder(),
+        ),
+        child: Text(
+          _deliveryTime == null
+              ? "Chọn ngày giao hàng"
+              : formatdatehelper.formatDMY(_deliveryTime!),
+        ),
+      ),
+    );
   }
 }

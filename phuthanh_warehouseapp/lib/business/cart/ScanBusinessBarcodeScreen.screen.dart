@@ -79,7 +79,7 @@ class _ScanBusinessCartScreenState extends State<ScanBusinessCartScreen> {
         );
         navigationHelper.pushReplacement(
           context,
-          CartDetailScreen(item: cart, isCreate: true),
+          CartDetailScreen(item: cart, typeSave: "CREATE"),
         );
       } else {
         navigationHelper.pop(context, scannedCode);

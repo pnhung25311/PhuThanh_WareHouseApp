@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/history/HistoryBusinessScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
 import 'package:flutter/services.dart';
 
@@ -134,7 +136,8 @@ ${item.ghiChu}
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => HistoryBusinessScreen(item: item, isExIm: true,),
+                  builder: (_) =>
+                      HistoryBusinessScreen(item: item, isExIm: true),
                 ),
               );
             },
@@ -147,11 +150,67 @@ ${item.ghiChu}
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => HistoryBusinessScreen(item: item, isExIm: false,),
+                  builder: (_) =>
+                      HistoryBusinessScreen(item: item, isExIm: false),
                 ),
               );
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.shopping_cart, color: Colors.green),
+            title: const Text('Nhập xuất thẳng'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CartDetailScreen(
+                    item: Cart(
+                      cartAID: 0,
+                      productID: item.barcode.trim(),
+                      idPartNo: item.danhDiem,
+                      nameProduct: item.tenHangHoa,
+                      manufacturerName: item.hangSanXuat,
+                      countryName: item.nuocSanXuat,
+                      unitName: item.donViTinh,
+                      price: 0,
+                      total: 0,
+                      qty: 0,
+                    ),
+                    typeSave: "TRANSFER",
+                  ),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.shopping_cart, color: Colors.green),
+            title: const Text('Nhập xuất tổng hợp'),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CartDetailScreen(
+                    item: Cart(
+                      cartAID: 0,
+                      productID: item.barcode.trim(),
+                      idPartNo: item.danhDiem,
+                      nameProduct: item.tenHangHoa,
+                      manufacturerName: item.hangSanXuat,
+                      countryName: item.nuocSanXuat,
+                      unitName: item.donViTinh,
+                      price: 0,
+                      total: 0,
+                      qty: 0,
+                    ),
+                    typeSave: "SYNTHETIC",
+                  ),
+                ),
+              );
+            },
+          ),
+
           //THÊM NHẬP XUẤT
           // if (role)
           // ListTile(

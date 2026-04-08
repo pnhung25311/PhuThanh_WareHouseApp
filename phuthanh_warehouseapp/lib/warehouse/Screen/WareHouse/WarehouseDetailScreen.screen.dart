@@ -205,7 +205,6 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     remarkOfHistoryController.dispose();
     super.dispose();
   }
-
   // thêm helper init để await các load
   Future<void> _init() async {
     await _loadAllData();

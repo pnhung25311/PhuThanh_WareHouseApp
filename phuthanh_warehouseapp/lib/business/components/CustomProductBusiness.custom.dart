@@ -52,8 +52,12 @@ class ProductCard extends StatelessWidget {
                   nameProduct: item.tenHangHoa,
                   manufacturerName: item.hangSanXuat,
                   countryName: item.nuocSanXuat,
+                  unitName: item.donViTinh,
+                  price: 0,
+                  total: 0,
+                  qty: 0,
                 );
-                nav.push(context, CartDetailScreen(item: cart, isCreate: true));
+                nav.push(context, CartDetailScreen(item: cart, typeSave: "CREATE"));
                 return false;
               } else if (direction == DismissDirection.startToEnd) {
                 Cart cart = Cart(
@@ -63,8 +67,12 @@ class ProductCard extends StatelessWidget {
                   nameProduct: item.tenHangHoa,
                   manufacturerName: item.hangSanXuat,
                   countryName: item.nuocSanXuat,
+                  unitName: item.donViTinh,
+                  price: 0,
+                  total: 0,
+                  qty: 0,
                 );
-                nav.push(context, CartDetailScreen(item: cart, isCreate: true));
+                nav.push(context, CartDetailScreen(item: cart, typeSave: "CREATE"));
                 return false;
               }
               return false;

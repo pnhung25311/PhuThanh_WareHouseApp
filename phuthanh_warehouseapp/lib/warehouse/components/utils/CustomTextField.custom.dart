@@ -1,4 +1,3 @@
-// file: widgets/custom_text_field.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -9,6 +8,8 @@ class CustomTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final bool readOnly;
   final bool enabled;
+  final String? errorText;                 // ⭐ NEW
+  final String? Function(String?)? validator; // ⭐ NEW
   final List<TextInputFormatter>? inputFormatters;
 
   const CustomTextField({
@@ -19,6 +20,8 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType,
     this.readOnly = false,
     this.enabled = true,
+    this.errorText,
+    this.validator,
     this.inputFormatters,
   });
 
@@ -29,18 +32,21 @@ class CustomTextField extends StatelessWidget {
       children: [
         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
-        TextField(
-          showCursor: true,
+
+        /// ⭐ CHUYỂN SANG TextFormField
+        TextFormField(
           controller: controller,
-          decoration: InputDecoration(
-            border: const OutlineInputBorder(),
-            hintText: "",
-            // hintText: hintText ?? label,
-          ),
+          validator: validator,
           keyboardType: keyboardType,
           readOnly: readOnly,
           enabled: enabled,
           inputFormatters: inputFormatters,
+
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            hintText: hintText ?? "",
+            errorText: errorText, // ⭐ hiển thị lỗi
+          ),
         ),
       ],
     );

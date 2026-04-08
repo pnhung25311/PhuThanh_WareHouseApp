@@ -2,10 +2,7 @@ class Country {
   final int CountryID;
   final String Name;
 
-  Country({
-    required this.CountryID,
-    required this.Name,
-  });
+  Country({required this.CountryID, required this.Name});
 
   factory Country.fromJson(Map<String, dynamic> json) {
     return Country(
@@ -15,19 +12,14 @@ class Country {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'CountryID': CountryID,
-      'Name': Name,
-    };
+    return {'CountryID': CountryID, 'Name': Name};
   }
-@override
-bool operator ==(Object other) =>
-    identical(this, other) ||
-    (other is Country && other.CountryID == CountryID);
 
-@override
-int get hashCode => CountryID.hashCode;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Country && other.CountryID == CountryID);
 
-  
+  @override
+  int get hashCode => CountryID.hashCode;
 }
-

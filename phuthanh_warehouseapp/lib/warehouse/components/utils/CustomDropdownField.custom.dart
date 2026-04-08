@@ -16,19 +16,21 @@ class CustomDropdownField<T> extends StatefulWidget {
   final String? textCreate;
   final Future<void> Function()? functionCreate;
 
-  // 🆕 Icon bên phải
+  // icon phải
   final IconData? rightIcon;
   final VoidCallback? onRightIconTap;
   final Color? rightIconColor;
   final String? rightIconTooltip;
-
   final BoxDecoration? rightIconDecoration;
   final EdgeInsetsGeometry? rightIconPadding;
   final double? rightIconSize;
 
-  // 🆕 BACKGROUND
+  // background
   final Color? backgroundColor;
   final Color? disabledBackgroundColor;
+
+  final String? errorText;
+  final String? Function(T?)? validator;
 
   const CustomDropdownField({
     super.key,
@@ -51,10 +53,10 @@ class CustomDropdownField<T> extends StatefulWidget {
     this.rightIconDecoration,
     this.rightIconPadding,
     this.rightIconSize,
-
-    // background
     this.backgroundColor,
     this.disabledBackgroundColor,
+    this.errorText,
+    this.validator,
   });
 
   @override
@@ -77,7 +79,7 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.items != widget.items) {
       _filteredItems = List<T>.from(widget.items);
-      _searchController.text = '';
+      _searchController.clear();
     }
   }
 
@@ -91,25 +93,19 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
   void _onSearchChanged() {
     final q = _searchController.text.toLowerCase();
     setState(() {
-      if (q.isEmpty) {
-        _filteredItems = List<T>.from(widget.items);
-      } else {
-        _filteredItems = widget.items
-            .where((e) => widget.getLabel(e).toLowerCase().contains(q))
-            .toList();
-      }
+      _filteredItems = q.isEmpty
+          ? List<T>.from(widget.items)
+          : widget.items
+              .where((e) => widget.getLabel(e).toLowerCase().contains(q))
+              .toList();
     });
   }
 
-  void closeDropdown(BuildContext ctx) {
-    if (Navigator.canPop(ctx)) Navigator.of(ctx).pop();
-  }
-
-  Future<void> _openSelectDialog() async {
+  Future<void> _openSelectDialog(FormFieldState<T> field) async {
     if (!widget.enabled || widget.readOnly) return;
 
     _filteredItems = List<T>.from(widget.items);
-    if (!widget.isSearch) _searchController.text = '';
+    if (!widget.isSearch) _searchController.clear();
 
     await showDialog(
       context: context,
@@ -121,8 +117,8 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
               title: Text(widget.label ?? 'Chọn'),
               content: SizedBox(
                 width: double.maxFinite,
+                height: 400,
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
                     if (widget.isSearch) ...[
                       TextField(
@@ -145,39 +141,34 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                       ),
                       const SizedBox(height: 8),
                     ],
+
                     Expanded(
                       child: _filteredItems.isEmpty
                           ? const Center(child: Text('Không có dữ liệu'))
-                          : Scrollbar(
-                              child: ListView.builder(
-                                itemCount: _filteredItems.length,
-                                itemBuilder: (context, index) {
-                                  final item = _filteredItems[index];
-                                  final label = widget.getLabel(item);
-                                  final isSelected =
-                                      widget.selectedValue != null &&
-                                      widget.getLabel(
-                                            widget.selectedValue as T,
-                                          ) ==
-                                          label;
-                                  return ListTile(
-                                    title: Text(
-                                      label,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    trailing: isSelected
-                                        ? const Icon(
-                                            Icons.check,
-                                            color: Colors.blue,
-                                          )
-                                        : null,
-                                    onTap: () {
-                                      widget.onChanged(item);
-                                      Navigator.of(ctx2).pop();
-                                    },
-                                  );
-                                },
-                              ),
+                          : ListView.builder(
+                              itemCount: _filteredItems.length,
+                              itemBuilder: (_, index) {
+                                final item = _filteredItems[index];
+                                final label = widget.getLabel(item);
+
+                                final isSelected =
+                                    widget.selectedValue != null &&
+                                        widget.selectedValue == item;
+
+                                return ListTile(
+                                  title: Text(label),
+                                  trailing: isSelected
+                                      ? const Icon(Icons.check,
+                                          color: Colors.blue)
+                                      : null,
+                                  onTap: () {
+                                    // ⭐ FIX QUAN TRỌNG NHẤT
+                                    field.didChange(item);   // báo Form ngay lập tức
+                                    widget.onChanged(item);  // rebuild parent
+                                    Navigator.pop(ctx2);
+                                  },
+                                );
+                              },
                             ),
                     ),
                   ],
@@ -187,13 +178,13 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                 if (widget.isCreate && widget.functionCreate != null)
                   TextButton(
                     onPressed: () async {
-                      closeDropdown(ctx2);
+                      Navigator.pop(ctx2);
                       await widget.functionCreate!();
                     },
                     child: Text(widget.textCreate ?? "Thêm mới"),
                   ),
                 TextButton(
-                  onPressed: () => Navigator.of(ctx2).pop(),
+                  onPressed: () => Navigator.pop(ctx2),
                   child: const Text('Đóng'),
                 ),
               ],
@@ -210,77 +201,48 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
         ? (widget.hintText ?? 'Chưa chọn')
         : widget.getLabel(widget.selectedValue as T);
 
-    return GestureDetector(
-      onTap: widget.readOnly ? null : _openSelectDialog,
-      child: AbsorbPointer(
-        absorbing: widget.readOnly || !widget.enabled,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (widget.label != null) ...[
-              Text(
-                widget.label!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: widget.enabled ? Colors.black87 : Colors.grey,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 6),
-            ],
-            InputDecorator(
-              decoration: InputDecoration(
-                enabled: widget.enabled,
-                border: const OutlineInputBorder(),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 14,
-                ),
+    return FormField<T>(
+      validator: widget.validator,
+      initialValue: widget.selectedValue,
+      builder: (field) {
+        final error = field.errorText ?? widget.errorText;
 
-                // 🎯 BACKGROUND CHUẨN
-                filled: true,
-                fillColor: !widget.enabled
-                    ? (widget.disabledBackgroundColor ??
-                        Colors.grey.shade200)
-                    : (widget.backgroundColor ?? Colors.white),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      display,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: widget.enabled
-                            ? Colors.black87
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-                  ),
-                  if (!widget.readOnly)
-                    const Icon(Icons.arrow_drop_down),
-                  if (widget.rightIcon != null)
-                    GestureDetector(
-                      onTap:
-                          widget.readOnly ? null : widget.onRightIconTap,
-                      child: Container(
-                        padding: widget.rightIconPadding ??
-                            const EdgeInsets.all(4),
-                        decoration: widget.rightIconDecoration,
-                        child: Icon(
-                          widget.rightIcon,
-                          size: widget.rightIconSize ?? 24,
-                          color:
-                              widget.rightIconColor ?? Colors.grey,
-                        ),
-                      ),
-                    ),
+        return GestureDetector(
+          onTap: widget.readOnly ? null : () => _openSelectDialog(field),
+          child: AbsorbPointer(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (widget.label != null) ...[
+                  Text(widget.label!,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 6),
                 ],
-              ),
+
+                InputDecorator(
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    filled: true,
+                    fillColor: widget.enabled
+                        ? (widget.backgroundColor ?? Colors.white)
+                        : (widget.disabledBackgroundColor ??
+                            Colors.grey.shade200),
+                    errorText: error,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(display)),
+                      if (!widget.readOnly)
+                        const Icon(Icons.arrow_drop_down),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

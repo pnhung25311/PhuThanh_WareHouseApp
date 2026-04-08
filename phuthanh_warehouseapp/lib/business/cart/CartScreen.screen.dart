@@ -228,7 +228,7 @@ class _CartListScreenState extends State<CartListScreen> {
       }).toList();
     }
     if (f.partnerId != null) {
-      filtered = filtered.where((c) => c.partner == f.partnerId).toList();
+      filtered = filtered.where((c) => c.deliveryID == f.partnerId).toList();
     }
     if (f.accID != null) {
       filtered = filtered.where((c) => c.accountID == f.accID).toList();
@@ -244,7 +244,7 @@ class _CartListScreenState extends State<CartListScreen> {
 
     /// 📌 Status
     if (f.status != null) {
-      filtered = filtered.where((c) => c.status == f.status).toList();
+      filtered = filtered.where((c) => c.statusID == f.status).toList();
     }
 
     setState(() {
@@ -311,7 +311,7 @@ class _CartListScreenState extends State<CartListScreen> {
                     onTap: () async {
                       final result = await navigationHelper.push(
                         context,
-                        CartDetailScreen(item: cart, isUpdate: true),
+                        CartDetailScreen(item: cart, typeSave: "UPDATE"),
                       );
                       if (result == true) {
                         _loadData();
@@ -325,7 +325,7 @@ class _CartListScreenState extends State<CartListScreen> {
         onPressed: () async {
           final result = await navigationHelper.push(
             context,
-            CartDetailScreen(item: Cart.empty(), isCreate: true),
+            CartDetailScreen(item: Cart.empty(), typeSave: "CREATE"),
           );
           if (result == true) _loadData();
         },

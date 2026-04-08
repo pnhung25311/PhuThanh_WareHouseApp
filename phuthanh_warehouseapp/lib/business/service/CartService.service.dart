@@ -40,6 +40,26 @@ class CartService {
       return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
+
+   Future<Map<String, dynamic>> addCartBatch(
+    String body,
+  ) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.post(
+        "dynamic/insert-batch/Cart",
+        body,
+      );
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
+    } catch (e) {
+      // log nếu cần
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
+    }
+  }
   /// Lấy tất cả giỏ hàng (hoặc theo filter nếu API hỗ trợ)
   Future<Map<String, dynamic>> getAllCarts() async {
     try {
@@ -139,6 +159,30 @@ class CartService {
       return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
+
+  Future<Map<String, dynamic>> confirmCart(
+    String userId,
+    String id,
+    String body,
+  ) async {
+    try {
+      const apiClient = ApiClient();
+      final response = await apiClient.put(
+        "dynamic/confirm-cart/"+userId+"/" + id.toString(),
+        body,
+      );
+
+      return {
+        "isSuccess": response.statusCode == 200,
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
+    } catch (e) {
+      print(e);
+      return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
+    }
+  }
+
 
   Future<Map<String, dynamic>> deleteCart(String table, String body) async {
     try {
