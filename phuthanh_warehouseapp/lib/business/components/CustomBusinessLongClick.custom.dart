@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/business/history/HistoryBusinessScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/business/history/HistoryBusinessScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +17,7 @@ class BusinessLongClick {
         children: [
           Center(
             child: Text(
-              item.barcode.toString(),
+              item.maVatTu.toString(),
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 22,
@@ -56,7 +56,7 @@ class BusinessLongClick {
                   '''
 ========== THÔNG TIN HÀNG HÓA ==========
 
-Barcode: ${item.barcode}
+Barcode: ${item.maVatTu}
 Mã Keeton: ${item.maKeeton}
 Mã Công Nghiệp: ${item.maCongNghiep}
 Danh điểm: ${item.danhDiem}
@@ -100,7 +100,7 @@ Thời gian bán ra gần nhất: ${item.thoiGianBanRaGanNhat}
 
 ===== VAT =====
 Ghi chú VAT: ${item.ghiChuVat}
-Tên hàng hóa theo VAT: ${item.tenHangHoaTheoVat}
+Tên hàng hóa: ${item.tenHangHoa}
 CoCQ Việt Ý: ${item.coCqVietY}
 CoCQ Phú Thành: ${item.coCqPhuThanh}
 
@@ -157,59 +157,89 @@ ${item.ghiChu}
             },
           ),
           ListTile(
-            leading: const Icon(Icons.shopping_cart, color: Colors.green),
-            title: const Text('Nhập xuất thẳng'),
+            leading: const Icon(Icons.history, color: Colors.green),
+            title: const Text('Điều chuyển'),
             onTap: () {
+              Cart cart = Cart(
+                cartAID: 0,
+                productID: item.maVatTu.trim(),
+                idPartNo: item.danhDiem,
+                nameProduct: item.tenHangHoa,
+                manufacturerName: item.hangSanXuat,
+                countryName: item.nuocSanXuat,
+                unitName: item.donViTinh,
+                // cogs: item.giaVon1,
+                // nameSource: item.nhaCungCapThucTe,
+
+                price: 0,
+                total: 0,
+                qty: 0,
+              );
               Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => CartDetailScreen(
-                    item: Cart(
-                      cartAID: 0,
-                      productID: item.barcode.trim(),
-                      idPartNo: item.danhDiem,
-                      nameProduct: item.tenHangHoa,
-                      manufacturerName: item.hangSanXuat,
-                      countryName: item.nuocSanXuat,
-                      unitName: item.donViTinh,
-                      price: 0,
-                      total: 0,
-                      qty: 0,
-                    ),
-                    typeSave: "TRANSFER",
-                  ),
+                  builder: (_) =>
+                      CartDetailScreen(item: cart, typeSave: "TRANSFER"),
                 ),
               );
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.shopping_cart, color: Colors.green),
-            title: const Text('Nhập xuất tổng hợp'),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CartDetailScreen(
-                    item: Cart(
-                      cartAID: 0,
-                      productID: item.barcode.trim(),
-                      idPartNo: item.danhDiem,
-                      nameProduct: item.tenHangHoa,
-                      manufacturerName: item.hangSanXuat,
-                      countryName: item.nuocSanXuat,
-                      unitName: item.donViTinh,
-                      price: 0,
-                      total: 0,
-                      qty: 0,
-                    ),
-                    typeSave: "SYNTHETIC",
-                  ),
-                ),
-              );
-            },
-          ),
+
+          // ListTile(
+          //   leading: const Icon(Icons.shopping_cart, color: Colors.green),
+          //   title: const Text('Nhập xuất thẳng'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (_) => CartDetailScreen(
+          //           item: Cart(
+          //             cartAID: 0,
+          //             productID: item.barcode.trim(),
+          //             idPartNo: item.danhDiem,
+          //             nameProduct: item.tenHangHoa,
+          //             manufacturerName: item.hangSanXuat,
+          //             countryName: item.nuocSanXuat,
+          //             unitName: item.donViTinh,
+          //             price: 0,
+          //             total: 0,
+          //             qty: 0,
+          //           ),
+          //           typeSave: "TRANSFER",
+          //         ),
+          //       ),
+          //     );
+          //   },
+          // ),
+          // ListTile(
+          //   leading: const Icon(Icons.shopping_cart, color: Colors.green),
+          //   title: const Text('Nhập xuất tổng hợp'),
+          //   onTap: () {
+          //     Navigator.pop(context);
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(
+          //         builder: (_) => CartDetailScreen(
+          //           item: Cart(
+          //             cartAID: 0,
+          //             productID: item.barcode.trim(),
+          //             idPartNo: item.danhDiem,
+          //             nameProduct: item.tenHangHoa,
+          //             manufacturerName: item.hangSanXuat,
+          //             countryName: item.nuocSanXuat,
+          //             unitName: item.donViTinh,
+          //             price: 0,
+          //             total: 0,
+          //             qty: 0,
+          //           ),
+          //           typeSave: "SYNTHETIC",
+          //         ),
+          //       ),
+          //     );
+          //   },
+          // ),
 
           //THÊM NHẬP XUẤT
           // if (role)

@@ -207,7 +207,7 @@ class CartItem extends StatelessWidget {
                     Expanded(
                       child: _meta(
                         Icons.account_balance_wallet,
-                        "NET: ${_money(cart.priceNET)}",
+                        "NET: ${_money(cart.price)}",
                       ),
                     ),
                   ],
@@ -272,9 +272,9 @@ class CartItem extends StatelessWidget {
                 /// USER + EMPLOYEE
                 Row(
                   children: [
-                    Expanded(child: _meta(Icons.person, cart.fullName ?? "")),
+                    Expanded(child: _meta(Icons.person, cart.creator ?? "")),
                     Expanded(
-                      child: _meta(Icons.badge, cart.nameEmployee ?? ""),
+                      child: _meta(Icons.badge, cart.proponent ?? ""),
                     ),
                   ],
                 ),

@@ -49,11 +49,11 @@ class _HistoryBusinessScreenState extends State<HistoryBusinessScreen> {
       final data;
       if (widget.isExIm) {
         data = await businessservice.getHistoryExport(
-          widget.item.barcode.toString().trim(),
+          widget.item.maVatTu.toString().trim(),
         );
       } else {
         data = await businessservice.getHistoryImport(
-          widget.item.barcode.toString().trim(),
+          widget.item.maVatTu.toString().trim(),
         );
       }
 
@@ -193,7 +193,7 @@ class _HistoryBusinessScreenState extends State<HistoryBusinessScreen> {
               : Text(
                   'Lịch sử ' +
                       (widget.isExIm == true ? "bán hàng " : "nhập hàng ") +
-                      widget.item.barcode.toString().trim(),
+                      widget.item.maVatTu.toString().trim(),
                   style: TextStyle(fontSize: 18, color: const Color.fromARGB(255, 58, 240, 3)),
                 ),
         ),

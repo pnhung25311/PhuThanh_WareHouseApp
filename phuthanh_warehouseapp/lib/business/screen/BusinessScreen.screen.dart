@@ -85,7 +85,7 @@ class _BusinessScreenState extends State<BusinessScreen> {
         _filteredProducts = _allProducts;
       } else {
         _filteredProducts = _allProducts.where((product) {
-          return product.barcode.toLowerCase().contains(query) ||
+          return product.maVatTu.toLowerCase().contains(query) ||
               product.danhDiem.toLowerCase().contains(query) ||
               product.boDanhDiemTuongDuong.toLowerCase().contains(query) ||
               product.tenHangHoa.toLowerCase().contains(query);

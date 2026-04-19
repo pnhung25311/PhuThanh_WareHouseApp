@@ -17,7 +17,7 @@ class ProductCard extends StatelessWidget {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
 
-    final barcode = item.barcode.trim();
+    final maVatTu = item.maVatTu.trim();
     final name = item.tenHangHoa.trim();
     NavigationHelper nav = NavigationHelper();
 
@@ -36,7 +36,7 @@ class ProductCard extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Dismissible(
-            key: ValueKey(item.barcode), // phải unique
+            key: ValueKey(item.maVatTu), // phải unique
             direction: DismissDirection.horizontal, // chỉ swipe trái
             // nền khi kéo
             background: _buildLeftBackground(),
@@ -47,32 +47,36 @@ class ProductCard extends StatelessWidget {
               if (direction == DismissDirection.endToStart) {
                 Cart cart = Cart(
                   cartAID: 0,
-                  productID: item.barcode.trim(),
+                  productID: item.maVatTu.trim(),
                   idPartNo: item.danhDiem,
                   nameProduct: item.tenHangHoa,
                   manufacturerName: item.hangSanXuat,
                   countryName: item.nuocSanXuat,
                   unitName: item.donViTinh,
+                  cogs: item.giaVon1,
                   price: 0,
                   total: 0,
                   qty: 0,
                 );
-                nav.push(context, CartDetailScreen(item: cart, typeSave: "CREATE"));
+                nav.push(context, CartDetailScreen(item: cart, typeSave: "EXPORT"));
                 return false;
               } else if (direction == DismissDirection.startToEnd) {
                 Cart cart = Cart(
                   cartAID: 0,
-                  productID: item.barcode.trim(),
+                  productID: item.maVatTu.trim(),
                   idPartNo: item.danhDiem,
                   nameProduct: item.tenHangHoa,
                   manufacturerName: item.hangSanXuat,
                   countryName: item.nuocSanXuat,
                   unitName: item.donViTinh,
+                  cogs: item.giaVon1,
+                  nameSource: item.nhaCungCapThucTe,
+
                   price: 0,
                   total: 0,
                   qty: 0,
                 );
-                nav.push(context, CartDetailScreen(item: cart, typeSave: "CREATE"));
+                nav.push(context, CartDetailScreen(item: cart, typeSave: "IMPORT"));
                 return false;
               }
               return false;
@@ -104,7 +108,7 @@ class ProductCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            barcode,
+                            maVatTu,
                             style: textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w700,
                               height: 1.25,
@@ -480,7 +484,7 @@ class ProductCard extends StatelessWidget {
           Icon(Icons.add_shopping_cart, color: Colors.white),
           SizedBox(width: 6),
           Text(
-            "Thêm giỏ hàng",
+            "Thêm phiếu nhập",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
         ],
@@ -494,14 +498,14 @@ class ProductCard extends StatelessWidget {
       alignment: Alignment.centerRight,
       padding: const EdgeInsets.only(right: 20),
       decoration: BoxDecoration(
-        color: Colors.green,
+        color: Colors.red,
         borderRadius: BorderRadius.circular(16),
       ),
       child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            "Thêm giỏ hàng",
+            "Thêm phiếu xuất",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           SizedBox(width: 6),

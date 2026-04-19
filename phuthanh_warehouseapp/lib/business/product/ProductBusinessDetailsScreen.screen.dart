@@ -30,7 +30,7 @@ class BusinessDetailScreen extends StatelessWidget {
             icon: const Icon(Icons.share),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Đã copy: ${item.barcode}')),
+                SnackBar(content: Text('Đã copy: ${item.maVatTu}')),
               );
             },
           ),
@@ -137,7 +137,7 @@ class BusinessDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildHeaderRow('Barcode', item.barcode, isBold: true),
+                      _buildHeaderRow('Barcode', item.maVatTu, isBold: true),
                       _buildRow('Tên hàng hóa', item.tenHangHoa, maxLines: 2),
                       _buildRow('Danh điểm', item.danhDiem),
                       _buildRow(
@@ -253,7 +253,7 @@ class BusinessDetailScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Giá vốn & VAT
-              _buildPriceRow('Giá vốn 1', item.formattedGiaVon1),
+              _buildPriceRow('Giá vốn 1', item.giaVon1.toString()),
               if (item.giaVon2 != null && item.giaVon2! > 0)
                 _buildPriceRow('Giá vốn 2', _formatNumber(item.giaVon2!)),
               _buildRow('VAT Việt Ý', _formatVat(item.vatVietY)),
@@ -267,7 +267,7 @@ class BusinessDetailScreen extends StatelessWidget {
               // Thông tin khác
               _buildRow('CoCq Việt Ý', item.coCqVietY),
               _buildRow('CoCq Phú Thành', item.coCqPhuThanh),
-              _buildRow('Tổng số lượng bán ra', item.formattedTongSoLuongBanRa),
+              _buildRow('Tổng số lượng bán ra', item.soLuongBanRaGanNhat.toString()),
               _buildRow(
                 'SL bán gần nhất',
                 _formatNumberOrDash(item.soLuongBanRaGanNhat),
