@@ -463,10 +463,10 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                 // PRODUCT
                 _card("Sản phẩm", Icons.inventory, [
                   CustomTextField(
-                    label: "Mã sản phẩm",
+                    label: "Mã sản phẩm  thực tế",
                     controller: _productIDCtrl,
                     validator: (v) =>
-                        v == null || v.isEmpty ? "Nhập mã sản phẩm" : null,
+                        v == null || v.isEmpty ? "Nhập mã sản phẩm thực tế" : null,
                   ),
                   _gap(),
                   CustomTextField(
@@ -566,7 +566,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                     ),
                     _gap(),
                     CustomTextField(
-                      label: "Giá vốn",
+                      label: "Giá vốn tham chiếu",
                       keyboardType: TextInputType.numberWithOptions(
                         decimal: true,
                         signed: true,
@@ -649,7 +649,11 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                   ),
                   _gap(),
                   CustomDropdownField<BusinessType>(
-                    label: "Đơn vị",
+                    label: typeSave == 'EXPORT'
+                        ? "Đơn vị bán hàng trực tiếp"
+                        : typeSave == 'IMPORT'
+                        ? "Nhập về đơn vị nào"
+                        : "Hàng của đơn vị nào",
                     items: business,
                     selectedValue: selectedBusiness,
                     getLabel: (i) => i.Name.toString(),
