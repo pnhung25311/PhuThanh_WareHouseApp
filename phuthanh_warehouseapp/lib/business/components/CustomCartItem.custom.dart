@@ -163,6 +163,10 @@ class CartItem extends StatelessWidget {
                               "Danh điểm: ${cart.idPartNo}",
                               style: TextStyle(color: Colors.grey[600]),
                             ),
+                          Text(
+                            "Vị trí kho:" + cart.locationID.toString(),
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
                         ],
                       ),
                     ),
@@ -273,9 +277,7 @@ class CartItem extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(child: _meta(Icons.person, cart.creator ?? "")),
-                    Expanded(
-                      child: _meta(Icons.badge, cart.proponent ?? ""),
-                    ),
+                    Expanded(child: _meta(Icons.badge, cart.proponent ?? "")),
                   ],
                 ),
 

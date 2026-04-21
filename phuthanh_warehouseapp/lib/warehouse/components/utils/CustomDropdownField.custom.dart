@@ -16,19 +16,16 @@ class CustomDropdownField<T> extends StatefulWidget {
   final String? textCreate;
   final Future<void> Function()? functionCreate;
 
-  // icon phải
+  // RIGHT ICON
   final IconData? rightIcon;
   final VoidCallback? onRightIconTap;
   final Color? rightIconColor;
   final String? rightIconTooltip;
-  final BoxDecoration? rightIconDecoration;
   final EdgeInsetsGeometry? rightIconPadding;
   final double? rightIconSize;
 
-  // background
   final Color? backgroundColor;
   final Color? disabledBackgroundColor;
-
   final String? errorText;
   final String? Function(T?)? validator;
 
@@ -50,7 +47,6 @@ class CustomDropdownField<T> extends StatefulWidget {
     this.rightIconColor,
     this.rightIconTooltip,
     this.readOnly = false,
-    this.rightIconDecoration,
     this.rightIconPadding,
     this.rightIconSize,
     this.backgroundColor,
@@ -141,7 +137,6 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                       ),
                       const SizedBox(height: 8),
                     ],
-
                     Expanded(
                       child: _filteredItems.isEmpty
                           ? const Center(child: Text('Không có dữ liệu'))
@@ -162,9 +157,8 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                                           color: Colors.blue)
                                       : null,
                                   onTap: () {
-                                    // ⭐ FIX QUAN TRỌNG NHẤT
-                                    field.didChange(item);   // báo Form ngay lập tức
-                                    widget.onChanged(item);  // rebuild parent
+                                    field.didChange(item);
+                                    widget.onChanged(item);
                                     Navigator.pop(ctx2);
                                   },
                                 );
@@ -205,42 +199,59 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
       validator: widget.validator,
       initialValue: widget.selectedValue,
       builder: (field) {
-        final error = field.errorText ?? widget.errorText;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.label != null) ...[
+              Text(widget.label!,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 14)),
+              const SizedBox(height: 6),
+            ],
 
-        return GestureDetector(
-          onTap: widget.readOnly ? null : () => _openSelectDialog(field),
-          child: AbsorbPointer(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (widget.label != null) ...[
-                  Text(widget.label!,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14)),
-                  const SizedBox(height: 6),
-                ],
-
-                InputDecorator(
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    filled: true,
-                    fillColor: widget.enabled
-                        ? (widget.backgroundColor ?? Colors.white)
-                        : (widget.disabledBackgroundColor ??
-                            Colors.grey.shade200),
-                    errorText: error,
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(child: Text(display)),
-                      if (!widget.readOnly)
-                        const Icon(Icons.arrow_drop_down),
-                    ],
-                  ),
+            GestureDetector(
+              onTap: (!widget.readOnly && widget.enabled)
+                  ? () => _openSelectDialog(field)
+                  : null,
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  filled: true,
+                  fillColor: widget.enabled
+                      ? (widget.backgroundColor ?? Colors.white)
+                      : (widget.disabledBackgroundColor ??
+                          Colors.grey.shade200),
+                  errorText: field.errorText ?? widget.errorText,
                 ),
-              ],
+                child: Row(
+                  children: [
+                    Expanded(child: Text(display)),
+
+                    const Icon(Icons.arrow_drop_down, size: 28),
+
+                    if (widget.rightIcon != null)
+                      GestureDetector(
+                        behavior: HitTestBehavior.translucent,
+                        onTap: widget.onRightIconTap,
+                        child: Tooltip(
+                          message: widget.rightIconTooltip ?? "",
+                          child: Padding(
+                            padding: widget.rightIconPadding ??
+                                const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                            child: Icon(
+                              widget.rightIcon,
+                              size: widget.rightIconSize ?? 24,
+                              color: widget.rightIconColor ?? Colors.grey[800],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
-          ),
+          ],
         );
       },
     );

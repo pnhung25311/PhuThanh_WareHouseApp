@@ -94,6 +94,7 @@ class CartService {
   Future<Map<String, dynamic>> getCartsToEmployee(String body) async {
     try {
       final response = await client.post("dynamic/find-array/vwCart", body);
+      print(body);
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);

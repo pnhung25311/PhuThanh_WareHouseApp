@@ -25,7 +25,7 @@ class Cart {
   final String? productIDVAT;
 
   final double? cogs;
-  final int? locationID;
+  final String? locationID;
 
   final double? qty;
   final double? price;
@@ -129,7 +129,7 @@ class Cart {
     int? productAIDVAT,
     String? productIDVAT,
     double? cogs,
-    int? locationID,
+    String? locationID,
     double? qty,
     double? price,
     double? total,
@@ -224,7 +224,7 @@ class Cart {
       productAIDVAT: 0,
       productIDVAT: '',
       cogs: 0,
-      locationID: 0,
+      locationID: '',
       qty: 0,
       price: 0,
       total: 0,
@@ -307,7 +307,7 @@ class Cart {
       nameStatusVAT: json['NameStatusVAT']?.toString(),
 
       contractID: json['ContractID']?.toString(),
-      locationID: _toInt(json['LocationID']),
+      locationID: json['LocationID']?.toString(),
 
       remark: json['Remark']?.toString(),
       deliveryTime: _toDate(json['DeliveryTime']),

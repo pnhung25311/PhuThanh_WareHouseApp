@@ -205,6 +205,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
     remarkOfHistoryController.dispose();
     super.dispose();
   }
+
   // thêm helper init để await các load
   Future<void> _init() async {
     await _loadAllData();
@@ -1119,10 +1120,11 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                         model: 2,
                       );
                       if (result != null) {
-                        await _loadAllData();
+                        await _loadAllData();                               
                         setState(() {});
                       }
                     },
+                    rightIconSize: 25,
                     rightIcon: AppState.instance.get("isPinEmployee") == true
                         ? Icons.push_pin
                         : Icons.push_pin_outlined,
@@ -1157,6 +1159,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                         setState(() {});
                       }
                     },
+                    rightIconSize: 25,
                     rightIcon: AppState.instance.get("isPinPartner") == true
                         ? Icons.push_pin
                         : Icons.push_pin_outlined,
