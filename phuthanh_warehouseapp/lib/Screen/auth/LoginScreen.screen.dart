@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/system/SystemOption.model.dart';
+import 'package:phuthanh_warehouseapp/service/FirebaseService.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
@@ -43,6 +44,7 @@ class _LoginscreenState extends State<Loginscreen> {
   NavigationHelper navigationHelper = NavigationHelper();
   MySharedPreferences mySharedPreferences = MySharedPreferences();
   FunctionConvertHelper functionConvertHelper = FunctionConvertHelper();
+  FireBaseService fireBaseService = FireBaseService();
 
   @override
   void initState() {
@@ -140,9 +142,7 @@ class _LoginscreenState extends State<Loginscreen> {
 
     final roles = acc.Role == "ADMIN" || acc.Role == "WAREHOUSE";
     AppState.instance.set("role", roles);
-
-    debugPrint("Role from account: ${acc.Role}");
-    debugPrint("roles bool: $roles");
+    await fireBaseService.registerFCMToken(acc.AccountID);
   }
 
   Future<void> _handleLogin(String username, String password) async {
@@ -244,10 +244,11 @@ class _LoginscreenState extends State<Loginscreen> {
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = 'http://192.168.1.54:2010/PYS%20Images/IMG_SYSTEM/loginImg.png';
+    final imageUrl =
+        'http://192.168.1.54:2010/PYS%20Images/IMG_SYSTEM/loginImg.png';
     final finalUrl = statusConnect == true
-                    ? imageUrl
-                    : functionConvertHelper.convertToPublicIP(imageUrl);
+        ? imageUrl
+        : functionConvertHelper.convertToPublicIP(imageUrl);
     return WillPopScope(
       onWillPop: () async => true,
       child: Scaffold(
@@ -262,7 +263,8 @@ class _LoginscreenState extends State<Loginscreen> {
                     width: 300,
                     height: 225,
                     fit: BoxFit.cover,
-                  ),const SizedBox(height: 26),
+                  ),
+                  const SizedBox(height: 26),
 
                   // Dropdown chọn hệ thống
                   Container(

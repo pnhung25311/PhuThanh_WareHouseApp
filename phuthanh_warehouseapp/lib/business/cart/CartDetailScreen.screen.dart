@@ -75,6 +75,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
   final _remarkCtrl = TextEditingController();
 
   DateTime? _deliveryTime;
+  DateTime? _reportDate;
   late String typeSave;
 
   List<Bill> bills = [];
@@ -300,7 +301,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
       // ⭐ FIX QTY
       int typeID = 0;
       double qty = double.tryParse(_qtyCtrl.text) ?? 0;
-      if (widget.typeSave == 'EXPORT') qty = qty * -1;
+      // if (widget.typeSave == 'EXPORT') qty = qty * -1;s
       if (widget.typeSave == 'EXPORT') typeID = 2;
       if (widget.typeSave == 'IMPORT') typeID = 1;
       if (widget.typeSave == 'TRANSFER') typeID = 3;
@@ -335,6 +336,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
         statusVAT: selectedOptionAction?.id ?? 0,
         contractID: _ContractIDCtrl.text,
         deliveryTime: _deliveryTime,
+        reportDate: _reportDate,
         businessID: selectedBusiness?.BusinessTypeID ?? 0,
         typeCartID: typeID,
         lastTime: DateTime.now(),
@@ -465,8 +467,9 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                   CustomTextField(
                     label: "Mã sản phẩm  thực tế",
                     controller: _productIDCtrl,
-                    validator: (v) =>
-                        v == null || v.isEmpty ? "Nhập mã sản phẩm thực tế" : null,
+                    validator: (v) => v == null || v.isEmpty
+                        ? "Nhập mã sản phẩm thực tế"
+                        : null,
                   ),
                   _gap(),
                   CustomTextField(
@@ -664,6 +667,8 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                   _gap(),
 
                   _buildDateField(),
+                  _gap(),
+                  _buildReportDateField(),
                 ]),
 
                 // NOTE
@@ -724,6 +729,32 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
           _deliveryTime == null
               ? "Chọn ngày giao hàng"
               : formatdatehelper.formatDMY(_deliveryTime!),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportDateField() {
+    return InkWell(
+      onTap: () async {
+        final d = await showDatePicker(
+          context: context,
+          firstDate: DateTime(2022),
+          lastDate: DateTime(2035),
+          initialDate: DateTime.now(),
+        );
+        if (d != null) setState(() => _reportDate = d);
+      },
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          labelText: "Ngày xuất/giao hàng",
+          suffixIcon: Icon(Icons.calendar_today),
+          border: OutlineInputBorder(),
+        ),
+        child: Text(
+          _reportDate == null
+              ? "Chọn ngày xuất/giao hàng"
+              : formatdatehelper.formatDMY(_reportDate!),
         ),
       ),
     );

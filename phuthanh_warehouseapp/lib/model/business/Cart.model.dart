@@ -63,6 +63,7 @@ class Cart {
   final int? typeCartID;
   final String? typeCartName;
   final DateTime? lastTime;
+  final DateTime? reportDate;
 
   Cart({
     required this.cartAID,
@@ -109,6 +110,7 @@ class Cart {
     this.typeCartID,
     this.typeCartName,
     this.lastTime,
+    this.reportDate,
   });
 
   Cart copyWith({
@@ -156,6 +158,7 @@ class Cart {
     int? typeCartID,
     String? typeCartName,
     DateTime? lastTime,
+    DateTime? reportDate,
   }) {
     return Cart(
       cartAID: cartAID ?? this.cartAID,
@@ -202,6 +205,7 @@ class Cart {
       typeCartID: typeCartID ?? this.typeCartID,
       typeCartName: typeCartName ?? this.typeCartName,
       lastTime: lastTime ?? this.lastTime,
+      reportDate: reportDate ?? this.reportDate,
     );
   }
 
@@ -251,6 +255,7 @@ class Cart {
       typeCartID: 0,
       typeCartName: '',
       lastTime: null,
+      reportDate: null,
     );
   }
   // ================= FROM JSON =================
@@ -317,6 +322,7 @@ class Cart {
       typeCartID: _toInt(json['TypeCartID']),
       typeCartName: json['TypeCartName']?.toString(),
       lastTime: _toDate(json['LastTime']),
+      reportDate: _toDate(json['ReportDate']),
     );
   }
 
@@ -352,6 +358,7 @@ class Cart {
       'BusinessID': businessID,
       'TypeCartID': typeCartID,
       'LastTime': f.format(DateTime.now()),
+      'ReportDate': reportDate != null ? f.format(reportDate!) : null,
     };
   }
 
