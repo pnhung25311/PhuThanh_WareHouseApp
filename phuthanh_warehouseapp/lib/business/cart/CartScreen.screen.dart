@@ -74,6 +74,9 @@ class _CartListScreenState extends State<CartListScreen> {
     final filtered = _allCarts.where((c) {
       return (c.productID ?? "").toLowerCase().contains(keyword) ||
           (c.nameProduct ?? "").toLowerCase().contains(keyword) ||
+          (c.unitName ?? "").toLowerCase().contains(keyword) ||
+          (c.countryName ?? "").toLowerCase().contains(keyword) ||
+          (c.manufacturerName ?? "").toLowerCase().contains(keyword) ||
           (c.idPartNo ?? "").toLowerCase().contains(keyword);
     }).toList();
 
