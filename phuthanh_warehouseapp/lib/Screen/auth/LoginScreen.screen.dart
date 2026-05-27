@@ -142,7 +142,7 @@ class _LoginscreenState extends State<Loginscreen> {
 
     final roles = acc.Role == "ADMIN" || acc.Role == "WAREHOUSE";
     AppState.instance.set("role", roles);
-    await fireBaseService.registerFCMToken(acc.AccountID);
+    // await fireBaseService.registerFCMToken(acc.AccountID);
   }
 
   Future<void> _handleLogin(String username, String password) async {

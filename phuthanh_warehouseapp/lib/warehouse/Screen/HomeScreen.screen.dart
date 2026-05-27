@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/core/config/notification_manager.dart';
+// import 'package:phuthanh_warehouseapp/core/config/notification_manager.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/ScanBarcodeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/WareHouseSearchScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/WareHouseScreenHome.screen.dart';
@@ -18,17 +18,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
   NavigationHelper navigationHelper = NavigationHelper();
-  final NotificationManager _notificationManager = NotificationManager();
+  // final NotificationManager _notificationManager = NotificationManager();
   @override
   void initState() {
     super.initState();
     print("HomeScreen loaded");
-    _notificationManager.init(context);
+    // _notificationManager.init(context);
   }
 
   @override
   void dispose() {
-    _notificationManager.dispose();
+    // _notificationManager.dispose();
     super.dispose();
   }
 

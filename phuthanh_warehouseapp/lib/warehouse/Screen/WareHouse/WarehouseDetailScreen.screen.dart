@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/helper/ImagePickerHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/formatters/DotToMinusFormatte.custom.dart';
@@ -497,6 +499,40 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
   void _upDateWareHouse() async {
     setState(() => isSaving = true);
     try {
+      final helper = ImagePickerHelper();
+      final files = [
+        AppState.instance.get<File?>('img1'),
+        AppState.instance.get<File?>('img2'),
+        AppState.instance.get<File?>('img3'),
+      ];
+
+      final controllers = [
+        image1Controller,
+        image2Controller,
+        image3Controller,
+      ];
+      final keys = ['img1', 'img2', 'img3'];
+      final uploads = <Future<String?>>[];
+
+      for (var file in files) {
+        if (file != null) {
+          uploads.add(helper.uploadImage(file, productIDController.text));
+        } else {
+          uploads.add(Future.value(null)); // giữ vị trí null
+        }
+      }
+
+      final results = await Future.wait(uploads);
+
+      for (int i = 0; i < results.length; i++) {
+        final link = results[i];
+        if (link != null) {
+          controllers[i].text = link;
+          print(controllers[i].text);
+          AppState.instance.remove(keys[i]);
+        }
+      }
+
       // String locaResult = selectedLocationIds.join(",");
       String? fullName = await getFullname();
 
@@ -517,6 +553,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             "Remark": remarkOfWarehouseController.text.trim(),
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
             "LastUser": await fullName.toString().trim(),
+          }),
+        );
+        await infoService.UpdateProduct(
+          widget.item.productAID.toString(),
+          jsonEncode({
+            "Img1": image1Controller.text.trim(),
+            "Img2": image2Controller.text.trim(),
+            "Img3": image3Controller.text.trim(),
           }),
         );
 
@@ -543,6 +587,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             "ID_Bill": idBillController.text.trim(),
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
             "LastUser": await fullName.toString().trim(),
+          }),
+        );
+        await infoService.UpdateProduct(
+          widget.item.productAID.toString(),
+          jsonEncode({
+            "Img1": image1Controller.text.trim(),
+            "Img2": image2Controller.text.trim(),
+            "Img3": image3Controller.text.trim(),
           }),
         );
 
@@ -621,6 +673,14 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
             "LocationID": locationController.text.trim(),
             "Qty": QtyWhFrom,
             "LastTime": formatdatehelper.formatYMDHMS(DateTime.now()),
+          }),
+        );
+        await infoService.UpdateProduct(
+          widget.item.productAID.toString(),
+          jsonEncode({
+            "Img1": image1Controller.text.trim(),
+            "Img2": image2Controller.text.trim(),
+            "Img3": image3Controller.text.trim(),
           }),
         );
         bool fromSuccess = responseFrom["isSuccess"] == true;
@@ -1084,6 +1144,16 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               ],
             ),
 
+            _section("Ảnh sản phẩm", [
+              _imageField("Ảnh 1", image1Controller, "img1"),
+              const SizedBox(height: 16),
+
+              _imageField("Ảnh 2", image2Controller, "img2"),
+              const SizedBox(height: 16),
+
+              _imageField("Ảnh 3", image3Controller, "img3"),
+            ]),
+
             // ──── SECTION 6: NHẬP / XUẤT KHO (HISTORY) ────
             if (widget.isCreateHistory) ...[
               const Divider(height: 32, thickness: 1),
@@ -1120,7 +1190,7 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
                         model: 2,
                       );
                       if (result != null) {
-                        await _loadAllData();                               
+                        await _loadAllData();
                         setState(() {});
                       }
                     },
@@ -1310,6 +1380,64 @@ class _WarehouseDetailScreenState extends State<WarehouseDetailScreen> {
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _imageField(
+    String title,
+    TextEditingController controller,
+    String key,
+  ) {
+    return CustomTextFieldIcon(
+      label: title,
+      controller: controller,
+      prefixIcon: Icons.image_outlined,
+      suffixIcon: Icons.camera_alt,
+      readOnly: true,
+      onSuffixIconPressed: () async {
+        await ImagePickerHelper().showImageOptions(
+          context: context,
+          currentImageUrl: controller.text,
+          productID: productIDController.text,
+          nameImg: key,
+          isUpdate: widget.isUpDate,
+          onImageChanged: (url) {
+            setState(() {
+              controller.text = url ?? '';
+            });
+          },
+        );
+      },
+    );
+  }
+
+  Widget _section(String title, List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            blurRadius: 12,
+            color: Colors.black.withOpacity(.05),
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           ...children,
