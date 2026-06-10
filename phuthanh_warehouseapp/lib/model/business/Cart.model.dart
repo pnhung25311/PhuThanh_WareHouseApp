@@ -65,7 +65,7 @@ class Cart {
   final DateTime? lastTime;
   final DateTime? reportDate;
 
-  final int? vehicleTypeID;
+  final String? vehicleTypeID;
   final String? parameter;
 
   final double? grossPriceVAT;
@@ -175,7 +175,7 @@ class Cart {
     String? typeCartName,
     DateTime? lastTime,
     DateTime? reportDate,
-    int? vehicleTypeID,
+    String? vehicleTypeID,
     String? parameter,
 
     double? grossPriceVAT,
@@ -231,6 +231,12 @@ class Cart {
       typeCartName: typeCartName ?? this.typeCartName,
       lastTime: lastTime ?? this.lastTime,
       reportDate: reportDate ?? this.reportDate,
+      vehicleTypeID: vehicleTypeID ?? this.vehicleTypeID,
+      parameter: parameter ?? this.parameter,
+      grossPriceVAT: grossPriceVAT ?? this.grossPriceVAT,
+      priceCost: priceCost ?? this.priceVAT,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      isGetItem: isGetItem ?? this.isGetItem,
     );
   }
 
@@ -281,6 +287,12 @@ class Cart {
       typeCartName: '',
       lastTime: null,
       reportDate: null,
+      vehicleTypeID: '',
+      parameter: '',
+      grossPriceVAT: 0,
+      priceCost: 0,
+      invoiceNumber: '',
+      isGetItem: '',
     );
   }
   // ================= FROM JSON =================
@@ -348,6 +360,12 @@ class Cart {
       typeCartName: json['TypeCartName']?.toString(),
       lastTime: _toDate(json['LastTime']),
       reportDate: _toDate(json['ReportDate']),
+      vehicleTypeID: json['VehicleTypeID'],
+      parameter: json['Parameter']?.toString(),
+      grossPriceVAT: _toDouble(json['GrossPriceVAT']),
+      priceCost: _toDouble(json['PriceCostVAT']),
+      invoiceNumber: json['InvoiceNumber']?.toString(),
+      isGetItem: json['isGetItem']?.toString(),
     );
   }
 
@@ -384,6 +402,15 @@ class Cart {
       'TypeCartID': typeCartID,
       'LastTime': f.format(DateTime.now()),
       'ReportDate': reportDate != null ? f.format(reportDate!) : null,
+      'VehicleTypeID': vehicleTypeID,
+      'Parameter': parameter,
+
+      'GrossPriceVAT': grossPriceVAT,
+      'PriceCost': priceCost,
+
+      'InvoiceNumber': invoiceNumber,
+
+      'isGetItem': isGetItem,
     };
   }
 

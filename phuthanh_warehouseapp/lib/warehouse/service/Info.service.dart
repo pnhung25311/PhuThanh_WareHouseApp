@@ -327,7 +327,7 @@ class InfoService {
 
       final List<dynamic> data = jsonDecode(response.body);
       print("==================>");
-      print(data);
+      print(data.map((e)=>Product.fromJson(data[0])));
       return {
         "isSuccess": response.statusCode == 200,
         "statusCode": response.statusCode,
@@ -339,6 +339,7 @@ class InfoService {
       return {"isSuccess": false, "statusCode": 0, "body": e.toString()};
     }
   }
+  
 
   Future<Map<String, dynamic>> UpdateProduct(
     String condition,

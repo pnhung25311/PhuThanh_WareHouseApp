@@ -11,6 +11,7 @@ import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
@@ -31,6 +32,7 @@ class _CartListScreenState extends State<CartListScreen> {
   List<Supplier> suppliers = [];
   List<Manufacturer> manufacturers = [];
   List<Country> countrys = [];
+  List<Employee> employees = [];
   List<Account> acc = [];
   bool isSearching = false;
   final TextEditingController searchController = TextEditingController();
@@ -49,6 +51,7 @@ class _CartListScreenState extends State<CartListScreen> {
     _loadAccount();
     _loadCountry();
     _loadManufacturer();
+    _loadEmployee();
   }
 
   Future<int?> _getCurrentUserID() async {
@@ -165,6 +168,19 @@ class _CartListScreenState extends State<CartListScreen> {
     }
   }
 
+  Future<void> _loadEmployee() async {
+    try {
+      final employeeList = await infoService.LoadDtataEmployee();
+
+      setState(() {
+        employees = employeeList;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _loadAccount() async {
     try {
       final accList = await infoService.LoadDtataAccount();
@@ -189,6 +205,7 @@ class _CartListScreenState extends State<CartListScreen> {
         acc: acc,
         manu: manufacturers,
         country: countrys,
+        employee: employees,
       ),
     );
 
@@ -248,6 +265,13 @@ class _CartListScreenState extends State<CartListScreen> {
     /// 📌 Status
     if (f.status != null) {
       filtered = filtered.where((c) => c.statusID == f.status).toList();
+    }
+    if (f.employee != null) {
+      filtered = filtered.where((c) => c.employeeID == f.employee).toList();
+    }
+
+    if (f.sourceId != null) {
+      filtered = filtered.where((c) => c.sourceID == f.sourceId).toList();
     }
 
     setState(() {

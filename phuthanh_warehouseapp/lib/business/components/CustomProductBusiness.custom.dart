@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/product/ProductBusinessDetailsScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/StockAllocatorHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 
 class ProductCard extends StatelessWidget {
   final Business item;
@@ -20,6 +23,7 @@ class ProductCard extends StatelessWidget {
     final maVatTu = item.maVatTu.trim();
     final name = item.tenHangHoa.trim();
     NavigationHelper nav = NavigationHelper();
+    InfoService infoService = InfoService();
 
     final images = [
       item.hinhAnh1,
@@ -45,38 +49,66 @@ class ProductCard extends StatelessWidget {
             // xác nhận (có thể bỏ nếu không cần)
             confirmDismiss: (direction) async {
               if (direction == DismissDirection.endToStart) {
+                final data = await infoService.findProduct(item.maVatTu.trim());
+                if (data["statusCode"] == 403 ||
+                    data["statusCode"] == 401 ||
+                    data["statusCode"] == 0) {
+                  nav.pushAndRemoveUntil(context, const Loginscreen());
+                }
+                Product p = data["body"];
+
                 Cart cart = Cart(
                   cartAID: 0,
-                  productID: item.maVatTu.trim(),
-                  idPartNo: item.danhDiem,
-                  nameProduct: item.tenHangHoa,
-                  manufacturerName: item.hangSanXuat,
-                  countryName: item.nuocSanXuat,
-                  unitName: item.donViTinh,
+                  productID: p.productID,
+                  idPartNo: p.idPartNo,
+                  nameProduct: p.nameProduct,
+                  manufacturerID: p.manufacturerID,
+                  countryID: p.countryID,
+                  unitID: p.unitID,
+                  vehicleTypeID: p.vehicleTypeID,
+                  parameter: p.parameter,
+                  sourceID: p.supplierActualID,
+
                   cogs: item.giaVon1,
                   price: 0,
                   total: 0,
                   qty: 0,
                 );
-                nav.push(context, CartDetailScreen(item: cart, typeSave: "EXPORT"));
+                nav.push(
+                  context,
+                  CartDetailScreen(item: cart, typeSave: "EXPORT"),
+                );
                 return false;
               } else if (direction == DismissDirection.startToEnd) {
+                final data = await infoService.findProduct(item.maVatTu.trim());
+                if (data["statusCode"] == 403 ||
+                    data["statusCode"] == 401 ||
+                    data["statusCode"] == 0) {
+                  nav.pushAndRemoveUntil(context, const Loginscreen());
+                }
+                Product p = data["body"];
+
                 Cart cart = Cart(
                   cartAID: 0,
-                  productID: item.maVatTu.trim(),
-                  idPartNo: item.danhDiem,
-                  nameProduct: item.tenHangHoa,
-                  manufacturerName: item.hangSanXuat,
-                  countryName: item.nuocSanXuat,
-                  unitName: item.donViTinh,
-                  cogs: item.giaVon1,
-                  nameSource: item.nhaCungCapThucTe,
+                  productID: p.productID,
+                  idPartNo: p.idPartNo,
+                  nameProduct: p.nameProduct,
+                  manufacturerID: p.manufacturerID,
+                  countryID: p.countryID,
+                  unitID: p.unitID,
+                  vehicleTypeID: p.vehicleTypeID,
+                  parameter: p.parameter,
+                  sourceID: p.supplierActualID,
 
+                  cogs: item.giaVon1,
                   price: 0,
                   total: 0,
                   qty: 0,
                 );
-                nav.push(context, CartDetailScreen(item: cart, typeSave: "IMPORT"));
+                nav.push(
+                  context,
+                  CartDetailScreen(item: cart, typeSave: "IMPORT"),
+                );
                 return false;
               }
               return false;

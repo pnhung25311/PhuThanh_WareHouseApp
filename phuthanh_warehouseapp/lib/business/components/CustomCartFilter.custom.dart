@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDropdownField.custom.dart';
@@ -11,8 +12,10 @@ class CartFilterResult {
   final DateTime? toDate;
   final String? fullName;
   final int? partnerId;
+  final int? sourceId;
   final int? manufacturerID;
   final int? countryID;
+  final int? employee;
 
   final int? accID;
   final bool? status;
@@ -27,6 +30,8 @@ class CartFilterResult {
     this.countryID,
     this.accID,
     this.status,
+    this.employee,
+    this.sourceId,
   });
 }
 
@@ -36,6 +41,7 @@ class CartFilterBottomSheet extends StatefulWidget {
   final List<Account> acc;
   final List<Manufacturer> manu;
   final List<Country> country;
+  final List<Employee> employee;
 
   const CartFilterBottomSheet({
     super.key,
@@ -44,6 +50,7 @@ class CartFilterBottomSheet extends StatefulWidget {
     required this.acc,
     required this.manu,
     required this.country,
+    required this.employee,
   });
 
   @override
@@ -59,13 +66,17 @@ class _CartFilterBottomSheetState extends State<CartFilterBottomSheet> {
   late TextEditingController fullNameCtrl;
 
   List<Supplier> displaySuppliers = [];
+  List<Supplier> displaySources = [];
   List<Account> displayAccounts = [];
   List<Manufacturer> displayManufacturers = [];
   List<Country> displayCountrys = [];
+  List<Employee> displayEmployees = [];
   Supplier? selectedSupplier;
   Account? selectedAccount;
   Manufacturer? selectedManufacturer;
   Country? selectedCountry;
+  Employee? selectedEmployee;
+  Supplier? selectedSource;
 
   @override
   void initState() {
@@ -91,7 +102,7 @@ class _CartFilterBottomSheetState extends State<CartFilterBottomSheet> {
         FullName: "Tất cả",
         Role: "",
         Status: "",
-        Avatar: ""
+        Avatar: "",
       ),
       ...widget.acc,
     ];
@@ -104,6 +115,17 @@ class _CartFilterBottomSheetState extends State<CartFilterBottomSheet> {
     displayCountrys = [
       Country(CountryID: -1, Name: "Tất cả"),
       ...widget.country,
+    ];
+
+    displayEmployees = [
+      Employee(EmployeeID: -1, NameEmployee: "Tất cả"),
+      ...widget.employee,
+    ];
+
+
+    displaySources = [
+      Supplier(SupplierID: -1, Name: "Tất cả"),
+      ...widget.suppliers,
     ];
 
     /// 🔥 set selected ban đầu
@@ -119,6 +141,19 @@ class _CartFilterBottomSheetState extends State<CartFilterBottomSheet> {
       }
     } else {
       selectedSupplier = displaySuppliers.first; // Tất cả
+    }
+    if (widget.initial?.sourceId != null) {
+      final found = displaySources.where(
+        (s) => s.SupplierID == widget.initial!.sourceId,
+      );
+
+      if (found.isNotEmpty) {
+        selectedSource = found.first;
+      } else {
+        selectedSource = displaySources.first;
+      }
+    } else {
+      selectedSource = displaySources.first; // Tất cả
     }
 
     if (widget.initial?.accID != null) {
@@ -161,6 +196,20 @@ class _CartFilterBottomSheetState extends State<CartFilterBottomSheet> {
       }
     } else {
       selectedCountry = displayCountrys.first; // Tất cả
+    }
+
+    if (widget.initial?.employee != null) {
+      final foundEmpolyee = displayEmployees.where(
+        (s) => s.EmployeeID == widget.initial!.employee,
+      );
+
+      if (foundEmpolyee.isNotEmpty) {
+        selectedEmployee = foundEmpolyee.first;
+      } else {
+        selectedEmployee = displayEmployees.first;
+      }
+    } else {
+      selectedEmployee = displayEmployees.first; // Tất cả
     }
   }
 
@@ -273,13 +322,33 @@ class _CartFilterBottomSheetState extends State<CartFilterBottomSheet> {
             ),
             const SizedBox(height: 12),
 
+            CustomDropdownField<Employee>(
+              label: "Chọn người đề nghị",
+              selectedValue: selectedEmployee,
+              items: displayEmployees,
+              getLabel: (s) => s.NameEmployee,
+              onChanged: (v) => setState(() => selectedEmployee = v),
+              isSearch: true,
+            ),
+            const SizedBox(height: 12),
+
             /// 🏢 Supplier
             CustomDropdownField<Supplier>(
-              label: "Chọn NCC",
+              label: "Chọn nơi nhận hàng",
               selectedValue: selectedSupplier,
               items: displaySuppliers,
               getLabel: (s) => s.Name,
               onChanged: (v) => setState(() => selectedSupplier = v),
+              isSearch: true,
+            ),
+
+            const SizedBox(height: 12),
+            CustomDropdownField<Supplier>(
+              label: "Chọn nơi lấy hàng",
+              selectedValue: selectedSource,
+              items: displaySources,
+              getLabel: (s) => s.Name,
+              onChanged: (v) => setState(() => selectedSource = v),
               isSearch: true,
             ),
 
@@ -368,13 +437,20 @@ class _CartFilterBottomSheetState extends State<CartFilterBottomSheet> {
                           accID: selectedAccount?.AccountID == -1
                               ? null
                               : selectedAccount?.AccountID,
-                          manufacturerID: selectedManufacturer?.ManufacturerID == -1
+                          manufacturerID:
+                              selectedManufacturer?.ManufacturerID == -1
                               ? null
                               : selectedManufacturer?.ManufacturerID,
                           countryID: selectedCountry?.CountryID == -1
                               ? null
                               : selectedCountry?.CountryID,
                           status: status,
+                          employee: selectedEmployee?.EmployeeID == -1
+                              ? null
+                              : selectedEmployee?.EmployeeID,
+                          sourceId: selectedSource?.SupplierID == -1
+                              ? null
+                              : selectedSource?.SupplierID,
                         ),
                       );
                     },

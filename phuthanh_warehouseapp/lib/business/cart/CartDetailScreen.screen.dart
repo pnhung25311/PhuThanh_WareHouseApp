@@ -18,8 +18,10 @@ import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
 import 'package:phuthanh_warehouseapp/model/info/Unit.model.dart';
+import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/formatters/DotToMinusFormatte.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDropdownField.custom.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomSmartDropdown.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextField.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 
@@ -55,6 +57,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
 
   final _fullnameCtrl = TextEditingController();
   final _productIDCtrl = TextEditingController();
+  final _parameterCtrl = TextEditingController();
   final _productIDVATCtrl = TextEditingController();
   final _productNameCtrl = TextEditingController();
   final _productPartNoCtrl = TextEditingController();
@@ -68,7 +71,10 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
 
   final _priceVATCtrl = TextEditingController();
   final _priceCogsCtrl = TextEditingController();
+  final _priceCostCtrl = TextEditingController();
+  final _priceGrossPriceVAT = TextEditingController();
   final _ContractIDCtrl = TextEditingController();
+  final _invoiceNumberCtrl = TextEditingController();
 
   final _employeeCtrl = TextEditingController();
   final _statusCtrl = TextEditingController();
@@ -88,7 +94,9 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
   List<Payment> payments = [];
   List<Employee> employees = [];
   List<BusinessType> business = [];
+  List<VehicleType> vehicleType = [];
 
+  Key dropdownKey = UniqueKey();
   Bill? selectedBill;
   OptionAction? selectedOptionAction;
   Supplier? selectedSource;
@@ -99,7 +107,8 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
   Country? selectedCountry;
   Unit? selectedUnit;
   BusinessType? selectedBusiness;
-
+  List<VehicleType> selectVehicleType = [];
+  List<int> selectedVehicelIds = [];
   bool _loading = true;
   bool _saving = false;
   Timer? _productDebounce;
@@ -125,7 +134,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
         (e) => e.SupplierID.toString() == "41",
       );
       selectedSource = sources.firstWhereOrNull(
-        (e) => e.Name.toString() == widget.item.nameSource.toString(),
+        (e) => e.SupplierID.toString() == widget.item.sourceID.toString(),
       );
     }
     if (widget.typeSave == "EXPORT") {
@@ -155,6 +164,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
     _remarkCtrl.text = i.remark ?? '';
     _ContractIDCtrl.text = i.contractID ?? '';
     _deliveryTime = i.deliveryTime;
+    _parameterCtrl.text = i.parameter ?? '';
   }
 
   Future<void> _loadUser() async {
@@ -181,6 +191,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
       infoService.LoadDtataUnit(),
       infoService.LoadDtataCountry(),
       infoService.LoadDtataBusiness(),
+      infoService.LoadDtataVehicleType(),
     ]);
     final List<OptionAction> actions = [
       OptionAction(id: 1, name: "Đã xuất VAT"),
@@ -198,6 +209,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
     units = results[5] as List<Unit>;
     countrys = results[6] as List<Country>;
     business = results[7] as List<BusinessType>;
+    vehicleType = results[8] as List<VehicleType>;
 
     selectedBill = bills.firstWhereOrNull(
       (e) => e.BillID.toString() == widget.item.billID.toString(),
@@ -232,6 +244,16 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
     selectedBusiness = business.firstWhereOrNull(
       (e) => e.BusinessTypeID.toString() == widget.item.businessID.toString(),
     );
+    String vehicle = widget.item.vehicleTypeID.toString();
+    selectedVehicelIds = vehicle
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => int.tryParse(e) != null)
+        .map((e) => int.parse(e))
+        .toList();
+    selectVehicleType = vehicleType
+        .where((loc) => selectedVehicelIds.contains(loc.VehicleTypeID))
+        .toList();
 
     setState(() => _loading = false);
   }
@@ -325,6 +347,9 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
         total: double.tryParse(_totalCtrl.text),
         priceVAT: double.tryParse(_priceVATCtrl.text),
         cogs: double.tryParse(_priceCogsCtrl.text),
+        priceCost: double.tryParse(_priceCostCtrl.text),
+        grossPriceVAT: double.tryParse(_priceGrossPriceVAT.text),
+
 
         paymentID: selectedPayment?.PaymentID ?? 0,
         employeeID: selectedEmployee?.EmployeeID ?? 0,
@@ -339,6 +364,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
         reportDate: _reportDate,
         businessID: selectedBusiness?.BusinessTypeID ?? 0,
         typeCartID: typeID,
+        invoiceNumber: _invoiceNumberCtrl.text,
         lastTime: DateTime.now(),
       );
 
@@ -465,7 +491,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                 // PRODUCT
                 _card("Sản phẩm", Icons.inventory, [
                   CustomTextField(
-                    label: "Mã sản phẩm  thực tế",
+                    label: "Mã sản phẩm thực tế",
                     controller: _productIDCtrl,
                     validator: (v) => v == null || v.isEmpty
                         ? "Nhập mã sản phẩm thực tế"
@@ -490,6 +516,12 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                   CustomTextField(
                     label: "Danh điểm",
                     controller: _productPartNoCtrl,
+                    // readOnly: true,
+                  ),
+                  _gap(),
+                  CustomTextField(
+                    label: "Thông số",
+                    controller: _parameterCtrl,
                     // readOnly: true,
                   ),
                   _gap(),
@@ -524,25 +556,44 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                     isSearch: true,
                     validator: (v) => v == null ? "Bắt buộc chọn ĐVT" : null,
                   ),
+                  SmartDropdown<VehicleType>(
+                    key: dropdownKey,
+                    labelBuilder: (loc) => loc.VehicleTypeName,
+                    items: vehicleType,
+                    hint: "Chọn hãng xe",
+                    isSearch: true,
+                    isMultiSelect: true,
+                    readOnly: widget.readOnly,
+                    initialValues: selectVehicleType,
+                    dropdownMaxHeight: 300,
+                    onChanged: (values) => setState(() {
+                      selectVehicleType = List<VehicleType>.from(
+                        values as List,
+                      );
+                      selectedVehicelIds = selectVehicleType
+                          .map((e) => e.VehicleTypeID)
+                          .toList();
+                    }),
+                  ),
                 ]),
 
                 // PRICE
                 _card("Giá", Icons.payments, [
-                  CustomTextField(
-                    label: "Số lượng",
-                    controller: _qtyCtrl,
-                    keyboardType: TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: true,
+                  if (typeSave == 'IMPORT') ...[
+                    CustomTextField(
+                      label: "Số lượng",
+                      controller: _qtyCtrl,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                      validator: (v) =>
+                          v == null || v.isEmpty ? "Nhập số lượng" : null,
                     ),
-                    inputFormatters: [DotToMinusFormatter()],
-                    validator: (v) =>
-                        v == null || v.isEmpty ? "Nhập số lượng" : null,
-                  ),
-                  if (typeSave != 'TRANSFER') ...[
                     _gap(),
                     CustomTextField(
-                      label: "Đơn giá NET",
+                      label: "Giá mua NET",
                       controller: _priceCtrl,
                       keyboardType: TextInputType.numberWithOptions(
                         decimal: true,
@@ -556,7 +607,6 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                       controller: _totalCtrl,
                       readOnly: true,
                     ),
-
                     _gap(),
                     CustomTextField(
                       label: "Giá VAT",
@@ -569,7 +619,77 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                     ),
                     _gap(),
                     CustomTextField(
-                      label: "Giá vốn tham chiếu",
+                      label: "Giá vốn tham thảo",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                      controller: _priceCogsCtrl,
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Giá bán VAT dự kiến",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                      controller: _priceGrossPriceVAT,
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Giá bán NET dự kiến",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                      controller: _priceCostCtrl,
+                    ),
+                  ],
+
+                  if (typeSave == 'EXPORT') ...[
+                    CustomTextField(
+                      label: "Số lượng",
+                      controller: _qtyCtrl,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                      validator: (v) =>
+                          v == null || v.isEmpty ? "Nhập số lượng" : null,
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Giá mua NET",
+                      controller: _priceCtrl,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Thành tiền",
+                      controller: _totalCtrl,
+                      readOnly: true,
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Giá VAT",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      controller: _priceVATCtrl,
+                      inputFormatters: [DotToMinusFormatter()],
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Giá vốn tham thảo",
                       keyboardType: TextInputType.numberWithOptions(
                         decimal: true,
                         signed: true,
@@ -578,11 +698,45 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                       controller: _priceCogsCtrl,
                     ),
                   ],
+
+                  if (typeSave == 'TRANSFER') ...[
+                    CustomTextField(
+                      label: "Số lượng",
+                      controller: _qtyCtrl,
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                      validator: (v) =>
+                          v == null || v.isEmpty ? "Nhập số lượng" : null,
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Giá bán VAT dự kiến",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                      controller: _priceGrossPriceVAT,
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Giá bán NET dự kiến",
+                      keyboardType: TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: [DotToMinusFormatter()],
+                      controller: _priceCostCtrl,
+                    ),
+                  ],
                 ]),
 
                 // BILL
-                if (typeSave != 'TRANSFER') ...[
-                  _card("Thanh toán & hóa đơn", Icons.receipt, [
+                _card("Thanh toán & hóa đơn", Icons.receipt, [
+                  if (typeSave == 'IMPOR') ...[
                     CustomDropdownField<Bill>(
                       label: "Hóa đơn",
                       items: bills,
@@ -593,8 +747,9 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                       validator: (v) =>
                           v == null ? "Bắt buộc chọn hóa đơn" : null,
                     ),
+                    _gap(),
                     CustomDropdownField<Payment>(
-                      label: "Phương thức thanh toán",
+                      label: "Tình trạng thanh toán",
                       items: payments,
                       selectedValue: selectedPayment,
                       getLabel: (i) => i.Name.toString(),
@@ -604,28 +759,64 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                       //     ? "Bắt buộc chọn phương thức thanh toán"
                       //     : null,
                     ),
-                    if (typeSave != "IMPORT") ...[
-                      CustomDropdownField<OptionAction>(
-                        label: "Trạng thái VAT",
-                        items: statusVATs,
-                        selectedValue: selectedOptionAction,
-                        getLabel: (i) => i.name.toString(),
-                        onChanged: (v) =>
-                            setState(() => selectedOptionAction = v),
-                        isSearch: true,
-                        // validator: (v) => v == null
-                        //     ? "Bắt buộc chọn phương thức thanh toán"
-                        //     : null,
-                      ),
-                      _gap(),
-                      CustomTextField(
-                        label: "Hợp đồng",
-                        controller: _ContractIDCtrl,
-                        // readOnly: true,
-                      ),
-                    ],
-                  ]),
-                ],
+                    _gap(),
+                    CustomTextField(
+                      label: "Số hóa đơn",
+                      controller: _invoiceNumberCtrl,
+                      // readOnly: true,
+                    ),
+                  ],
+
+                  if (typeSave == "EXPORT") ...[
+                    CustomDropdownField<Bill>(
+                      label: "Hóa đơn",
+                      items: bills,
+                      selectedValue: selectedBill,
+                      getLabel: (i) => i.Name.toString(),
+                      onChanged: (v) => setState(() => selectedBill = v),
+                      isSearch: true,
+                      validator: (v) =>
+                          v == null ? "Bắt buộc chọn hóa đơn" : null,
+                    ),
+                    _gap(),
+                    CustomDropdownField<Payment>(
+                      label: "Tình trạng thanh toán",
+                      items: payments,
+                      selectedValue: selectedPayment,
+                      getLabel: (i) => i.Name.toString(),
+                      onChanged: (v) => setState(() => selectedPayment = v),
+                      isSearch: true,
+                      // validator: (v) => v == null
+                      //     ? "Bắt buộc chọn phương thức thanh toán"
+                      //     : null,
+                    ),
+                    _gap(),
+                    CustomDropdownField<OptionAction>(
+                      label: "Trạng thái VAT",
+                      items: statusVATs,
+                      selectedValue: selectedOptionAction,
+                      getLabel: (i) => i.name.toString(),
+                      onChanged: (v) =>
+                          setState(() => selectedOptionAction = v),
+                      isSearch: true,
+                      // validator: (v) => v == null
+                      //     ? "Bắt buộc chọn phương thức thanh toán"
+                      //     : null,
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Số hóa đơn",
+                      controller: _invoiceNumberCtrl,
+                      // readOnly: true,
+                    ),
+                    _gap(),
+                    CustomTextField(
+                      label: "Hợp đồng",
+                      controller: _ContractIDCtrl,
+                      // readOnly: true,
+                    ),
+                  ],
+                ]),
 
                 // SHIPPING
                 _card("Vận chuyển", Icons.local_shipping, [
@@ -641,7 +832,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
                   ),
                   _gap(),
                   CustomDropdownField<Supplier>(
-                    label: "Nơi giao hàng",
+                    label: "Nơi nhận hàng",
                     items: deliveries,
                     selectedValue: selectedDelivery,
                     getLabel: (i) => i.Name.toString(),
