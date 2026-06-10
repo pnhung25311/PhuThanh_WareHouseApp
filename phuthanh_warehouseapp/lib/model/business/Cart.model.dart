@@ -65,6 +65,16 @@ class Cart {
   final DateTime? lastTime;
   final DateTime? reportDate;
 
+  final int? vehicleTypeID;
+  final String? parameter;
+
+  final double? grossPriceVAT;
+  final double? priceCost;
+
+  final String? invoiceNumber;
+
+  final String? isGetItem;
+
   Cart({
     required this.cartAID,
     this.cartID,
@@ -111,6 +121,12 @@ class Cart {
     this.typeCartName,
     this.lastTime,
     this.reportDate,
+    this.vehicleTypeID,
+    this.parameter,
+    this.grossPriceVAT,
+    this.priceCost,
+    this.invoiceNumber,
+    this.isGetItem,
   });
 
   Cart copyWith({
@@ -159,6 +175,15 @@ class Cart {
     String? typeCartName,
     DateTime? lastTime,
     DateTime? reportDate,
+    int? vehicleTypeID,
+    String? parameter,
+
+    double? grossPriceVAT,
+    double? priceCost,
+
+    String? invoiceNumber,
+
+    String? isGetItem,
   }) {
     return Cart(
       cartAID: cartAID ?? this.cartAID,

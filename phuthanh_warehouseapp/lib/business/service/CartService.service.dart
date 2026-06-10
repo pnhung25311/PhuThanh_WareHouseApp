@@ -71,7 +71,6 @@ class CartService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final carts = data.map((e) => Cart.fromJson(e)).toList();
-        print(data);
 
         return {
           "isSuccess": true,
@@ -99,9 +98,7 @@ class CartService {
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
         final carts = data.map((e) => Cart.fromJson(e)).toList();
-        print("==================>");
-        print(data);
-
+        print(data[0]);
         return {
           "isSuccess": true,
           "statusCode": response.statusCode,
