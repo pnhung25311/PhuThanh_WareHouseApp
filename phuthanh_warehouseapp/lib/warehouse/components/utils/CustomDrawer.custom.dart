@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
+import 'package:phuthanh_warehouseapp/file/screen/TreeviewPage.screen.dart';
 // import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
 // import 'package:phuthanh_warehouseapp/business/screen/BusinessScreen.screen.dart';r
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
@@ -280,6 +281,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
           //   },
           // ),
           const Divider(),
+          ListTile(
+            leading: const Icon(Icons.storage, color: Colors.green),
+            title: const Text('SERVER', style: TextStyle(color: Colors.green)),
+            onTap: () {
+              navigationHelper.push(context, TreeViewPage());
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.change_circle, color: Colors.green),
             title: const Text(

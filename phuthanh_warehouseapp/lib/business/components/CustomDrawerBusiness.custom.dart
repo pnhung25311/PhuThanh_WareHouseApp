@@ -4,6 +4,7 @@ import 'package:phuthanh_warehouseapp/Screen/auth/UserProfile.screen.dart';
 import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
 // import 'package:phuthanh_warehouseapp/business/cart/CartScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/history/HistoryBusinessScreenALL.screen.dart';
+import 'package:phuthanh_warehouseapp/file/screen/TreeviewPage.screen.dart';
 // import 'package:phuthanh_warehouseapp/business/screen/BusinessScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
@@ -232,6 +233,13 @@ class _CustomDrawerBusinessState extends State<CustomDrawerBusiness> {
             ),
           ),
           const Divider(),
+                    ListTile(
+            leading: const Icon(Icons.storage, color: Colors.green),
+            title: const Text('SERVER', style: TextStyle(color: Colors.green)),
+            onTap: () {
+              navigationHelper.push(context, TreeViewPage());
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.change_circle, color: Colors.green),
             title: const Text(
