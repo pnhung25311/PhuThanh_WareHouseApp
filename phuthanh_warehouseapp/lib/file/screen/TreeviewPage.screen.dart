@@ -27,7 +27,8 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
   // Trạng thái cho chức năng Tìm kiếm
   bool _isSearching = false;
-  bool _isUploading = false; // Trạng thái hiển thị vòng xoay loading tại nút bấm
+  bool _isUploading =
+      false; // Trạng thái hiển thị vòng xoay loading tại nút bấm
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -74,7 +75,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
   // Kéo xuống listview để reload lại dữ liệu thư mục hiện tại
   Future<void> _handleRefresh() async {
-    final String currentRemotePath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
+    final String currentRemotePath = _navigationStack.isEmpty
+        ? ""
+        : _navigationStack.last.path;
     await _loadDirectory(currentRemotePath);
   }
 
@@ -104,7 +107,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
       _searchController.clear();
     });
 
-    final targetPath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
+    final targetPath = _navigationStack.isEmpty
+        ? ""
+        : _navigationStack.last.path;
     await _loadDirectory(targetPath);
   }
 
@@ -123,7 +128,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
       setState(() {
         _navigationStack.removeLast();
       });
-      final parentPath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
+      final parentPath = _navigationStack.isEmpty
+          ? ""
+          : _navigationStack.last.path;
       await _loadDirectory(parentPath);
       return false;
     }
@@ -131,7 +138,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
   }
 
   // 👉 HÀM KÍCH HOẠT KHI ẤN NÚT FLOATING ACTION BUTTON ĐỂ CHỌN VÀ UPLOAD FILE
-// Tạo thêm một biến cờ vật lý chuyên biệt để khóa cứng luồng click ngay lập tức
+  // Tạo thêm một biến cờ vật lý chuyên biệt để khóa cứng luồng click ngay lập tức
   bool _isPickerOpenActive = false;
 
   Future<void> _handlePickAndUploadFile() async {
@@ -145,9 +152,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
     try {
       // Đánh dấu hệ thống đang mở Picker để khóa toàn bộ các click tiếp theo
-      _isPickerOpenActive = true; 
+      _isPickerOpenActive = true;
 
-      // 2. TẠM DỪNG XÓA CACHE: Bỏ hoặc bọc try-catch kỹ lệnh clearTemporaryFiles 
+      // 2. TẠM DỪNG XÓA CACHE: Bọc try-catch kỹ lệnh clearTemporaryFiles
       // vì hàm này đôi khi cũng chiếm dụng luồng MethodChannel của FilePicker
       try {
         await FilePicker.platform.clearTemporaryFiles();
@@ -159,34 +166,36 @@ class _TreeViewPageState extends State<TreeViewPage> {
       await Future.delayed(const Duration(milliseconds: 300));
 
       debugPrint("🚀 Bắt đầu gọi cửa sổ chọn file từ Hệ điều hành...");
-      
-      // 4. Kích hoạt gọi cửa sổ chọn file
-      result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
-        allowMultiple: false,
-      );
 
+      // 4. Kích hoạt gọi cửa sổ chọn file với cấu hình chuẩn tối ưu cho Mobile từ Example
+      result = await FilePicker.platform.pickFiles(
+        type: FileType.any,         // Chọn bất kỳ loại file nào (PDF, Excel, Word, Image...)
+        allowMultiple: false,       // Chỉ cho phép chọn duy nhất 1 file
+        withData: false,            // TỐI ƯU MOBILE: KHÔNG nạp byte vào RAM để tránh crash (OOM)
+        withReadStream: false,      // Không mở luồng stream trực tiếp khi không cần thiết
+      );
     } catch (e) {
       debugPrint("❌ Lỗi nghiêm trọng khi gọi Native Picker: $e");
       _showErrorSnackBar("Không thể mở trình duyệt chọn file. Hãy thử lại!");
       return;
     } finally {
-      // Giải phóng cờ khóa mở picker để người dùng có thể bấm lại lần sau nếu lần này hủy
-      _isPickerOpenActive = false; 
+      // Luôn giải phóng cờ khóa mở picker trong khối finally để người dùng có thể bấm lại lần sau
+      _isPickerOpenActive = false;
     }
 
-    // 5. Kiểm tra nếu người dùng không chọn file nào (bấm back ra ngoài)
+    // 5. Kiểm tra nếu người dùng không chọn file nào (bấm back hoặc hủy bỏ)
     if (result == null || result.files.isEmpty || result.files.single.path == null) {
       debugPrint("👉 Người dùng đã chủ động hủy bỏ hoặc thoát cửa sổ chọn file.");
       return;
     }
 
-    // 6. Sau khi đã lấy được file thành công, tiến hành bật trạng thái Upload
+    // 6. Sau khi đã lấy được file thành công, tiến hành bật trạng thái Upload (Hiển thị vòng xoay tại FAB)
     setState(() {
       _isUploading = true;
     });
 
     try {
+      // Lấy file thông qua đường dẫn vật lý (path) đã được lưu tạm trong bộ nhớ máy
       final File localFile = File(result.files.single.path!);
       final String fileName = result.files.single.name;
 
@@ -200,9 +209,10 @@ class _TreeViewPageState extends State<TreeViewPage> {
         );
       }
 
+      // Xác định thư mục hiện tại trong ứng dụng Phú Thành
       final String currentRemotePath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
-      
-      // Gửi file lên Spring Boot server Phú Thành
+
+      // Thực hiện gửi dữ liệu đa phần (Multipart) lên Spring Boot Backend
       final String successMessage = await service.uploadFile(currentRemotePath, localFile);
 
       if (mounted) {
@@ -214,14 +224,15 @@ class _TreeViewPageState extends State<TreeViewPage> {
             behavior: SnackBarBehavior.floating,
           ),
         );
-        
-        // Reload lại danh sách thư mục hiện tại
+
+        // Tự động load lại danh sách thư mục hiện tại để hiển thị file mới lên màn hình
         await _loadDirectory(currentRemotePath);
       }
     } catch (e) {
-      debugPrint("Lỗi tiến trình upload file: $e");
+      debugPrint("Lỗi tiến trình upload file lên server: $e");
       _showErrorSnackBar('Upload file thất bại: $e');
     } finally {
+      // 7. Luôn giải phóng cờ upload để khôi phục lại trạng thái bình thường của nút bấm
       if (mounted) {
         setState(() {
           _isUploading = false;
@@ -229,7 +240,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
       }
     }
   }
-
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -258,13 +268,23 @@ class _TreeViewPageState extends State<TreeViewPage> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.home_filled, color: _navigationStack.isEmpty ? Colors.orange : Colors.grey.shade600, size: 18),
+              Icon(
+                Icons.home_filled,
+                color: _navigationStack.isEmpty
+                    ? Colors.orange
+                    : Colors.grey.shade600,
+                size: 18,
+              ),
               const SizedBox(width: 4),
               Text(
                 "Kho tổng",
                 style: TextStyle(
-                  color: _navigationStack.isEmpty ? Colors.orange : Colors.grey.shade600,
-                  fontWeight: _navigationStack.isEmpty ? FontWeight.bold : FontWeight.normal,
+                  color: _navigationStack.isEmpty
+                      ? Colors.orange
+                      : Colors.grey.shade600,
+                  fontWeight: _navigationStack.isEmpty
+                      ? FontWeight.bold
+                      : FontWeight.normal,
                   fontSize: 14,
                 ),
               ),
@@ -276,7 +296,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
     for (int i = 0; i < _navigationStack.length; i++) {
       final isLast = (i == _navigationStack.length - 1);
-      children.add(Icon(Icons.arrow_right_rounded, color: Colors.grey.shade400));
+      children.add(
+        Icon(Icons.arrow_right_rounded, color: Colors.grey.shade400),
+      );
       children.add(
         Flexible(
           child: InkWell(
@@ -319,7 +341,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87, size: 20),
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: Colors.black87,
+              size: 20,
+            ),
             onPressed: () async {
               if (!await _onWillPop()) return;
               if (context.mounted) Navigator.pop(context);
@@ -338,8 +364,14 @@ class _TreeViewPageState extends State<TreeViewPage> {
                   ),
                 )
               : Text(
-                  _navigationStack.isEmpty ? "Kho dữ liệu Phú Thành" : _navigationStack.last.name,
-                  style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 19, color: Colors.black87),
+                  _navigationStack.isEmpty
+                      ? "Kho dữ liệu Phú Thành"
+                      : _navigationStack.last.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.normal,
+                    fontSize: 19,
+                    color: Colors.black87,
+                  ),
                 ),
           actions: [
             _isSearching
@@ -378,19 +410,35 @@ class _TreeViewPageState extends State<TreeViewPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  Icon(Icons.sort_by_alpha_rounded, size: 16, color: Colors.grey.shade600),
+                  Icon(
+                    Icons.sort_by_alpha_rounded,
+                    size: 16,
+                    color: Colors.grey.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Text(
-                    _isSearching ? "Kết quả tìm kiếm (${_filteredItems.length})" : "Name",
+                    _isSearching
+                        ? "Kết quả tìm kiếm (${_filteredItems.length})"
+                        : "Name",
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                   ),
-                  if (!_isSearching) Icon(Icons.arrow_upward_rounded, size: 16, color: Colors.grey.shade600),
+                  if (!_isSearching)
+                    Icon(
+                      Icons.arrow_upward_rounded,
+                      size: 16,
+                      color: Colors.grey.shade600,
+                    ),
                 ],
               ),
             ),
             Expanded(
               child: _isLoading
-                  ? const Center(child: CircularProgressIndicator(color: Colors.orange, strokeWidth: 2))
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Colors.orange,
+                        strokeWidth: 2,
+                      ),
+                    )
                   : RefreshIndicator(
                       color: Colors.orange,
                       onRefresh: _handleRefresh,
@@ -399,11 +447,17 @@ class _TreeViewPageState extends State<TreeViewPage> {
                               physics: const AlwaysScrollableScrollPhysics(),
                               children: [
                                 SizedBox(
-                                  height: MediaQuery.of(context).size.height * 0.5,
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.5,
                                   child: Center(
                                     child: Text(
-                                      _isSearching ? "Không tìm thấy kết quả" : "Thư mục trống",
-                                      style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
+                                      _isSearching
+                                          ? "Không tìm thấy kết quả"
+                                          : "Thư mục trống",
+                                      style: TextStyle(
+                                        color: Colors.grey.shade400,
+                                        fontSize: 15,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -412,16 +466,30 @@ class _TreeViewPageState extends State<TreeViewPage> {
                           : ListView.separated(
                               physics: const AlwaysScrollableScrollPhysics(),
                               itemCount: _filteredItems.length,
-                              separatorBuilder: (context, index) => const Divider(height: 1, thickness: 0.5, indent: 70),
+                              separatorBuilder: (context, index) =>
+                                  const Divider(
+                                    height: 1,
+                                    thickness: 0.5,
+                                    indent: 70,
+                                  ),
                               itemBuilder: (context, index) {
                                 final file = _filteredItems[index];
                                 return ListTile(
                                   onTap: () => _onItemClick(file),
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 4,
+                                  ),
                                   leading: file.isFolder
-                                      ? const Icon(Icons.folder_rounded, color: Colors.orange, size: 42)
+                                      ? const Icon(
+                                          Icons.folder_rounded,
+                                          color: Colors.orange,
+                                          size: 42,
+                                        )
                                       : ClipRRect(
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                           child: Container(
                                             width: 42,
                                             height: 42,
@@ -431,13 +499,23 @@ class _TreeViewPageState extends State<TreeViewPage> {
                                         ),
                                   title: Text(
                                     file.name,
-                                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400, color: Colors.black),
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.black,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   subtitle: Padding(
                                     padding: const EdgeInsets.only(top: 2),
-                                    child: Text(_getSubtitle(file), style: TextStyle(fontSize: 12.5, color: Colors.grey.shade500)),
+                                    child: Text(
+                                      _getSubtitle(file),
+                                      style: TextStyle(
+                                        fontSize: 12.5,
+                                        color: Colors.grey.shade500,
+                                      ),
+                                    ),
                                   ),
                                 );
                               },
@@ -473,14 +551,53 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
   Widget _buildFilePreview(String fileName) {
     final name = fileName.toLowerCase();
-    if (name.endsWith('.pdf')) return const Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 24);
-    if (name.endsWith('.doc') || name.endsWith('.docx')) return const Icon(Icons.description_rounded, color: Colors.blueAccent, size: 24);
-    if (name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv')) return const Icon(Icons.table_view_rounded, color: Colors.green, size: 24);
-    if (name.endsWith('.ppt') || name.endsWith('.pptx')) return const Icon(Icons.slideshow_rounded, color: Colors.deepOrange, size: 24);
-    if (name.endsWith('.txt')) return const Icon(Icons.article_rounded, color: Colors.blueGrey, size: 24);
-    if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg')) return const Icon(Icons.image_rounded, color: Colors.purple, size: 24);
-    if (name.endsWith('.zip') || name.endsWith('.rar')) return const Icon(Icons.folder_zip_rounded, color: Colors.amber, size: 24);
-    return Icon(Icons.insert_drive_file_rounded, color: Colors.grey.shade400, size: 24);
+    if (name.endsWith('.pdf'))
+      return const Icon(
+        Icons.picture_as_pdf,
+        color: Colors.redAccent,
+        size: 24,
+      );
+    if (name.endsWith('.doc') || name.endsWith('.docx'))
+      return const Icon(
+        Icons.description_rounded,
+        color: Colors.blueAccent,
+        size: 24,
+      );
+    if (name.endsWith('.xls') ||
+        name.endsWith('.xlsx') ||
+        name.endsWith('.csv'))
+      return const Icon(
+        Icons.table_view_rounded,
+        color: Colors.green,
+        size: 24,
+      );
+    if (name.endsWith('.ppt') || name.endsWith('.pptx'))
+      return const Icon(
+        Icons.slideshow_rounded,
+        color: Colors.deepOrange,
+        size: 24,
+      );
+    if (name.endsWith('.txt'))
+      return const Icon(
+        Icons.article_rounded,
+        color: Colors.blueGrey,
+        size: 24,
+      );
+    if (name.endsWith('.png') ||
+        name.endsWith('.jpg') ||
+        name.endsWith('.jpeg'))
+      return const Icon(Icons.image_rounded, color: Colors.purple, size: 24);
+    if (name.endsWith('.zip') || name.endsWith('.rar'))
+      return const Icon(
+        Icons.folder_zip_rounded,
+        color: Colors.amber,
+        size: 24,
+      );
+    return Icon(
+      Icons.insert_drive_file_rounded,
+      color: Colors.grey.shade400,
+      size: 24,
+    );
   }
 
   Future<void> _onItemClick(FileNode file) async {
@@ -499,7 +616,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
   void _showFileActionSheet(FileNode file) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (context) {
         return SafeArea(
           child: Column(
@@ -507,18 +626,35 @@ class _TreeViewPageState extends State<TreeViewPage> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(file.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
+                child: Text(
+                  file.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(Icons.open_in_new_rounded, color: Colors.orange),
+                leading: const Icon(
+                  Icons.open_in_new_rounded,
+                  color: Colors.orange,
+                ),
                 title: const Text('Mở file'),
-                onTap: () { Navigator.pop(context); _handleFileAction(file, actionType: 'open'); },
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleFileAction(file, actionType: 'open');
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.share_rounded, color: Colors.blue),
                 title: const Text('Chia sẻ qua ứng dụng khác (Zalo,...)'),
-                onTap: () { Navigator.pop(context); _handleFileAction(file, actionType: 'share'); },
+                onTap: () {
+                  Navigator.pop(context);
+                  _handleFileAction(file, actionType: 'share');
+                },
               ),
               const SizedBox(height: 8),
             ],
@@ -528,14 +664,32 @@ class _TreeViewPageState extends State<TreeViewPage> {
     );
   }
 
-  Future<void> _handleFileAction(FileNode file, {required String actionType}) async {
+  Future<void> _handleFileAction(
+    FileNode file, {
+    required String actionType,
+  }) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: Text(actionType == 'share' ? 'Đang chuẩn bị chia sẻ file: ${file.name}...' : 'Đang tải file: ${file.name}...', style: const TextStyle(fontSize: 14), overflow: TextOverflow.ellipsis)),
+            Expanded(
+              child: Text(
+                actionType == 'share'
+                    ? 'Đang chuẩn bị chia sẻ file: ${file.name}...'
+                    : 'Đang tải file: ${file.name}...',
+                style: const TextStyle(fontSize: 14),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         behavior: SnackBarBehavior.floating,
@@ -552,7 +706,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
         if (actionType == 'open') {
           final result = await OpenFilex.open(fullFilePath);
           if (result.type != ResultType.done && mounted) {
-            _showErrorSnackBar('Không tìm thấy ứng dụng phù hợp để mở file này.');
+            _showErrorSnackBar(
+              'Không tìm thấy ứng dụng phù hợp để mở file này.',
+            );
           }
         } else if (actionType == 'share') {
           final box = context.findRenderObject() as RenderBox?;
@@ -562,7 +718,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
               files: filesToShare,
               text: null,
               subject: null,
-              sharePositionOrigin: box != null ? (box.localToGlobal(Offset.zero) & box.size) : null,
+              sharePositionOrigin: box != null
+                  ? (box.localToGlobal(Offset.zero) & box.size)
+                  : null,
             ),
           );
         }
