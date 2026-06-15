@@ -139,6 +139,8 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
   // 👉 HÀM KÍCH HOẠT KHI ẤN NÚT FLOATING ACTION BUTTON ĐỂ CHỌN VÀ UPLOAD FILE
   // Tạo thêm một biến cờ vật lý chuyên biệt để khóa cứng luồng click ngay lập tức
+
+// Biến cờ chặn click trùng (Đảm bảo biến này đã khai báo ở cấp class State)
   bool _isPickerOpenActive = false;
 
   Future<void> _handlePickAndUploadFile() async {
@@ -154,48 +156,37 @@ class _TreeViewPageState extends State<TreeViewPage> {
       // Đánh dấu hệ thống đang mở Picker để khóa toàn bộ các click tiếp theo
       _isPickerOpenActive = true;
 
-      // 2. TẠM DỪNG XÓA CACHE: Bọc try-catch kỹ lệnh clearTemporaryFiles
-      // vì hàm này đôi khi cũng chiếm dụng luồng MethodChannel của FilePicker
-      try {
-        await FilePicker.platform.clearTemporaryFiles();
-      } catch (e) {
-        debugPrint("Không có file tạm cần dọn dẹp: $e");
-      }
-
-      // 3. Trì hoãn 300ms để luồng UI Flutter và luồng Native OS hoàn toàn ổn định
+      // 2. Trì hoãn 300ms để luồng UI Flutter và luồng Native OS hoàn toàn ổn định
       await Future.delayed(const Duration(milliseconds: 300));
 
-      debugPrint("🚀 Bắt đầu gọi cửa sổ chọn file từ Hệ điều hành...");
+      debugPrint("🚀 Bắt đầu gọi cửa sổ chọn file (Cú pháp cũ tương thích Xcode)...");
 
-      // 4. Kích hoạt gọi cửa sổ chọn file với cấu hình chuẩn tối ưu cho Mobile từ Example
-      result = await FilePicker.platform.pickFiles(
-        type: FileType.any,         // Chọn bất kỳ loại file nào (PDF, Excel, Word, Image...)
-        allowMultiple: false,       // Chỉ cho phép chọn duy nhất 1 file
-        withData: false,            // TỐI ƯU MOBILE: KHÔNG nạp byte vào RAM để tránh crash (OOM)
-        withReadStream: false,      // Không mở luồng stream trực tiếp khi không cần thiết
+      // 3. SỬA TẠI ĐÂY: Gọi trực tiếp FilePicker.pickFiles (Bỏ hoàn toàn chữ .platform và clearTemporaryFiles)
+      result = await FilePicker.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
       );
     } catch (e) {
       debugPrint("❌ Lỗi nghiêm trọng khi gọi Native Picker: $e");
       _showErrorSnackBar("Không thể mở trình duyệt chọn file. Hãy thử lại!");
       return;
     } finally {
-      // Luôn giải phóng cờ khóa mở picker trong khối finally để người dùng có thể bấm lại lần sau
+      // Luôn giải phóng cờ khóa mở picker trong khối finally
       _isPickerOpenActive = false;
     }
 
-    // 5. Kiểm tra nếu người dùng không chọn file nào (bấm back hoặc hủy bỏ)
+    // 4. Kiểm tra nếu người dùng không chọn file nào (bấm back hoặc hủy bỏ)
     if (result == null || result.files.isEmpty || result.files.single.path == null) {
       debugPrint("👉 Người dùng đã chủ động hủy bỏ hoặc thoát cửa sổ chọn file.");
       return;
     }
 
-    // 6. Sau khi đã lấy được file thành công, tiến hành bật trạng thái Upload (Hiển thị vòng xoay tại FAB)
+    // 5. Sau khi đã lấy được file thành công, tiến hành bật trạng thái Upload
     setState(() {
       _isUploading = true;
     });
 
     try {
-      // Lấy file thông qua đường dẫn vật lý (path) đã được lưu tạm trong bộ nhớ máy
       final File localFile = File(result.files.single.path!);
       final String fileName = result.files.single.name;
 
@@ -209,10 +200,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
         );
       }
 
-      // Xác định thư mục hiện tại trong ứng dụng Phú Thành
       final String currentRemotePath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
 
-      // Thực hiện gửi dữ liệu đa phần (Multipart) lên Spring Boot Backend
+      // Gửi file lên Spring Boot server Phú Thành
       final String successMessage = await service.uploadFile(currentRemotePath, localFile);
 
       if (mounted) {
@@ -225,14 +215,13 @@ class _TreeViewPageState extends State<TreeViewPage> {
           ),
         );
 
-        // Tự động load lại danh sách thư mục hiện tại để hiển thị file mới lên màn hình
+        // Reload lại danh sách thư mục hiện tại
         await _loadDirectory(currentRemotePath);
       }
     } catch (e) {
       debugPrint("Lỗi tiến trình upload file lên server: $e");
       _showErrorSnackBar('Upload file thất bại: $e');
     } finally {
-      // 7. Luôn giải phóng cờ upload để khôi phục lại trạng thái bình thường của nút bấm
       if (mounted) {
         setState(() {
           _isUploading = false;
@@ -240,7 +229,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
       }
     }
   }
-
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
