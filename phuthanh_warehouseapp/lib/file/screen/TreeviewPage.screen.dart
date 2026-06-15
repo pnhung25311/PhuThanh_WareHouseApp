@@ -502,26 +502,27 @@ bool _isPickerActive = false;
         ),
 
         // 3. THÊM NÚT FLOATINGACTIONBUTTON CHO HÀNH ĐỘNG UPLOAD FILE 👇
-floatingActionButton: FloatingActionButton(
-          // Bọc trong hàm ẩn danh để đảm bảo Flutter chỉ kích hoạt đúng 1 luồng khi click
-          onPressed: _isUploading 
-              ? null 
-              : () {
-                  _handlePickAndUploadFile();
-                },
-          backgroundColor: _isUploading ? Colors.grey : Colors.orange,
-          tooltip: 'Tải file mới lên thư mục này',
-          child: _isUploading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : const Icon(Icons.cloud_upload_rounded, color: Colors.white),
-        ),
+// floatingActionButton: FloatingActionButton(
+//           // Bọc trong hàm ẩn danh để đảm bảo Flutter chỉ kích hoạt đúng 1 luồng khi click
+//           onPressed: _isUploading 
+//               ? null 
+//               : () {
+//                   _handlePickAndUploadFile();
+//                 },
+//           backgroundColor: _isUploading ? Colors.grey : Colors.orange,
+//           tooltip: 'Tải file mới lên thư mục này',
+//           child: _isUploading
+//               ? const SizedBox(
+//                   width: 24,
+//                   height: 24,
+//                   child: CircularProgressIndicator(
+//                     color: Colors.white,
+//                     strokeWidth: 2,
+//                   ),
+//                 )
+//               : const Icon(Icons.cloud_upload_rounded, color: Colors.white),
+//         ),
+      
       ),
     );
   }
