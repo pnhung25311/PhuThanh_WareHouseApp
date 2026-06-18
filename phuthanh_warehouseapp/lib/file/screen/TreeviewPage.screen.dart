@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:phuthanh_warehouseapp/file/service/TreeviewService.service.dart';
+import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/file/FileNode.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
@@ -17,7 +18,8 @@ class TreeViewPage extends StatefulWidget {
 
 class _TreeViewPageState extends State<TreeViewPage> {
   final Treeviewservice service = Treeviewservice();
-
+  final MySharedPreferences prefs = MySharedPreferences();
+  
   // Quản lý Stack điều hướng: Thư mục hiện tại nằm ở cuối danh sách
   final List<FileNode> _navigationStack = [];
 
@@ -25,17 +27,29 @@ class _TreeViewPageState extends State<TreeViewPage> {
   List<FileNode> _filteredItems = []; // Item sau khi lọc tìm kiếm
   bool _isLoading = true;
 
-  // Trạng thái cho chức năng Tìm kiếm
+  // Trạng thái cho chức năng Tìm kiếm & Upload
   bool _isSearching = false;
-  bool _isUploading =
-      false; // Trạng thái hiển thị vòng xoay loading tại nút bấm
+  bool _isUploading = false; 
   final TextEditingController _searchController = TextEditingController();
+  String accid = "";
 
   @override
   void initState() {
     super.initState();
-    _loadDirectory(""); // Load thư mục gốc ban đầu
+    _initData();
     _searchController.addListener(_onSearchChanged);
+  }
+
+  void _initData() async {
+    final acc = await prefs.getDataObject("account");
+    if (acc != null && acc["AccountID"] != null) {
+      setState(() {
+        accid = acc["AccountID"].toString();
+      });
+      _loadDirectory(accid, "");
+    } else {
+      debugPrint("❌ Không tìm thấy thông tin AccountID trong SharedPreferences");
+    }
   }
 
   @override
@@ -44,14 +58,14 @@ class _TreeViewPageState extends State<TreeViewPage> {
     super.dispose();
   }
 
-  // Hàm load dữ liệu của một thư mục cụ thể
-  Future<void> _loadDirectory(String path) async {
+  // Hàm load dữ liệu từ Server
+  Future<void> _loadDirectory(String accId, String path) async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      final data = await service.loadChildren(path);
+      final data = await service.loadChildren(accId, path);
       setState(() {
         _allCurrentItems = data;
         _filteredItems = data;
@@ -63,7 +77,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
       });
     } catch (e) {
       debugPrint("Lỗi tải thư mục: $e");
-      _showErrorSnackBar('Không thể tải dữ liệu: $e');
+      _showErrorSnackBar('Không thể tải dữ liệu từ Server: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -73,13 +87,130 @@ class _TreeViewPageState extends State<TreeViewPage> {
     }
   }
 
-  // Kéo xuống listview để reload lại dữ liệu thư mục hiện tại
-  Future<void> _handleRefresh() async {
-    final String currentRemotePath = _navigationStack.isEmpty
-        ? ""
-        : _navigationStack.last.path;
-    await _loadDirectory(currentRemotePath);
+// ==================== CHỨC NĂNG ĐỒNG BỘ TRUE SYNC (LOCAL -> SERVER) ====================
+  Future<void> _handleTrueSync() async {
+    if (_isLoading || _isUploading) return;
+
+    if (_navigationStack.isEmpty) {
+      _showErrorSnackBar("Vui lòng vào một thư mục/ổ đĩa cụ thể để thực hiện đồng bộ file cục bộ!");
+      return;
+    }
+
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final baseDir = await getApplicationDocumentsDirectory();
+      final String currentRemotePath = _navigationStack.last.path;
+      
+      String cleanRemotePath = currentRemotePath;
+      if (cleanRemotePath.startsWith('/')) cleanRemotePath = cleanRemotePath.substring(1);
+      final String localFolderPath = "${baseDir.path}/$cleanRemotePath";
+      final Directory localDir = Directory(localFolderPath);
+
+      if (!await localDir.exists()) {
+        _showSuccessSnackBar("Thư mục cục bộ trống. Không có file nào cần đồng bộ lên server.");
+        return;
+      }
+
+      final List<File> localFiles = [];
+      try {
+        final List<FileSystemEntity> entities = localDir.listSync(recursive: false, followLinks: false);
+        for (var entity in entities) {
+          if (entity is File) {
+            final String name = entity.path.split('/').last;
+            if (!name.startsWith('.')) {
+              localFiles.add(entity);
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint("❌ Lỗi khi đọc danh sách file hệ thống local: $e");
+      }
+
+      if (localFiles.isEmpty) {
+        _showSuccessSnackBar("Không tìm thấy file hợp lệ nào ở bộ nhớ máy để đồng bộ.");
+        return;
+      }
+
+      final List<String> serverFileNames = _allCurrentItems
+          .where((item) => !item.folder)
+          .map((item) => item.name.toLowerCase().trim())
+          .toList();
+
+      final List<File> filesToUpload = localFiles.where((localFile) {
+        final String localFileName = localFile.path.split('/').last.toLowerCase().trim();
+        return !serverFileNames.contains(localFileName);
+      }).toList();
+
+      if (filesToUpload.isEmpty) {
+        _showSuccessSnackBar("Tất cả file cục bộ đã đồng bộ hoàn toàn với Server!");
+        return;
+      }
+
+      int successCount = 0;
+      List<String> errorMessages = []; // Lưu trữ các lỗi xảy ra trong quá trình upload
+
+      for (File file in filesToUpload) {
+        final String fileName = file.path.split('/').last;
+        debugPrint("🔄 Đang tự động đẩy file: $fileName lên Server...");
+        
+        try {
+          final String responseMessage = await service.uploadFile(currentRemotePath, file);
+          
+          // Kiểm tra nếu Server không trả về Exception nhưng trả về chuỗi text chứa từ khóa lỗi quyền
+          final String lowerResponse = responseMessage.toLowerCase();
+          if (lowerResponse.contains("không có quyền") || 
+              lowerResponse.contains("denied") || 
+              lowerResponse.contains("forbidden") ||
+              lowerResponse.contains("chưa đăng nhập")) {
+            errorMessages.add("$fileName: $responseMessage");
+          } else {
+            successCount++;
+          }
+        } catch (uploadError) {
+          debugPrint("❌ Lỗi khi upload file $fileName: $uploadError");
+          
+          // Chuẩn hóa câu chữ lỗi bóc ra từ Exception (ví dụ: 403 Forbidden)
+          String errorStr = uploadError.toString();
+          if (errorStr.contains("403") || errorStr.contains("Forbidden")) {
+            errorStr = "Tài khoản không có quyền ghi/upload vào thư mục này (403).";
+          } else if (errorStr.contains("401") || errorStr.contains("Unauthorized")) {
+            errorStr = "Phiên đăng nhập hết hạn hoặc không hợp lệ (401).";
+          }
+          
+          errorMessages.add("$fileName: $errorStr");
+        }
+      }
+
+      // 6. Biện luận kết quả sau khi kết thúc vòng lặp để đưa ra thông báo chính xác
+      await _loadDirectory(accid, currentRemotePath); // Reload lại cây thư mục trước
+
+      if (errorMessages.isNotEmpty) {
+        if (successCount == 0) {
+          // Trường hợp thất bại hoàn toàn do chặn quyền
+          _showErrorSnackBar("Đồng bộ thất bại! Bạn không có quyền upload tệp tin vào đây.");
+        } else {
+          // Thất bại một phần
+          _showErrorSnackBar("Đã đẩy $successCount file. Thất bại ${errorMessages.length} file do lỗi hoặc chặn quyền.");
+        }
+      } else {
+        _showSuccessSnackBar("Đã đồng bộ thành công tất cả ($successCount/${filesToUpload.length}) file lên Server!");
+      }
+
+    } catch (e) {
+      debugPrint("Lỗi True Sync: $e");
+      _showErrorSnackBar("Quá trình đồng bộ xảy ra lỗi: $e");
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
   }
+// ===================================================================================
 
   // Xử lý bộ lọc tìm kiếm
   void _onSearchChanged() {
@@ -107,13 +238,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
       _searchController.clear();
     });
 
-    final targetPath = _navigationStack.isEmpty
-        ? ""
-        : _navigationStack.last.path;
-    await _loadDirectory(targetPath);
+    final targetPath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
+    await _loadDirectory(accid, targetPath);
   }
 
-  // Xử lý nút Back vật lý hoặc nút Back trên thanh ứng dụng
+  // Xử lý nút Back vật lý hoặc trên AppBar
   Future<bool> _onWillPop() async {
     if (_isSearching) {
       setState(() {
@@ -128,98 +257,45 @@ class _TreeViewPageState extends State<TreeViewPage> {
       setState(() {
         _navigationStack.removeLast();
       });
-      final parentPath = _navigationStack.isEmpty
-          ? ""
-          : _navigationStack.last.path;
-      await _loadDirectory(parentPath);
+      final parentPath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
+      await _loadDirectory(accid, parentPath);
       return false;
     }
     return true;
   }
 
-  // 👉 HÀM KÍCH HOẠT KHI ẤN NÚT FLOATING ACTION BUTTON ĐỂ CHỌN VÀ UPLOAD FILE
-  // Tạo thêm một biến cờ vật lý chuyên biệt để khóa cứng luồng click ngay lập tức
-
-// Biến cờ chặn click trùng (Đảm bảo biến này đã khai báo ở cấp class State)
   bool _isPickerOpenActive = false;
 
+  // Chọn file thủ công bằng tay từ điện thoại đưa lên Server
   Future<void> _handlePickAndUploadFile() async {
-    // 1. KIỂM TRA PHONG TỎA: Nếu đang bận upload HOẶC đang mở picker thì chặn click ngay lập tức
-    if (_isUploading || _isPickerOpenActive) {
-      debugPrint("⚠️ Chặn click trùng lặp! Tiến trình trước đó chưa xử lý xong.");
-      return;
-    }
+    if (_isUploading || _isPickerOpenActive) return;
 
     FilePickerResult? result;
-
     try {
-      // Đánh dấu hệ thống đang mở Picker để khóa toàn bộ các click tiếp theo
       _isPickerOpenActive = true;
-
-      // 2. Trì hoãn 300ms để luồng UI Flutter và luồng Native OS hoàn toàn ổn định
       await Future.delayed(const Duration(milliseconds: 300));
-
-      debugPrint("🚀 Bắt đầu gọi cửa sổ chọn file (Cú pháp cũ tương thích Xcode)...");
-
-      // 3. SỬA TẠI ĐÂY: Gọi trực tiếp FilePicker.pickFiles (Bỏ hoàn toàn chữ .platform và clearTemporaryFiles)
-      result = await FilePicker.pickFiles(
-        type: FileType.any,
-        allowMultiple: false,
-      );
+      result = await FilePicker.pickFiles(type: FileType.any, allowMultiple: false);
     } catch (e) {
-      debugPrint("❌ Lỗi nghiêm trọng khi gọi Native Picker: $e");
-      _showErrorSnackBar("Không thể mở trình duyệt chọn file. Hãy thử lại!");
+      _showErrorSnackBar("Không thể mở cửa sổ chọn file: $e");
       return;
     } finally {
-      // Luôn giải phóng cờ khóa mở picker trong khối finally
       _isPickerOpenActive = false;
     }
 
-    // 4. Kiểm tra nếu người dùng không chọn file nào (bấm back hoặc hủy bỏ)
-    if (result == null || result.files.isEmpty || result.files.single.path == null) {
-      debugPrint("👉 Người dùng đã chủ động hủy bỏ hoặc thoát cửa sổ chọn file.");
-      return;
-    }
+    if (result == null || result.files.isEmpty || result.files.single.path == null) return;
 
-    // 5. Sau khi đã lấy được file thành công, tiến hành bật trạng thái Upload
     setState(() {
       _isUploading = true;
     });
 
     try {
       final File localFile = File(result.files.single.path!);
-      final String fileName = result.files.single.name;
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Đang upload file: $fileName...'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-
       final String currentRemotePath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
 
-      // Gửi file lên Spring Boot server Phú Thành
       final String successMessage = await service.uploadFile(currentRemotePath, localFile);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).clearSnackBars();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(successMessage),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-
-        // Reload lại danh sách thư mục hiện tại
-        await _loadDirectory(currentRemotePath);
-      }
+      _showSuccessSnackBar(successMessage);
+      await _loadDirectory(accid, currentRemotePath);
     } catch (e) {
-      debugPrint("Lỗi tiến trình upload file lên server: $e");
       _showErrorSnackBar('Upload file thất bại: $e');
     } finally {
       if (mounted) {
@@ -229,20 +305,53 @@ class _TreeViewPageState extends State<TreeViewPage> {
       }
     }
   }
+
+  // Xóa tệp/thư mục vật lý
+  Future<void> _handleDelete(FileNode item) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Xác nhận xóa ⚠️'),
+        content: Text('Bạn có chắc chắn muốn xóa "${item.name}" không?\nHành động này không thể hoàn tác!'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Hủy', style: TextStyle(color: Colors.grey))),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Xóa', style: TextStyle(color: Colors.red))),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+    setState(() => _isLoading = true);
+
+    try {
+      final String successMsg = await service.deleteFileOrFolder(item.path);
+      _showSuccessSnackBar(successMsg);
+      final String currentRemotePath = _navigationStack.isEmpty ? "" : _navigationStack.last.path;
+      await _loadDirectory(accid, currentRemotePath);
+    } catch (e) {
+      _showErrorSnackBar('Không thể xóa: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.redAccent, behavior: SnackBarBehavior.floating),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: Colors.green, behavior: SnackBarBehavior.floating),
     );
   }
 
   String _getSubtitle(FileNode file) {
     final String fakeDate = "Jun 21, 2022 20:56";
-    return file.isFolder ? "$fakeDate  •  Thư mục" : "$fakeDate  •  Mở File";
+    return file.folder ? "$fakeDate  •  Thư mục" : "$fakeDate  •  Mở File";
   }
 
   Widget _buildBreadcrumbs() {
@@ -256,23 +365,13 @@ class _TreeViewPageState extends State<TreeViewPage> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.home_filled,
-                color: _navigationStack.isEmpty
-                    ? Colors.orange
-                    : Colors.grey.shade600,
-                size: 18,
-              ),
+              Icon(Icons.home_filled, color: _navigationStack.isEmpty ? Colors.orange : Colors.grey.shade600, size: 18),
               const SizedBox(width: 4),
               Text(
                 "Kho tổng",
                 style: TextStyle(
-                  color: _navigationStack.isEmpty
-                      ? Colors.orange
-                      : Colors.grey.shade600,
-                  fontWeight: _navigationStack.isEmpty
-                      ? FontWeight.bold
-                      : FontWeight.normal,
+                  color: _navigationStack.isEmpty ? Colors.orange : Colors.grey.shade600,
+                  fontWeight: _navigationStack.isEmpty ? FontWeight.bold : FontWeight.normal,
                   fontSize: 14,
                 ),
               ),
@@ -284,9 +383,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
     for (int i = 0; i < _navigationStack.length; i++) {
       final isLast = (i == _navigationStack.length - 1);
-      children.add(
-        Icon(Icons.arrow_right_rounded, color: Colors.grey.shade400),
-      );
+      children.add(Icon(Icons.arrow_right_rounded, color: Colors.grey.shade400));
       children.add(
         Flexible(
           child: InkWell(
@@ -329,11 +426,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(
-              Icons.arrow_back_ios_new_rounded,
-              color: Colors.black87,
-              size: 20,
-            ),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.black87, size: 20),
             onPressed: () async {
               if (!await _onWillPop()) return;
               if (context.mounted) Navigator.pop(context);
@@ -352,14 +445,8 @@ class _TreeViewPageState extends State<TreeViewPage> {
                   ),
                 )
               : Text(
-                  _navigationStack.isEmpty
-                      ? "Kho dữ liệu Phú Thành"
-                      : _navigationStack.last.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.normal,
-                    fontSize: 19,
-                    color: Colors.black87,
-                  ),
+                  _navigationStack.isEmpty ? "Kho dữ liệu Phú Thành" : _navigationStack.last.name,
+                  style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 19, color: Colors.black87),
                 ),
           actions: [
             _isSearching
@@ -381,9 +468,13 @@ class _TreeViewPageState extends State<TreeViewPage> {
                       });
                     },
                   ),
+            // NÚT BẤM ĐỒNG BỘ: Kích hoạt tính năng so sánh file local -> đẩy lên server
             IconButton(
-              icon: const Icon(Icons.more_vert, color: Colors.black87),
-              onPressed: () {},
+              icon: _isUploading 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.orange))
+                  : const Icon(Icons.sync_rounded, color: Colors.black87),
+              tooltip: 'Đồng bộ file từ Mobile lên Server ngay',
+              onPressed: (_isLoading || _isUploading) ? null : _handleTrueSync,
             ),
           ],
           elevation: 0,
@@ -398,54 +489,32 @@ class _TreeViewPageState extends State<TreeViewPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.sort_by_alpha_rounded,
-                    size: 16,
-                    color: Colors.grey.shade600,
-                  ),
+                  Icon(Icons.sort_by_alpha_rounded, size: 16, color: Colors.grey.shade600),
                   const SizedBox(width: 4),
                   Text(
-                    _isSearching
-                        ? "Kết quả tìm kiếm (${_filteredItems.length})"
-                        : "Name",
+                    _isSearching ? "Kết quả tìm kiếm (${_filteredItems.length})" : "Name",
                     style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                   ),
-                  if (!_isSearching)
-                    Icon(
-                      Icons.arrow_upward_rounded,
-                      size: 16,
-                      color: Colors.grey.shade600,
-                    ),
+                  if (!_isSearching) Icon(Icons.arrow_upward_rounded, size: 16, color: Colors.grey.shade600),
                 ],
               ),
             ),
             Expanded(
               child: _isLoading
-                  ? const Center(
-                      child: CircularProgressIndicator(
-                        color: Colors.orange,
-                        strokeWidth: 2,
-                      ),
-                    )
+                  ? const Center(child: CircularProgressIndicator(color: Colors.orange, strokeWidth: 2))
                   : RefreshIndicator(
                       color: Colors.orange,
-                      onRefresh: _handleRefresh,
+                      onRefresh: () => _loadDirectory(accid, _navigationStack.isEmpty ? "" : _navigationStack.last.path),
                       child: _filteredItems.isEmpty
                           ? ListView(
                               physics: const AlwaysScrollableScrollPhysics(),
                               children: [
                                 SizedBox(
-                                  height:
-                                      MediaQuery.of(context).size.height * 0.5,
+                                  height: MediaQuery.of(context).size.height * 0.5,
                                   child: Center(
                                     child: Text(
-                                      _isSearching
-                                          ? "Không tìm thấy kết quả"
-                                          : "Thư mục trống",
-                                      style: TextStyle(
-                                        color: Colors.grey.shade400,
-                                        fontSize: 15,
-                                      ),
+                                      _isSearching ? "Không tìm thấy kết quả" : "Thư mục trống",
+                                      style: TextStyle(color: Colors.grey.shade400, fontSize: 15),
                                     ),
                                   ),
                                 ),
@@ -454,55 +523,52 @@ class _TreeViewPageState extends State<TreeViewPage> {
                           : ListView.separated(
                               physics: const AlwaysScrollableScrollPhysics(),
                               itemCount: _filteredItems.length,
-                              separatorBuilder: (context, index) =>
-                                  const Divider(
-                                    height: 1,
-                                    thickness: 0.5,
-                                    indent: 70,
-                                  ),
+                              separatorBuilder: (context, index) => const Divider(height: 1, thickness: 0.5, indent: 70),
                               itemBuilder: (context, index) {
                                 final file = _filteredItems[index];
-                                return ListTile(
-                                  onTap: () => _onItemClick(file),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 4,
+
+                                return Dismissible(
+                                  key: Key(file.path),
+                                  direction: DismissDirection.endToStart,
+                                  background: Container(
+                                    color: Colors.redAccent,
+                                    alignment: Alignment.centerRight,
+                                    padding: const EdgeInsets.only(right: 20.0),
+                                    child: const Icon(Icons.delete_forever, color: Colors.white, size: 28),
                                   ),
-                                  leading: file.isFolder
-                                      ? const Icon(
-                                          Icons.folder_rounded,
-                                          color: Colors.orange,
-                                          size: 42,
-                                        )
-                                      : ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                          child: Container(
+                                  confirmDismiss: (direction) async {
+                                    _handleDelete(file);
+                                    return false;
+                                  },
+                                  child: ListTile(
+                                    onTap: () => _onItemClick(file),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                    leading: file.folder
+                                        ? Container(
                                             width: 42,
                                             height: 42,
-                                            color: Colors.grey.shade100,
-                                            child: _buildFilePreview(file.name),
-                                          ),
-                                        ),
-                                  title: Text(
-                                    file.name,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.black,
+                                            alignment: Alignment.center,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFFFF3E0),
+                                              borderRadius: BorderRadius.circular(8),
+                                              border: Border.all(color: Colors.orange.withOpacity(0.15), width: 1),
+                                            ),
+                                            child: const Icon(Icons.folder_rounded, color: Colors.orange, size: 24),
+                                          )
+                                        : _buildFilePreview(file.name),
+                                    title: Text(
+                                      file.name,
+                                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400, color: Colors.black),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  subtitle: Padding(
-                                    padding: const EdgeInsets.only(top: 2),
-                                    child: Text(
-                                      _getSubtitle(file),
-                                      style: TextStyle(
-                                        fontSize: 12.5,
-                                        color: Colors.grey.shade500,
-                                      ),
+                                    subtitle: Padding(
+                                      padding: const EdgeInsets.only(top: 2),
+                                      child: Text(_getSubtitle(file), style: TextStyle(fontSize: 12.5, color: Colors.grey.shade500)),
+                                    ),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 22),
+                                      onPressed: () => _handleDelete(file),
                                     ),
                                   ),
                                 );
@@ -512,24 +578,15 @@ class _TreeViewPageState extends State<TreeViewPage> {
             ),
           ],
         ),
-
-        // 👉 NÚT BẤM FLOATING ACTION BUTTON CHỌN FILE LÀ ĐÂY 👇
         floatingActionButton: FloatingActionButton(
-          onPressed: _isUploading
-              ? null // Vô hiệu hóa nút bấm tạm thời khi đang tải dữ liệu lên server
-              : () {
-                  _handlePickAndUploadFile(); // Thực thi tiến trình chọn file
-                },
+          onPressed: _isUploading ? null : _handlePickAndUploadFile,
           backgroundColor: _isUploading ? Colors.grey : Colors.orange,
           tooltip: 'Tải file mới lên thư mục này',
           child: _isUploading
               ? const SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
+                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                 )
               : const Icon(Icons.cloud_upload_rounded, color: Colors.white),
         ),
@@ -539,63 +596,85 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
   Widget _buildFilePreview(String fileName) {
     final name = fileName.toLowerCase();
-    if (name.endsWith('.pdf'))
-      return const Icon(
-        Icons.picture_as_pdf,
-        color: Colors.redAccent,
-        size: 24,
-      );
-    if (name.endsWith('.doc') || name.endsWith('.docx'))
-      return const Icon(
-        Icons.description_rounded,
-        color: Colors.blueAccent,
-        size: 24,
-      );
-    if (name.endsWith('.xls') ||
-        name.endsWith('.xlsx') ||
-        name.endsWith('.csv'))
-      return const Icon(
-        Icons.table_view_rounded,
-        color: Colors.green,
-        size: 24,
-      );
-    if (name.endsWith('.ppt') || name.endsWith('.pptx'))
-      return const Icon(
-        Icons.slideshow_rounded,
-        color: Colors.deepOrange,
-        size: 24,
-      );
-    if (name.endsWith('.txt'))
-      return const Icon(
-        Icons.article_rounded,
-        color: Colors.blueGrey,
-        size: 24,
-      );
-    if (name.endsWith('.png') ||
-        name.endsWith('.jpg') ||
-        name.endsWith('.jpeg'))
-      return const Icon(Icons.image_rounded, color: Colors.purple, size: 24);
-    if (name.endsWith('.zip') || name.endsWith('.rar'))
-      return const Icon(
-        Icons.folder_zip_rounded,
-        color: Colors.amber,
-        size: 24,
-      );
-    return Icon(
-      Icons.insert_drive_file_rounded,
-      color: Colors.grey.shade400,
-      size: 24,
+    IconData iconData = Icons.insert_drive_file_rounded;
+    Color mainColor = Colors.grey.shade500;
+    Color bgColor = Colors.grey.shade100;
+
+    if (name.endsWith('.pdf')) {
+      iconData = Icons.picture_as_pdf_rounded;
+      mainColor = const Color(0xFFE53935);
+      bgColor = const Color(0xFFFFEBEE);
+    } else if (name.endsWith('.doc') || name.endsWith('.docx') || name.endsWith('.odt')) {
+      iconData = Icons.description_rounded;
+      mainColor = const Color(0xFF1E88E5);
+      bgColor = const Color(0xFFE3F2FD);
+    } else if (name.endsWith('.xlsm') || name.endsWith('.xls') || name.endsWith('.xlsx') || name.endsWith('.csv') || name.endsWith('.ods')) {
+      iconData = Icons.table_view_rounded;
+      mainColor = const Color(0xFF43A047);
+      bgColor = const Color(0xFFE8F5E9);
+    } else if (name.endsWith('.ppt') || name.endsWith('.pptx') || name.endsWith('.odp')) {
+      iconData = Icons.slideshow_rounded;
+      mainColor = const Color(0xFFF4511E);
+      bgColor = const Color(0xFFFBE9E7);
+    } else if (name.endsWith('.txt') || name.endsWith('.log') || name.endsWith('.rtf')) {
+      iconData = Icons.article_rounded;
+      mainColor = const Color(0xFF78909C);
+      bgColor = const Color(0xFFECEFF1);
+    } else if (name.endsWith('.png') || name.endsWith('.jpg') || name.endsWith('.jpeg') || name.endsWith('.webp') || name.endsWith('.gif') || name.endsWith('.bmp')) {
+      iconData = Icons.image_rounded;
+      mainColor = const Color(0xFF8E24AA);
+      bgColor = const Color(0xFFF3E5F5);
+    } else if (name.endsWith('.psd') || name.endsWith('.ai') || name.endsWith('.svg') || name.endsWith('.eps')) {
+      iconData = Icons.palette_rounded;
+      mainColor = const Color(0xFFD81B60);
+      bgColor = const Color(0xFFFCE4EC);
+    } else if (name.endsWith('.dwg') || name.endsWith('.dxf') || name.endsWith('.step') || name.endsWith('.stp')) {
+      iconData = Icons.architecture_rounded;
+      mainColor = const Color(0xFF009688);
+      bgColor = const Color(0xFFE0F2F1);
+    } else if (name.endsWith('.zip') || name.endsWith('.rar') || name.endsWith('.7z') || name.endsWith('.tar') || name.endsWith('.gz')) {
+      iconData = Icons.folder_zip_rounded;
+      mainColor = const Color(0xFFFFB300);
+      bgColor = const Color(0xFFFFF8E1);
+    } else if (name.endsWith('.mp4') || name.endsWith('.mkv') || name.endsWith('.avi') || name.endsWith('.mov') || name.endsWith('.wmv') || name.endsWith('.flv')) {
+      iconData = Icons.video_collection_rounded;
+      mainColor = const Color(0xFF00ACC1);
+      bgColor = const Color(0xFFE0F7FA);
+    } else if (name.endsWith('.mp3') || name.endsWith('.wav') || name.endsWith('.wma') || name.endsWith('.flac') || name.endsWith('.m4a')) {
+      iconData = Icons.audiotrack_rounded;
+      mainColor = const Color(0xFF00BCD4);
+      bgColor = const Color(0xFFE0F7FA);
+    } else if (name.endsWith('.html') || name.endsWith('.css') || name.endsWith('.js') || name.endsWith('.dart') || name.endsWith('.java') || name.endsWith('.py') || name.endsWith('.json') || name.endsWith('.xml') || name.endsWith('.sql')) {
+      iconData = Icons.code_rounded;
+      mainColor = const Color(0xFF3F51B5);
+      bgColor = const Color(0xFFE8EAF6);
+    } else if (name.endsWith('.exe') || name.endsWith('.msi') || name.endsWith('.apk') || name.endsWith('.dmg')) {
+      iconData = Icons.settings_system_daydream_rounded;
+      mainColor = const Color(0xFF455A64);
+      bgColor = const Color(0xFFCFD8DC);
+    }
+
+    return Container(
+      width: 42,
+      height: 42,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: mainColor.withOpacity(0.15), width: 1),
+      ),
+      child: Icon(iconData, color: mainColor, size: 22),
     );
   }
 
   Future<void> _onItemClick(FileNode file) async {
-    if (file.isFolder) {
+    if (file.folder) {
       setState(() {
         _navigationStack.add(file);
         _isSearching = false;
         _searchController.clear();
       });
-      await _loadDirectory(file.path);
+      await _loadDirectory(accid, file.path);
     } else {
       _showFileActionSheet(file);
     }
@@ -604,9 +683,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
   void _showFileActionSheet(FileNode file) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
       builder: (context) {
         return SafeArea(
           child: Column(
@@ -614,22 +691,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  file.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                child: Text(file.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(
-                  Icons.open_in_new_rounded,
-                  color: Colors.orange,
-                ),
+                leading: const Icon(Icons.open_in_new_rounded, color: Colors.orange),
                 title: const Text('Mở file'),
                 onTap: () {
                   Navigator.pop(context);
@@ -652,28 +718,17 @@ class _TreeViewPageState extends State<TreeViewPage> {
     );
   }
 
-  Future<void> _handleFileAction(
-    FileNode file, {
-    required String actionType,
-  }) async {
+  Future<void> _handleFileAction(FileNode file, {required String actionType}) async {
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            ),
+            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                actionType == 'share'
-                    ? 'Đang chuẩn bị chia sẻ file: ${file.name}...'
-                    : 'Đang tải file: ${file.name}...',
+                actionType == 'share' ? 'Đang chuẩn bị chia sẻ file: ${file.name}...' : 'Đang tải file: ${file.name}...',
                 style: const TextStyle(fontSize: 14),
                 overflow: TextOverflow.ellipsis,
               ),
@@ -686,17 +741,19 @@ class _TreeViewPageState extends State<TreeViewPage> {
     );
 
     try {
-      await service.downloadFile(file.path, file.name);
-      final dir = await getApplicationDocumentsDirectory();
-      final String fullFilePath = "${dir.path}/${file.name}";
+      final baseDir = await getApplicationDocumentsDirectory();
+      String remotePath = file.path;
+      if (remotePath.startsWith('/')) remotePath = remotePath.substring(1);
 
-      if (await File(fullFilePath).exists()) {
+      final String fullFilePath = "${baseDir.path}/$remotePath";
+      await service.downloadFile(file.path, fullFilePath);
+
+      final File targetFile = File(fullFilePath);
+      if (await targetFile.exists()) {
         if (actionType == 'open') {
           final result = await OpenFilex.open(fullFilePath);
           if (result.type != ResultType.done && mounted) {
-            _showErrorSnackBar(
-              'Không tìm thấy ứng dụng phù hợp để mở file này.',
-            );
+            _showErrorSnackBar('Không tìm thấy ứng dụng phù hợp để mở file này.');
           }
         } else if (actionType == 'share') {
           final box = context.findRenderObject() as RenderBox?;
@@ -706,17 +763,15 @@ class _TreeViewPageState extends State<TreeViewPage> {
               files: filesToShare,
               text: null,
               subject: null,
-              sharePositionOrigin: box != null
-                  ? (box.localToGlobal(Offset.zero) & box.size)
-                  : null,
+              sharePositionOrigin: box != null ? (box.localToGlobal(Offset.zero) & box.size) : null,
             ),
           );
         }
       } else {
-        _showErrorSnackBar('File không tồn tại sau khi tải về.');
+        _showErrorSnackBar('Lỗi: File không tồn tại sau khi tải về cấu trúc thư mục.');
       }
     } catch (e) {
-      debugPrint("Lỗi xử lý file ($actionType): $e");
+      debugPrint("❌ Lỗi cấu trúc thư mục & xử lý file ($actionType): $e");
       if (mounted) _showErrorSnackBar('Xảy ra lỗi khi xử lý file: $e');
     }
   }

@@ -35,6 +35,7 @@ class ApiClient {
     final url = Uri.parse('$baseUrl$endpoint');
     final token = AppState.instance.get("token");
     print("TOKEN = $token");
+    print(url );
     return await http.get(
       url,
       headers: {
