@@ -718,61 +718,86 @@ class _TreeViewPageState extends State<TreeViewPage> {
     );
   }
 
-  Future<void> _handleFileAction(FileNode file, {required String actionType}) async {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                actionType == 'share' ? 'Đang chuẩn bị chia sẻ file: ${file.name}...' : 'Đang tải file: ${file.name}...',
-                style: const TextStyle(fontSize: 14),
-                overflow: TextOverflow.ellipsis,
-              ),
+Future<void> _handleFileAction(FileNode file, {required String actionType}) async {
+  ScaffoldMessenger.of(context).clearSnackBars();
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Row(
+        children: [
+          const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              actionType == 'share' ? 'Đang chuẩn bị chia sẻ file: ${file.name}...' : 'Đang tải file về máy: ${file.name}...',
+              style: const TextStyle(fontSize: 14),
+              overflow: TextOverflow.ellipsis,
             ),
-          ],
-        ),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
+          ),
+        ],
       ),
-    );
+      behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 2),
+    ),
+  );
 
-    try {
-      final baseDir = await getApplicationDocumentsDirectory();
-      String remotePath = file.path;
-      if (remotePath.startsWith('/')) remotePath = remotePath.substring(1);
+  try {
+    String? downloadsDirPath;
 
-      final String fullFilePath = "${baseDir.path}/$remotePath";
-      await service.downloadFile(file.path, fullFilePath);
-
-      final File targetFile = File(fullFilePath);
-      if (await targetFile.exists()) {
-        if (actionType == 'open') {
-          final result = await OpenFilex.open(fullFilePath);
-          if (result.type != ResultType.done && mounted) {
-            _showErrorSnackBar('Không tìm thấy ứng dụng phù hợp để mở file này.');
-          }
-        } else if (actionType == 'share') {
-          final box = context.findRenderObject() as RenderBox?;
-          final filesToShare = <XFile>[XFile(fullFilePath, name: file.name)];
-          await SharePlus.instance.share(
-            ShareParams(
-              files: filesToShare,
-              text: null,
-              subject: null,
-              sharePositionOrigin: box != null ? (box.localToGlobal(Offset.zero) & box.size) : null,
-            ),
-          );
-        }
-      } else {
-        _showErrorSnackBar('Lỗi: File không tồn tại sau khi tải về cấu trúc thư mục.');
+    if (Platform.isAndroid) {
+      // 📂 Đối với Android: Trỏ thẳng vào thư mục /storage/emulated/0/Download công khai của máy
+      downloadsDirPath = '/storage/emulated/0/Download';
+      
+      // Kiểm tra xem thư mục có tồn tại không (phòng trường hợp máy đặc biệt)
+      final androidDownloadsDir = Directory(downloadsDirPath);
+      if (!await androidDownloadsDir.exists()) {
+        // Phương án dự phòng nếu đường dẫn cứng không tồn tại
+        final externalDir = await getExternalStorageDirectory();
+        downloadsDirPath = externalDir?.path;
       }
-    } catch (e) {
-      debugPrint("❌ Lỗi cấu trúc thư mục & xử lý file ($actionType): $e");
-      if (mounted) _showErrorSnackBar('Xảy ra lỗi khi xử lý file: $e');
+    } else if (Platform.isIOS) {
+      // 📂 Đối với iOS: Lưu vào thư mục Documents công khai (Người dùng có thể xem qua app "Tệp" - Files)
+      final iosDir = await getApplicationDocumentsDirectory();
+      downloadsDirPath = iosDir.path;
     }
+
+    if (downloadsDirPath == null) {
+      _showErrorSnackBar('Không tìm thấy thư mục lưu trữ trên thiết bị.');
+      return;
+    }
+
+    // Thiết lập đường dẫn file đầy đủ (Lưu trực tiếp vào thư mục Downloads với tên file gốc)
+    final String fullFilePath = "$downloadsDirPath/${file.name}";
+    final File targetFile = File(fullFilePath);
+
+    // Tiến hành tải file từ Server về máy thật
+    await service.downloadFile(file.path, fullFilePath);
+
+    if (await targetFile.exists()) {
+      // Thông báo tải thành công và hiển thị vị trí lưu cho người dùng biết
+      _showSuccessSnackBar('Đã tải xong! File lưu tại: Thư mục Tải về (Download) > ${file.name}');
+
+      if (actionType == 'open') {
+        // Mở file ngay bằng OpenFilex từ máy thật
+        final result = await OpenFilex.open(fullFilePath);
+        if (result.type != ResultType.done && mounted) {
+          _showErrorSnackBar('Không tìm thấy ứng dụng phù hợp để mở file.');
+        }
+      } else if (actionType == 'share') {
+        final box = context.findRenderObject() as RenderBox?;
+        final filesToShare = <XFile>[XFile(fullFilePath, name: file.name)];
+        
+        await Share.shareXFiles(
+          filesToShare,
+          sharePositionOrigin: box != null ? (box.localToGlobal(Offset.zero) & box.size) : null,
+        );
+      }
+    } else {
+      _showErrorSnackBar('Lỗi: File không tồn tại sau khi tải.');
+    }
+  } catch (e) {
+    debugPrint("❌ Lỗi tải vào bộ nhớ thật ($actionType): $e");
+    if (mounted) _showErrorSnackBar('Xảy ra lỗi khi xử lý file: $e');
   }
+}
+
 }
