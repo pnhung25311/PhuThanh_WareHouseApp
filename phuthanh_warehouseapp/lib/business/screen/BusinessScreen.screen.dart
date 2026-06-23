@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/cart/ScanBusinessBarcodeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomBusinessLongClick.custom.dart';
-import 'package:phuthanh_warehouseapp/business/components/CustomDrawerBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomProductBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawerUtils.custom.dart';
 
 class BusinessScreen extends StatefulWidget {
   const BusinessScreen({super.key});
@@ -208,7 +208,7 @@ class _BusinessScreenState extends State<BusinessScreen> {
           ),
         ],
       ),
-      drawer: CustomDrawerBusiness(),
+      drawer: CustomDrawerUtils(),
       body: _isLoading
           ? _buildLoading()
           : _errorMessage != null

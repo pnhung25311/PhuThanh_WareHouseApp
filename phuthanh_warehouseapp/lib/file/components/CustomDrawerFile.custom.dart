@@ -1,91 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/UserProfile.screen.dart';
 import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
-import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawerLongClick.custom.dart';
+import 'package:phuthanh_warehouseapp/file/screen/TreeviewPage.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
-import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/service/WareHouseService.service.dart';
+import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
-class CustomDrawer extends StatefulWidget {
+class CustomDrawerFile extends StatefulWidget {
   final VoidCallback? onWarehouseSelected;
 
-  const CustomDrawer({super.key, this.onWarehouseSelected});
+  const CustomDrawerFile({super.key, this.onWarehouseSelected});
 
   @override
-  State<CustomDrawer> createState() => _CustomDrawerState();
+  State<CustomDrawerFile> createState() => _CustomDrawerFileState();
 }
 
-class _CustomDrawerState extends State<CustomDrawer> {
-  List<DrawerItem> _drawerItems = [];
-  int? _selectedWarehouseId;
-  bool _loading = true;
-  String? _error;
-  Warehouseservice warehouseservice = Warehouseservice();
+class _CustomDrawerFileState extends State<CustomDrawerFile> {
   NavigationHelper navigationHelper = NavigationHelper();
   MySharedPreferences mySharedPreferences = MySharedPreferences();
-  DrawerLongClick drawerLongClick = DrawerLongClick();
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchWarehouses();
-  }
-
-  Future<void> _fetchWarehouses() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-
-    try {
-      final list = await warehouseservice.getItemhWareHouse();
-      AppState.instance.set("listItemDrawer", list);
-
-      setState(() {
-        _drawerItems = list;
-
-        if (list.isNotEmpty) {
-          final savedItem = AppState.instance.get("itemDrawer");
-
-          if (savedItem != null) {
-            _selectedWarehouseId = savedItem.wareHouseID;
-          } else {
-            _selectedWarehouseId = list.first.wareHouseID;
-            AppState.instance.set("itemDrawer", list.first);
-          }
-        }
-
-        _loading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
-  }
-
-  void _onTapWarehouse(DrawerItem item) {
-    setState(() {
-      _selectedWarehouseId = item.wareHouseID;
-    });
-
-    AppState.instance.set("itemDrawer", item);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Đang ở ${item.nameWareHouse}'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-
-    widget.onWarehouseSelected?.call();
-    navigationHelper.pop(context);
-  }
 
   void _onLogout() {
     showDialog(
@@ -148,6 +83,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   );
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.insert_drive_file, color: Colors.green),
+                title: const Text("Quản lý tệp tin"),
+                onTap: () {
+                  navigationHelper.pop(context);
+                  navigationHelper.pushAndRemoveUntil(
+                    context,
+                    const TreeViewPage(),
+                  );
+                },
+              ),
             ],
           ),
         );
@@ -160,15 +106,18 @@ class _CustomDrawerState extends State<CustomDrawer> {
     return Drawer(
       child: Column(
         children: [
-          /// ===== HEADER =====
+          /// HEADER
           FutureBuilder<Map<String, dynamic>?>(
             future: mySharedPreferences.getDataObject('account'),
             builder: (context, snapshot) {
               String fullname = "User";
+              // String avatarUrl = '';
+              Account? account;
 
               if (snapshot.hasData && snapshot.data != null) {
-                final account = Account.fromJson(snapshot.data!);
+                account = Account.fromJson(snapshot.data!);
                 fullname = account.FullName;
+                // avatarUrl = account.Avatar;
               }
               final NameSys = AppState.instance.get("selectedSystemName");
 
@@ -186,16 +135,36 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.white,
-                            radius: 30,
-                            child: Icon(
-                              Icons.person,
-                              color: Colors.blue,
-                              size: 35,
+                          GestureDetector(
+                            onTap: () {
+                              if (account != null) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        UserProfileScreen(account: account!),
+                                  ),
+                                );
+                              }
+                            },
+                            child: CircleAvatar(
+                              radius: 30,
+                              backgroundColor: Colors.white,
+                              backgroundImage:
+                                  (account?.Avatar.isNotEmpty ?? false)
+                                  ? NetworkImage(account!.Avatar)
+                                  : null,
+                              child: (account?.Avatar.isEmpty ?? true)
+                                  ? const Icon(
+                                      Icons.person,
+                                      color: Colors.blue,
+                                      size: 35,
+                                    )
+                                  : null,
                             ),
                           ),
                           const SizedBox(width: 10),
+
                           Text(
                             NameSys.toString() + '!',
                             style: const TextStyle(
@@ -221,62 +190,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
             },
           ),
 
-          /// ===== LIST WAREHOUSE =====
+          /// ===== MENU =====
           Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                ? Center(child: Text('Lỗi: $_error'))
-                : ListView.builder(
-                    itemCount: _drawerItems.length,
-                    itemBuilder: (context, index) {
-                      final item = _drawerItems[index];
-                      final isSelected =
-                          item.wareHouseID == _selectedWarehouseId;
-
-                      return ListTile(
-                        leading: Icon(
-                          Icons.warehouse,
-                          color: isSelected ? Colors.blue : Colors.black54,
-                        ),
-                        title: Text(
-                          item.nameWareHouse ?? '',
-                          style: TextStyle(
-                            color: isSelected ? Colors.blue : Colors.black87,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                        ),
-                        trailing: isSelected
-                            ? const Icon(Icons.check, color: Colors.blue)
-                            : null,
-                        tileColor: isSelected
-                            ? Colors.blue.withOpacity(0.12)
-                            : null,
-                        onTap: () => _onTapWarehouse(item),
-                        onLongPress: isSelected
-                            ? () {
-                                // Navigator.pop(context, true);
-                                // drawerLongClick.show(
-                                //   context,
-                                //   "showhideWareHouse",
-                                // );
-                                // widget.onWarehouseSelected?.call();
-                              }
-                            : null, // nếu không chọn thì không cho long press,
-                      );
-                    },
-                  ),
+            child: ListView(
+              children: [
+ 
+              ],
+            ),
           ),
-
-          // ListTile(
-          //   leading: const Icon(Icons.shopping_cart, color: Colors.green),
-          //   title: const Text('Giỏ hàng'),
-          //   onTap: () {
-          //     navigationHelper.push(context, CartListScreen(isBusiness: false));
-          //   },
-          // ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.change_circle, color: Colors.green),
@@ -287,7 +208,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
             onTap: _changeSystem,
           ),
 
-          /// ===== LOGOUT =====
+          /// LOGOUT
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),

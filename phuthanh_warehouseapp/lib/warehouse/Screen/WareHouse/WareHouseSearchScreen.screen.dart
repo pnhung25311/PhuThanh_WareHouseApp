@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/ScanBarcodeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawer.custom.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawerUtils.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomProductItem.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomProductLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
@@ -301,7 +301,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ],
       ),
-      drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
+      drawer: CustomDrawerUtils(onWarehouseSelected: _onDrawerReload),
       body: RefreshIndicator(
         onRefresh: _loadData,
         child: item.wareHouseCategory == 0

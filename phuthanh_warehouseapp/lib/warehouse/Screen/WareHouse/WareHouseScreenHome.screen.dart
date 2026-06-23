@@ -3,7 +3,7 @@ import 'package:phuthanh_warehouseapp/warehouse/Screen/Product/ProductDetailScre
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/guarantee/GuaranteeHomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/sheetckeck/HomeCheckListScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawer.custom.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawerUtils.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomProductItem.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomProductLongClick.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomWarehouseItem.custom.dart';
@@ -200,7 +200,7 @@ class _WareHouseScreenState extends State<WareHouseScreen> {
             ),
         ],
       ),
-      drawer: CustomDrawer(onWarehouseSelected: _onDrawerReload),
+      drawer: CustomDrawerUtils(onWarehouseSelected: _onDrawerReload),
       body: item.wareHouseCategory == 0
           ? _buildProductList()
           : _buildWarehouseList(roles),

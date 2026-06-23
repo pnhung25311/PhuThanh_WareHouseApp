@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
+import 'package:phuthanh_warehouseapp/file/screen/TreeviewPage.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/system/SystemOption.model.dart';
 import 'package:phuthanh_warehouseapp/service/FirebaseService.service.dart';
@@ -33,6 +34,7 @@ class _LoginscreenState extends State<Loginscreen> {
   final List<SystemOption> _systems = [
     SystemOption(name: 'Hệ thống kho', value: 'system1', id: 1),
     SystemOption(name: 'Hệ thống kinh doanh', value: 'system2', id: 2),
+    SystemOption(name: 'Quản lý tệp tin', value: 'system3', id: 3),
   ];
 
   // Hệ thống được chọn
@@ -209,11 +211,18 @@ class _LoginscreenState extends State<Loginscreen> {
         _loadRole();
 
         _saveSetting();
-        if (_selectedSystem!.id == 1) {
-          navigationHelper.pushAndRemoveUntil(context, HomeScreen());
-        }
-        if (_selectedSystem!.id == 2) {
-          navigationHelper.pushAndRemoveUntil(context, HomeBusinessScreen());
+        switch (_selectedSystem!.id) {
+          case 1:
+            navigationHelper.pushAndRemoveUntil(context, HomeScreen());
+            break;
+          case 2:
+            navigationHelper.pushAndRemoveUntil(context, HomeBusinessScreen());
+            break;
+          case 3:
+            navigationHelper.pushAndRemoveUntil(context, TreeViewPage());
+            break;
+          default:
+            print('ko có hệ thống');
         }
       } else {
         String message = "Đăng nhập thất bại (${response.statusCode})";

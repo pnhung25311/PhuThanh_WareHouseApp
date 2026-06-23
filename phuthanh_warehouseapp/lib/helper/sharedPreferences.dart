@@ -1,7 +1,19 @@
 import 'dart:convert';
+import 'package:phuthanh_warehouseapp/model/file/FileNode.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MySharedPreferences {
+  // ===== Số =====
+  Future<void> setDataNumber(String key, double value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(key, value);
+  }
+
+  Future<double?> getDataNumber(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(key);
+  }
+
   // ===== Chuỗi =====
   Future<void> setDataString(String key, String value) async {
     final prefs = await SharedPreferences.getInstance();
@@ -68,5 +80,22 @@ class MySharedPreferences {
   Future<void> removeList(String key) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(key);
+  }
+
+  // Thêm vào class MySharedPreferences trong file của bạn
+  Future<void> saveShortcuts(List<FileNode> shortcuts) async {
+    // Chuyển List<FileNode> thành List các Map Json rồi lưu lại
+    List<Map<String, dynamic>> jsonList = shortcuts
+        .map((e) => e.toJson())
+        .toList();
+    await setDataList("file_shortcuts", jsonList);
+  }
+
+  Future<List<FileNode>> loadShortcuts() async {
+    final list = await getDataList("file_shortcuts");
+    if (list == null) return [];
+    return list
+        .map((e) => FileNode.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 }
