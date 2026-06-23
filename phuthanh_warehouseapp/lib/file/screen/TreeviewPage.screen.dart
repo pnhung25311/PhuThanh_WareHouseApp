@@ -1701,25 +1701,25 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
       if (Platform.isAndroid) {
         // Lấy thư mục Downloads riêng của ứng dụng trên bộ nhớ ngoài
-        final List<Directory>? externalDirs =
-            await getExternalStorageDirectories(
-              type: StorageDirectory.downloads,
-            );
+        // final List<Directory>? externalDirs =
+        //     await getExternalStorageDirectories(
+        //       type: StorageDirectory.downloads,
+        //     );
 
-        if (externalDirs != null && externalDirs.isNotEmpty) {
-          String baseAndroidPath = externalDirs.first.path;
+        // if (externalDirs != null && externalDirs.isNotEmpty) {
+        //   String baseAndroidPath = externalDirs.first.path;
 
-          // Ghép thêm cấu trúc thư mục hiện tại vào sau thư mục Downloads gốc
-          finalDirectoryPath = currentRemotePath.isEmpty
-              ? baseAndroidPath
-              : "$baseAndroidPath/$currentRemotePath";
-        } else {
+        //   // Ghép thêm cấu trúc thư mục hiện tại vào sau thư mục Downloads gốc
+        //   finalDirectoryPath = currentRemotePath.isEmpty
+        //       ? baseAndroidPath
+        //       : "$baseAndroidPath/$currentRemotePath";
+        // } else {
           // Phương án dự phòng nếu không lấy được bộ nhớ ngoài
           final Directory appDocDir = await getApplicationDocumentsDirectory();
           finalDirectoryPath = currentRemotePath.isEmpty
               ? "${appDocDir.path}/PhuThanhDownloads"
               : "${appDocDir.path}/PhuThanhDownloads/$currentRemotePath";
-        }
+        // }
       }
       if (Platform.isIOS) {
         // Đối với iOS: Giữ nguyên logic cũ của bạn
