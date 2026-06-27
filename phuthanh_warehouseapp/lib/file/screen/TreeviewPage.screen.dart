@@ -313,7 +313,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
     String sizeText = (file.formattedSize != "-")
         ? file.formattedSize
         : "Không rõ dung lượng";
-    return "$sizeText  •  Giữ để tùy chọn";
+    return "$sizeText  •  Last modified";
   }
 
   Widget _buildBreadcrumbs() {
@@ -628,6 +628,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
                                   ),
                               itemBuilder: (context, index) {
                                 final file = displayList[index];
+                                final isFav = _isShortcut(file);
 
                                 return ListTile(
                                   onTap: () => _onItemClickFromList(file),
@@ -685,12 +686,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
                                   ),
                                   trailing: IconButton(
                                     icon: Icon(
-                                      Icons.more_vert_rounded,
+                                       isFav? Icons.link:Icons.more_vert_rounded,
                                       color: Colors.grey.shade500,
                                       size: 22,
                                     ),
                                     onPressed: () => {
-                                      
                                       _showFileActionSheet(file),
                                     }, // Mở nhanh menu khi bấm 3 chấm
                                   ),
@@ -708,84 +708,92 @@ class _TreeViewPageState extends State<TreeViewPage> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     // Nút Dán xuất hiện động khi có dữ liệu trong bộ nhớ tạm
-                    if (_clipboardItem != null) ...[
-                      // Thay thế đoạn code hiện tại của bạn bằng cấu trúc này:
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          // 1. Nút Dán (Paste)
-                          FloatingActionButton.extended(
-                            heroTag: "btnPasteAction",
-                            onPressed: _isLoading ? null : _handlePasteAction,
-                            backgroundColor: Colors.green,
-                            icon: const Icon(
-                              Icons.paste_rounded,
-                              color: Colors.white,
-                            ),
-                            label: Text(
-                              _clipboardAction == 'copy'
-                                  ? 'Dán Sao chép'
-                                  : 'Dán Di chuyển',
-                              style: const TextStyle(
+                    if (_navigationStack.length != 0) ...[
+                      if (_clipboardItem != null) ...[
+                        // Thay thế đoạn code hiện tại của bạn bằng cấu trúc này:
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            // 1. Nút Dán (Paste)
+                            FloatingActionButton.extended(
+                              heroTag: "btnPasteAction",
+                              onPressed: _isLoading ? null : _handlePasteAction,
+                              backgroundColor: Colors.green,
+                              icon: const Icon(
+                                Icons.paste_rounded,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                              ),
+                              label: Text(
+                                _clipboardAction == 'copy'
+                                    ? 'Dán Sao chép'
+                                    : 'Dán Di chuyển',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
 
-                          const SizedBox(width: 12), // Khoảng cách nhỏ
-                          // 2. Nút Hủy bỏ (Clear Clipboard)
-                          FloatingActionButton(
-                            heroTag: "btnClearClipboard",
-                            mini: true, // Làm nút nhỏ hơn cho gọn
-                            onPressed: () {
-                              setState(() {
-                                _clipboardAction =
-                                    ''; // Hoặc null, tùy theo biến bạn dùng
-                                _clipboardItem =
-                                    null; // Xóa sạch dữ liệu đã lưu
-                              });
-                            },
-                            backgroundColor: Colors.redAccent,
-                            child: const Icon(Icons.close, color: Colors.white),
-                          ),
-                        ],
+                            const SizedBox(width: 12), // Khoảng cách nhỏ
+                            // 2. Nút Hủy bỏ (Clear Clipboard)
+                            FloatingActionButton(
+                              heroTag: "btnClearClipboard",
+                              mini: true, // Làm nút nhỏ hơn cho gọn
+                              onPressed: () {
+                                setState(() {
+                                  _clipboardAction =
+                                      ''; // Hoặc null, tùy theo biến bạn dùng
+                                  _clipboardItem =
+                                      null; // Xóa sạch dữ liệu đã lưu
+                                });
+                              },
+                              backgroundColor: Colors.redAccent,
+                              child: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 16), // Khoảng cách giữa 2 nút
+                      ],
+                      FloatingActionButton(
+                        mini: true,
+                        onPressed: () => _showCreateFolderDialog(context),
+                        backgroundColor: Colors.blue,
+                        child: const Icon(
+                          Icons.create_new_folder_rounded,
+                          color: Colors.white,
+                        ),
                       ),
-                      const SizedBox(width: 16), // Khoảng cách giữa 2 nút
+                      if (_clipboardItem == null) ...[
+                        // Nút Tải file lên (Mặc định hiện tại của bạn)
+                        FloatingActionButton(
+                          mini: true,
+                          heroTag: "btnUploadAction",
+                          onPressed: _isUploading
+                              ? null
+                              : _handlePickAndUploadFile,
+                          backgroundColor: _isUploading
+                              ? Colors.grey
+                              : Colors.orange,
+                          tooltip: 'Tải file mới lên thư mục này',
+                          child: _isUploading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.cloud_upload_rounded,
+                                  color: Colors.white,
+                                ),
+                        ),
+                      ],
                     ],
-                    FloatingActionButton(
-                      mini: true,
-                      onPressed: () => _showCreateFolderDialog(context),
-                      backgroundColor: Colors.blue,
-                      child: const Icon(
-                        Icons.create_new_folder_rounded,
-                        color: Colors.white,
-                      ),
-                    ),
-
-                    // Nút Tải file lên (Mặc định hiện tại của bạn)
-                    FloatingActionButton(
-                      mini: true,
-                      heroTag: "btnUploadAction",
-                      onPressed: _isUploading ? null : _handlePickAndUploadFile,
-                      backgroundColor: _isUploading
-                          ? Colors.grey
-                          : Colors.orange,
-                      tooltip: 'Tải file mới lên thư mục này',
-                      child: _isUploading
-                          ? const SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Icon(
-                              Icons.cloud_upload_rounded,
-                              color: Colors.white,
-                            ),
-                    ),
                   ],
                 ),
               )
@@ -948,14 +956,14 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
         final String localFilePath =
             "${baseDir.path}/PhuThanhDownloads/$cleanRemotePath/${file.name}";
-            // "/$cleanRemotePath/${file.name}";
-            print(localFilePath);
+        // "/$cleanRemotePath/${file.name}";
+        print(localFilePath);
 
         final File checkFile = File(localFilePath);
 
         if (await checkFile.exists()) {
           localFileCorresponding = checkFile;
-        }else{
+        } else {
           print("nó đã ko có");
         }
       } catch (e) {
@@ -1140,7 +1148,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
               if (!file.folder)
                 ListTile(
                   leading: const Icon(Icons.share_rounded, color: Colors.blue),
-                  title: const Text('Chia sẻ qua ứng dụng khác (Zalo,...)'),
+                  title: const Text('Chia sẻ'),
                   onTap: () {
                     Navigator.pop(bottomSheetContext);
                     _handleFileAction(file, actionType: 'share');
@@ -1714,11 +1722,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
         //       ? baseAndroidPath
         //       : "$baseAndroidPath/$currentRemotePath";
         // } else {
-          // Phương án dự phòng nếu không lấy được bộ nhớ ngoài
-          final Directory appDocDir = await getApplicationDocumentsDirectory();
-          finalDirectoryPath = currentRemotePath.isEmpty
-              ? "${appDocDir.path}/PhuThanhDownloads"
-              : "${appDocDir.path}/PhuThanhDownloads/$currentRemotePath";
+        // Phương án dự phòng nếu không lấy được bộ nhớ ngoài
+        final Directory appDocDir = await getApplicationDocumentsDirectory();
+        finalDirectoryPath = currentRemotePath.isEmpty
+            ? "${appDocDir.path}/PhuThanhDownloads"
+            : "${appDocDir.path}/PhuThanhDownloads/$currentRemotePath";
         // }
       }
       if (Platform.isIOS) {
