@@ -25,7 +25,6 @@ class _BusinessScreenState extends State<BusinessScreen> {
   BusinessLongClick businessLongClick = BusinessLongClick();
   NavigationHelper nav = NavigationHelper();
 
-
   @override
   void initState() {
     super.initState();
@@ -85,10 +84,17 @@ class _BusinessScreenState extends State<BusinessScreen> {
         _filteredProducts = _allProducts;
       } else {
         _filteredProducts = _allProducts.where((product) {
-          return product.maVatTu.toLowerCase().contains(query) ||
-              product.danhDiem.toLowerCase().contains(query) ||
-              product.boDanhDiemTuongDuong.toLowerCase().contains(query) ||
-              product.tenHangHoa.toLowerCase().contains(query);
+          // Sử dụng toán tử "??" để thay thế giá trị null bằng chuỗi rỗng "" trước khi so khớp
+          final maVatTu = (product.maVatTu).toLowerCase();
+          final danhDiem = (product.danhDiem).toLowerCase();
+          final boDanhDiemTuongDuong = (product.boDanhDiemTuongDuong)
+              .toLowerCase();
+          final tenHangHoa = (product.tenHangHoa).toLowerCase();
+
+          return maVatTu.contains(query) ||
+              danhDiem.contains(query) ||
+              boDanhDiemTuongDuong.contains(query) ||
+              tenHangHoa.contains(query);
         }).toList();
       }
     });

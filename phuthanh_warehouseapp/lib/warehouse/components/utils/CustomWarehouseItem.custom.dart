@@ -111,6 +111,7 @@ class _WarehouseItemState extends State<WarehouseItem> {
                   _hasValue(item.idKeeton) ||
                   _hasValue(item.idIndustrial) ||
                   _hasValue(item.idPartNo) ||
+                  _hasValue(item.idPartNoOrigin) ||
                   _hasValue(item.idReplacedPartNo))
                 _section(
                   "Thông tin sản phẩm",
@@ -120,6 +121,7 @@ class _WarehouseItemState extends State<WarehouseItem> {
                     _info(Icons.confirmation_number, "Keeton", item.idKeeton),
                     _info(Icons.precision_manufacturing, "CN", item.idIndustrial),
                     _info(Icons.view_list, "Danh điểm", item.idPartNo),
+                    _info(Icons.view_list, "Danh điểm gốc", item.idPartNoOrigin),
                     _info(Icons.compare_arrows, "Danh điểm TĐ", item.idReplacedPartNo),
                   ],
                 ),

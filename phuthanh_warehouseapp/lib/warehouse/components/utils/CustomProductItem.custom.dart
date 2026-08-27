@@ -116,6 +116,7 @@ class _ProductItemState extends State<ProductItem> {
                   _hasValue(item.idKeeton) ||
                   _hasValue(item.idIndustrial) ||
                   _hasValue(item.idPartNo) ||
+                  _hasValue(item.idPartNoOrigin) ||
                   _hasValue(item.idReplacedPartNo))
                 _section(
                   "Thông tin sản phẩm",
@@ -125,7 +126,8 @@ class _ProductItemState extends State<ProductItem> {
                     _info(Icons.tag, "Keeton", item.idKeeton),
                     _info(Icons.precision_manufacturing, "CN", item.idIndustrial),
                     _info(Icons.view_list, "Part No", item.idPartNo),
-                    _info(Icons.compare_arrows, "Part thay thế", item.idReplacedPartNo),
+                    _info(Icons.compare_arrows, "Part No thay thế", item.idReplacedPartNo),
+                    _info(Icons.view_list, "Part No gốc", item.idPartNoOrigin),
                   ],
                 ),
 

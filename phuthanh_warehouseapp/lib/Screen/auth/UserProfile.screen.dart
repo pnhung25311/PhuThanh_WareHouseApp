@@ -20,9 +20,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   File? imageFile;
   InfoService infoService = InfoService();
   MySharedPreferences mySharedPreferences = MySharedPreferences();
+  
+  // 🔥 Bước 1: Tạo biến cục bộ để quản lý trạng thái Account thay vì dùng trực tiếp widget.account
+  late Account account; 
+
+  @override
+  void initState() {
+    super.initState();
+    account = widget.account; // Khởi tạo giá trị ban đầu từ widget
+  }
 
   /// ================= PICK IMAGE =================
-
   void _showImagePicker() {
     showModalBottomSheet(
       context: context,
@@ -60,48 +68,48 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       File file = File(picked.path);
 
       setState(() {
-        imageFile = file; // preview ngay
+        imageFile = file; // preview ngay lập tức hình ảnh vừa chọn
       });
 
       /// 🚀 UPLOAD
-      await _uploadAvatar(file, widget.account.UserName);
+      await _uploadAvatar(file, account.UserName);
     }
   }
 
   Future<void> _uploadAvatar(File file, String username) async {
     try {
       final response = await ApiClient().postFile(
-        "upload/$username", // endpoint của bạn
+        "upload/$username",
         file,
       );
 
       if (response.statusCode == 200) {
         final resBody = await response.stream.bytesToString();
-
         print("Upload success: $resBody");
 
         final update = await infoService.upDateAccount(
-          widget.account.AccountID.toString(),
+          account.AccountID.toString(),
           jsonEncode({'Avatar': resBody.toString().trim()}),
         );
 
         if (update["isSuccess"]) {
-          /// 🔥 Parse JSON (giả sử backend trả avatarUrl)
           final data = jsonDecode(resBody);
           String newAvatar = data["avatarUrl"];
+print(newAvatar);
+          // Tạo object mới chứa avatar mới
+          final updatedAccount = account.copyWith(Avatar: newAvatar);
 
-          /// ✅ Update lại account
-          // account. = newAvatar;
-          final updatedAccount = widget.account.copyWith(Avatar: newAvatar);
-
-          /// ✅ Lưu local
-          await MySharedPreferences().setDataObject(
+          /// ✅ Lưu vào local storage
+          await mySharedPreferences.setDataObject(
             "account",
             updatedAccount.toJson(),
           );
 
-          /// ✅ Refresh UI
-          setState(() {});
+          /// ✅ Bước 2: Cập nhật biến trạng thái cục bộ để ép UI render lại dữ liệu mới
+          setState(() {
+            account = updatedAccount;
+            imageFile = null; // Xóa file nháp tạm thời để hiển thị NetworkImage từ link mới hoàn toàn
+          });
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Cập nhật avatar thành công")),
@@ -120,10 +128,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   }
 
   /// ================= UI =================
-
   @override
   Widget build(BuildContext context) {
-    final account = widget.account;
+    // 💡 Bước 3: Bỏ dòng "final account = widget.account;" cũ đi, hệ thống sẽ tự dùng biến `account` ở trên State.
 
     return Scaffold(
       appBar: AppBar(
@@ -183,9 +190,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 10),
-
                   Text(
                     account.FullName,
                     style: const TextStyle(
@@ -197,7 +202,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
 
             /// INFO
@@ -207,8 +211,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             _buildItem("Trạng thái", account.Status),
 
             const SizedBox(height: 20),
-
-            /// BUTTON EDIT
             ElevatedButton(
               onPressed: () {
                 // TODO: mở màn hình EditProfileScreen
@@ -244,3 +246,4 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 }
+

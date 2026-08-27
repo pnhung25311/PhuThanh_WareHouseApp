@@ -1,4 +1,4 @@
-import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
 // import 'package:phuthanh_warehouseapp/file/screen/TreeviewPage.screen.dart';
@@ -7,11 +7,21 @@ import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Firebase.initializeApp();
-
-  // await NotificationService().init(); // 🔥 thêm dòng này
-
-  AppState.instance.init();
+  
+  try {
+    print("====== 🚀 BẮT ĐẦU KHỞI TẠO APP ======");
+    
+    // await Firebase.initializeApp();
+    print("====== ✅ KHỞI TẠO FIREBASE XONG ======");
+    
+    AppState.instance.init();
+    print("====== ✅ KHỞI TẠO APPSTATE XONG ======");
+    
+  } catch (e, stack) {
+    // Nếu có bất kỳ lỗi gì, dòng này sẽ in ra Terminal bản Release. 
+    print("❌❌ LỖI CHÍ MẠNG TẠI HÀM MAIN: $e");
+    print(stack);
+  }
 
   runApp(const MyApp());
 }

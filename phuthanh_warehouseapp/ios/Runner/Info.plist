@@ -24,17 +24,54 @@
 	<string>????</string>
 	<key>UIFileSharingEnabled</key>
 	<true/>
-	
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	
+	<!-- ==================================================================== -->
+	<!-- CÁC QUYỀN HÌNH ẢNH & CAMERA (ĐÃ CÓ CỦA BẠN) -->
+	<!-- ==================================================================== -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Ứng dụng cần truy cập thư viện ảnh để bạn có thể chọn và tải lên hình ảnh hàng hóa hoặc chứng từ kho.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Ứng dụng cần quyền lưu hình ảnh báo cáo hoặc chứng từ vào thư viện ảnh của bạn.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Ứng dụng cần dùng camera để quét mã QR.</string>
 	<key>NSUserNotificationUsageDescription</key>
 	<string>App cần quyền gửi thông báo</string>
+	
+	<!-- ==================================================================== -->
+	<!-- BỔ SUNG: CÁC QUYỀN VỊ TRÍ (RẤT DỄ GÂY CRASH NẾU THƯ VIỆN TỰ GỌI KHI VÀO APP) -->
+	<!-- ==================================================================== -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ứng dụng cần truy cập vị trí của bạn để xác nhận vị trí kho hoặc check-in hàng hóa.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Ứng dụng cần truy cập vị trí chạy ngầm để hỗ trợ điều phối và giao nhận hàng hóa.</string>
+
+	<!-- ==================================================================== -->
+	<!-- BỔ SUNG: CÁC QUYỀN BLUETOOTH (NẾU DÙNG MÁY IN BILL HOẶC MÁY QUÉT BARCODE NGOẠI VI) -->
+	<!-- ==================================================================== -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Ứng dụng cần kết nối Bluetooth để liên kết với máy quét mã vạch hoặc máy in tem nhãn.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Ứng dụng cần sử dụng Bluetooth để kết nối với các thiết bị ngoại vi trong kho.</string>
+
+	<!-- ==================================================================== -->
+	<!-- BỔ SUNG: QUYỀN MẠNG NỘI BỘ (NẾU IN HÓA ĐƠN QUA WIFI/LAN) -->
+	<!-- ==================================================================== -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Ứng dụng cần truy cập mạng nội bộ để kết nối và in hóa đơn qua máy in Wi-Fi/LAN.</string>
+	<!-- ==================================================================== -->
+<!-- ==================================================================== -->
+    <!-- BỔ SUNG: QUYỀN FACE ID (BẮT BUỘC VÌ CÓ DÙNG LOCAL_AUTH) -->
+    <!-- ==================================================================== -->
+    <key>NSFaceIDUsageDescription</key>
+    <string>Ứng dụng cần sử dụng Face ID / Touch ID để xác thực đăng nhập vào hệ thống kho Phú Thành.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

@@ -265,6 +265,7 @@ class InfoService {
       final response = await apiClient.get("dynamic/get-all/vwProduct");
 
       final List<dynamic> data = jsonDecode(response.body);
+      // print(data);
       return {
         "isSuccess": response.statusCode == 200,
         "statusCode": response.statusCode,

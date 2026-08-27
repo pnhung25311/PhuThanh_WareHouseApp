@@ -1,7 +1,7 @@
 import Flutter
 import UIKit
-import flutter_local_notifications
-import FirebaseCore
+// import flutter_local_notifications
+// import FirebaseCore
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -9,8 +9,8 @@ import FirebaseCore
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    FirebaseApp.configure()
-    UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+    // FirebaseApp.configure()
+    // UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

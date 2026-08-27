@@ -5,6 +5,7 @@ class WareHouse {
   final String? idKeeton;
   final String? idIndustrial;
   final String? idPartNo;
+  final String? idPartNoOrigin;
   final String? idReplacedPartNo;
   final String? nameProduct;
   final double? qtyExpected;
@@ -41,6 +42,7 @@ class WareHouse {
     this.idKeeton,
     this.idIndustrial,
     this.idPartNo,
+    this.idPartNoOrigin,
     this.idReplacedPartNo,
     this.nameProduct,
     this.qtyExpected,
@@ -80,7 +82,7 @@ class WareHouse {
       productID: json['ProductID'] ?? '',
       idKeeton: json['ID_Keeton'] ?? '',
       idIndustrial: json['ID_Industrial'] ?? '',
-      idPartNo: json['ID_PartNo'] ?? '',
+      idPartNoOrigin: json['ID_PartNoOrigin'] ?? '',
       idReplacedPartNo: json['ID_ReplacedPartNo'] ?? '',
       nameProduct: json['NameProduct'] ?? '',
       qtyExpected: json['Qty_Expected'] != null
@@ -128,7 +130,7 @@ class WareHouse {
       'ProductID': productID,
       'ID_Keeton': idKeeton,
       'ID_Industrial': idIndustrial,
-      'ID_PartNo': idPartNo,
+      'ID_PartNoOrigin': idPartNoOrigin,
       'ID_ReplacedPartNo': idReplacedPartNo,
       'NameProduct': nameProduct,
       'Qty_Expected': qtyExpected,
@@ -167,6 +169,7 @@ class WareHouse {
     String? productID,
     String? idKeeton,
     String? idIndustrial,
+    String? idPartNoOrigin,
     String? idPartNo,
     String? idReplacedPartNo,
     String? nameProduct,
@@ -203,7 +206,7 @@ class WareHouse {
       productID: productID ?? this.productID,
       idKeeton: idKeeton ?? this.idKeeton,
       idIndustrial: idIndustrial ?? this.idIndustrial,
-      idPartNo: idPartNo ?? this.idPartNo,
+      idPartNoOrigin: idPartNoOrigin ?? this.idPartNoOrigin,
       idReplacedPartNo: idReplacedPartNo ?? this.idReplacedPartNo,
       nameProduct: nameProduct ?? this.nameProduct,
       qtyExpected: qtyExpected?.toDouble() ?? this.qtyExpected,
@@ -270,7 +273,7 @@ class WareHouse {
       productID: '',
       idKeeton: '',
       idIndustrial: '',
-      idPartNo: '',
+      idPartNoOrigin: '',
       idReplacedPartNo: '',
       nameProduct: '',
       qtyExpected: 0,

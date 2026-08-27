@@ -1,10 +1,13 @@
 import 'dart:convert';
+// import 'dart:io';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/Screen/auth/ChangePasswordScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
 import 'package:phuthanh_warehouseapp/file/screen/TreeviewPage.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/system/SystemOption.model.dart';
-import 'package:phuthanh_warehouseapp/service/FirebaseService.service.dart';
+// import 'package:phuthanh_warehouseapp/service/FirebaseService.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/Screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
@@ -18,6 +21,10 @@ import 'package:phuthanh_warehouseapp/model/system/StatusSystem.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/StatusSystem.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
+// 1. IMPORT SERVICE SINH TRẮC HỌC CỦA BẠN VÀO ĐÂY
+import 'package:phuthanh_warehouseapp/Screen/service/BiometricAuthService.service.dart';
+
+
 class Loginscreen extends StatefulWidget {
   const Loginscreen({super.key});
 
@@ -30,28 +37,29 @@ class _LoginscreenState extends State<Loginscreen> {
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
 
-  // Danh sách các hệ thống
   final List<SystemOption> _systems = [
     SystemOption(name: 'Hệ thống kho', value: 'system1', id: 1),
     SystemOption(name: 'Hệ thống kinh doanh', value: 'system2', id: 2),
     SystemOption(name: 'Quản lý tệp tin', value: 'system3', id: 3),
   ];
 
-  // Hệ thống được chọn
   SystemOption? _selectedSystem;
-  bool? statusConnect; // null = chưa load xong
+  bool? statusConnect;
 
   List<StatusSystem> arrStatus = [];
   StatusSystemService statusSystemService = StatusSystemService();
   NavigationHelper navigationHelper = NavigationHelper();
   MySharedPreferences mySharedPreferences = MySharedPreferences();
   FunctionConvertHelper functionConvertHelper = FunctionConvertHelper();
-  FireBaseService fireBaseService = FireBaseService();
+  // FireBaseService fireBaseService = FireBaseService();
+
+  // 2. KHỞI TẠO BIOMETRIC SERVICE
+  final BiometricAuthService _biometricAuthService = BiometricAuthService();
 
   @override
   void initState() {
     super.initState();
-    _selectedSystem = _systems[0]; // Mặc định chọn hệ thống đầu tiên
+    _selectedSystem = _systems[0];
     _loadSavedInfo();
     checkNetwork();
   }
@@ -81,7 +89,6 @@ class _LoginscreenState extends State<Loginscreen> {
         _usernameController.text = savedUsername;
         _passwordController.text = savedPassword;
 
-        // Khôi phục hệ thống đã chọn
         if (savedSystem.isNotEmpty) {
           _selectedSystem = _systems.firstWhere(
             (system) => system.value == savedSystem,
@@ -89,6 +96,38 @@ class _LoginscreenState extends State<Loginscreen> {
           );
         }
       });
+
+      // 3. TỰ ĐỘNG GỌI QUÉT VÂN TAY/KHUÔN MẶT KHI CÓ DỮ LIỆU ĐÃ LƯU
+      if (savedUsername.isNotEmpty && savedPassword.isNotEmpty) {
+        _handleBiometricAuth();
+      }
+    }
+  }
+
+  // 4. HÀM XỬ LÝ QUÉT SINH TRẮC HỌC VÀ ĐĂNG NHẬP
+  Future<void> _handleBiometricAuth() async {
+    // Kiểm tra máy có hỗ trợ phần cứng không
+    bool isSupported = await _biometricAuthService.isDeviceSupported();
+    if (!isSupported) return;
+
+    // Yêu cầu người dùng phải lưu mật khẩu trước đó mới cho sài FaceID/Vân tay
+    if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Vui lòng đăng nhập bằng mật khẩu lần đầu để kích hoạt sinh trắc học.',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    // Kích hoạt hiển thị pop-up của hệ thống
+    bool isAuthenticated = await _biometricAuthService.authenticate();
+    if (isAuthenticated) {
+      // Nếu quét thành công -> Tiến hành đăng nhập luôn
+      await _handleLogin(_usernameController.text, _passwordController.text);
     }
   }
 
@@ -111,7 +150,6 @@ class _LoginscreenState extends State<Loginscreen> {
     final settingsWH = await mySharedPreferences.getDataObject(
       "showhideWareHouse",
     );
-
     if (settingsWH == null) {
       final displaySetting = DisplaySetting();
       await mySharedPreferences.setDataObject(
@@ -125,7 +163,6 @@ class _LoginscreenState extends State<Loginscreen> {
     final settingsP = await mySharedPreferences.getDataObject(
       "showhideProduct",
     );
-
     if (settingsP == null) {
       final displaySetting = DisplaySetting();
       await mySharedPreferences.setDataObject(
@@ -139,12 +176,9 @@ class _LoginscreenState extends State<Loginscreen> {
 
   Future<void> _loadRole() async {
     final acc = AppState.instance.get("account") as Account?;
-
     if (!mounted || acc == null) return;
-
     final roles = acc.Role == "ADMIN" || acc.Role == "WAREHOUSE";
     AppState.instance.set("role", roles);
-    // await fireBaseService.registerFCMToken(acc.AccountID);
   }
 
   Future<void> _handleLogin(String username, String password) async {
@@ -168,10 +202,8 @@ class _LoginscreenState extends State<Loginscreen> {
       return;
     }
 
-    // Lưu hệ thống được chọn vào AppState để sử dụng trong toàn bộ app
     AppState.instance.set("selectedSystem", _selectedSystem!.value);
     AppState.instance.set("selectedSystemName", _selectedSystem!.name);
-    // AppState.instance.set("apiUrl", _selectedSystem!.apiUrl);
 
     final api = const ApiClient();
 
@@ -198,7 +230,6 @@ class _LoginscreenState extends State<Loginscreen> {
         final account = loginResponse.account;
         AppState.instance.set("account", account);
         AppState.instance.set("token", loginResponse.token);
-        print(loginResponse.token);
 
         await mySharedPreferences.setDataObject('account', account.toJson());
         await mySharedPreferences.setDataString('username', username);
@@ -226,7 +257,6 @@ class _LoginscreenState extends State<Loginscreen> {
         }
       } else {
         String message = "Đăng nhập thất bại (${response.statusCode})";
-
         try {
           final body = jsonDecode(response.body);
           if (body is Map && body.containsKey('message')) {
@@ -243,7 +273,7 @@ class _LoginscreenState extends State<Loginscreen> {
     } catch (e) {
       debugPrint("Lỗi login: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Không thể kết nối tới server'),
           backgroundColor: Colors.red,
         ),
@@ -275,7 +305,6 @@ class _LoginscreenState extends State<Loginscreen> {
                   ),
                   const SizedBox(height: 26),
 
-                  // Dropdown chọn hệ thống
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -339,49 +368,80 @@ class _LoginscreenState extends State<Loginscreen> {
                   ),
 
                   const SizedBox(height: 10),
+                  // ĐÃ ĐƯỢC CẬP NHẬT: Thêm nút chuyển sang màn hình Đổi mật khẩu bên cạnh Checkbox Remember me
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Checkbox(
-                        value: _rememberMe,
-                        onChanged: (value) {
-                          setState(() {
-                            _rememberMe = value ?? false;
-                          });
-                        },
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _rememberMe,
+                            onChanged: (value) {
+                              setState(() {
+                                _rememberMe = value ?? false;
+                              });
+                            },
+                          ),
+                          const Text('Remember me', style: TextStyle(fontSize: 15)),
+                        ],
                       ),
-                      const Text('Remember me', style: TextStyle(fontSize: 15)),
+                      TextButton(
+                        onPressed: () {
+                          // Điều hướng sang màn hình Đổi mật khẩu
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ChangePasswordScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text(
+                          'Đổi mật khẩu?',
+                          style: TextStyle(
+                            color: Color(0xFF3B62FF),
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
 
                   const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 49,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        await _handleLogin(
-                          _usernameController.text,
-                          _passwordController.text,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3B62FF),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 49,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await _handleLogin(
+                                _usernameController.text,
+                                _passwordController.text,
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF3B62FF),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'Login',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                      child: const Text(
-                        'Login',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                      const SizedBox(width: 12),
+                    ],
                   ),
 
-                  // Hiển thị hệ thống đang chọn
                   if (_selectedSystem != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 20),

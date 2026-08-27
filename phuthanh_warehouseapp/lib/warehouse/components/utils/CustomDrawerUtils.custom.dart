@@ -307,32 +307,37 @@ class _CustomDrawerUtilsState extends State<CustomDrawerUtils> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          GestureDetector(
-                            onTap: () {
-                              if (account != null) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => UserProfileScreen(account: account!),
-                                  ),
-                                );
-                              }
-                            },
-                            child: CircleAvatar(
-                              radius: 30,
-                              backgroundColor: Colors.white,
-                              backgroundImage: (account?.Avatar.isNotEmpty ?? false)
-                                  ? NetworkImage(account!.Avatar)
-                                  : null,
-                              child: (account?.Avatar.isEmpty ?? true)
-                                  ? const Icon(
-                                      Icons.person,
-                                      color: Colors.blue,
-                                      size: 35,
-                                    )
-                                  : null,
-                            ),
-                          ),
+// Tìm đoạn code này trong CustomDrawerUtils:
+GestureDetector(
+  onTap: () {
+    if (account != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => UserProfileScreen(account: account!),
+        ),
+      ).then((_) {
+        print(account?.Avatar);
+        /// 🔥 Thêm dòng này: Khi tắt màn hình Profile quay về, ép Drawer render lại để nhận ảnh mới
+        setState(() {}); 
+      });
+    }
+  },
+  child: CircleAvatar(
+    radius: 30,
+    backgroundColor: Colors.white,
+    backgroundImage: (account?.Avatar.isNotEmpty ?? false)
+        ? NetworkImage(account!.Avatar)
+        : null,
+    child: (account?.Avatar.isEmpty ?? true)
+        ? const Icon(
+            Icons.person,
+            color: Colors.blue,
+            size: 35,
+          )
+        : null,
+  ),
+),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(

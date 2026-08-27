@@ -423,7 +423,7 @@ class ProductCard extends StatelessWidget {
     );
   }
 
-  Widget _buildStockVAT({required bool isNarrow}) {
+Widget _buildStockVAT({required bool isNarrow}) {
     final allocator = StockAllocator();
 
     int VATpt = item.vatPhuThanh?.toInt() ?? 0;
@@ -438,9 +438,18 @@ class ProductCard extends StatelessWidget {
 
     Map<String, int> input = {"VATpt": VATpt, "VATvy": VATvy};
 
-    final result = allocator.allocate(input, total);
+    // 1. Tạo một Map kết quả rỗng phòng trường hợp thuật toán lỗi
+    Map<String, dynamic> result = {};
 
-    /// 🔥 Chuẩn hóa data theo row
+    // 2. Bọc try-catch để an toàn tuyệt đối cho giao diện
+    try {
+      result = allocator.allocate(input, total);
+    } catch (e) {
+      // Nếu thuật toán dfs quăng lỗi Null check, ghi nhận log và giữ kết quả rỗng
+      debugPrint("Lỗi phân bổ kho: $e");
+    }
+
+    /// 🔥 Chuẩn hóa data theo row (Thêm kiểm tra null an toàn bằng '?')
     final rows = [
       [
         _Stock(

@@ -7,7 +7,7 @@ class Product {
   final String idReplacedPartNo;
   final String nameProduct;
   // final double qtyExpected;
-  // final String idBill;
+  final String idPartNoOrigin;
   final String parameter;
   final String vehicleDetail;
   final String? vehicleTypeID;
@@ -36,6 +36,7 @@ class Product {
     required this.idIndustrial,
     required this.idPartNo,
     required this.idReplacedPartNo,
+    required this.idPartNoOrigin,
     required this.nameProduct,
     // required this.qtyExpected,
     // required this.idBill,
@@ -73,6 +74,7 @@ class Product {
       nameProduct: '',
       // qtyExpected: 0,
       // idBill: '',
+      idPartNoOrigin: '',
       parameter: '',
       vehicleDetail: '',
       vehicleCluster: '',
@@ -116,6 +118,7 @@ class Product {
       supplierID: json['SupplierID'] ?? 0,
       supplierActualID: json['SupplierActualID'] ?? 0,
       unitID: json['UnitID'] ?? 0,
+      idPartNoOrigin: json['ID_PartNoOrigin'] ?? '',
       unitName: json['UnitName'] ?? '',
       countryName: json['CountryName'] ?? '',
       manufacturerName: json['ManufacturerName'] ?? '',
@@ -141,6 +144,7 @@ class Product {
       'ID_PartNo': idPartNo,
       'ID_ReplacedPartNo': idReplacedPartNo,
       'NameProduct': nameProduct,
+      'ID_PartNoOrigin': idPartNoOrigin,  
       // 'Qty_Expected': qtyExpected,
       // 'ID_Bill': idBill,
       'Parameter': parameter,
@@ -176,6 +180,7 @@ class Product {
     String? nameProduct,
     // double? qtyExpected,
     // String? idBill,
+    String? idPartNoOrigin,
     String? parameter,
     String? vehicleDetail,
     String? vehicleTypeID,
@@ -207,6 +212,7 @@ class Product {
       nameProduct: nameProduct ?? this.nameProduct,
       // qtyExpected: qtyExpected ?? this.qtyExpected,
       // idBill: idBill ?? this.idBill,
+      idPartNoOrigin: idPartNoOrigin ?? this.idPartNoOrigin,
       parameter: parameter ?? this.parameter,
       vehicleDetail: vehicleDetail ?? this.vehicleDetail,
       vehicleTypeID: vehicleTypeID ?? this.vehicleTypeID,

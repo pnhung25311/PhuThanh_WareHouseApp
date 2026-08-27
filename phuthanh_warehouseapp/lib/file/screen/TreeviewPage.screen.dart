@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:phuthanh_warehouseapp/file/service/TreeviewService.service.dart';
@@ -22,27 +23,24 @@ class _TreeViewPageState extends State<TreeViewPage> {
   final Treeviewservice service = Treeviewservice();
   final MySharedPreferences prefs = MySharedPreferences();
 
-  // Quản lý Stack điều hướng: Thư mục hiện tại nằm ở cuối danh sách
   final List<FileNode> _navigationStack = [];
-  List<FileNode> _shortcuts = []; // Chứa danh sách các lối tắt được lưu
+  List<FileNode> _shortcuts = [];
 
-  List<FileNode> _allCurrentItems = []; // Toàn bộ item của thư mục hiện tại
-  List<FileNode> _filteredItems = []; // Item sau khi lọc tìm kiếm
+  List<FileNode> _allCurrentItems = [];
+  List<FileNode> _filteredItems = [];
   bool _isLoading = true;
 
-  // Trạng thái điều khiển chế độ xem: 'main' (Thư mục chính) hoặc 'shortcuts' (Lối tắt)
   String _currentViewMode = 'main';
 
-  // Trạng thái cho chức năng Tìm kiếm & Upload
   bool _isSearching = false;
   bool _isUploading = false;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _breadcrumbScrollController = ScrollController();
   String accid = "";
   String accPassword = "";
-  // --- Biến lưu trữ trạng thái Copy / Cut / Paste ---
-  FileNode? _clipboardItem; // Mục đang được chọn để sao chép hoặc cắt
-  String _clipboardAction = ""; // Hành động hiện tại: 'copy' hoặc 'cut'
+
+  FileNode? _clipboardItem;
+  String _clipboardAction = "";
 
   @override
   void initState() {
@@ -88,7 +86,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
     super.dispose();
   }
 
-  // Hàm load dữ liệu từ Server
   Future<void> _loadDirectory(String accId, String path) async {
     if (mounted) {
       setState(() {
@@ -121,7 +118,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
     }
   }
 
-  // Xử lý bộ lọc tìm kiếm
   void _onSearchChanged() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -135,7 +131,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
     });
   }
 
-  // Bấm vào Breadcrumbs điều hướng nhanh
   Future<void> _onBreadcrumbClick(int index) async {
     setState(() {
       if (index == -1) {
@@ -155,9 +150,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
     await _loadDirectory(accid, targetPath);
   }
 
-  // Xử lý nút Back vật lý hoặc trên AppBar
   void _handleBackNavigation() {
-    // Bỏ async ở đây
     if (_isSearching) {
       setState(() {
         _isSearching = false;
@@ -176,7 +169,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
       final parentPath = _navigationStack.isEmpty
           ? ""
           : _navigationStack.last.path;
-      // Chạy tải dữ liệu ngầm, không await để giữ UI mượt mà
       _loadDirectory(accid, parentPath);
       return;
     }
@@ -186,59 +178,152 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
   bool _isPickerOpenActive = false;
 
-  // Chọn file thủ công bằng tay từ điện thoại đưa lên Server
-  Future<void> _handlePickAndUploadFile() async {
-    if (_isUploading || _isPickerOpenActive) return;
+Future<void> _handlePickAndUploadFile() async {
+  if (_isUploading || _isPickerOpenActive) return;
 
-    FilePickerResult? result;
-    try {
-      _isPickerOpenActive = true;
-      await Future.delayed(const Duration(milliseconds: 300));
-      result = await FilePicker.pickFiles(
-        type: FileType.any,
-        allowMultiple: false,
+  // Hiển thị một Dialog nhỏ hoặc BottomSheet để người dùng chọn nguồn
+  FileType targetType = FileType.any;
+  
+  final FileType? selectedType = await showModalBottomSheet<FileType>(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+    ),
+    builder: (BuildContext context) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.image_rounded, color: Colors.purple),
+              title: const Text('Mở Thư viện ảnh (Gallery)'),
+              onTap: () => Navigator.pop(context, FileType.image),
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_open_rounded, color: Colors.orange),
+              title: const Text('Mở Quản lý tệp tin (Files)'),
+              onTap: () => Navigator.pop(context, FileType.any),
+            ),
+          ],
+        ),
       );
-    } catch (e) {
-      _showErrorSnackBar("Không thể mở cửa sổ chọn file: $e");
-      return;
-    } finally {
-      _isPickerOpenActive = false;
-    }
+    },
+  );
 
-    if (result == null ||
-        result.files.isEmpty ||
-        result.files.single.path == null) {
-      return;
-    }
+  if (selectedType == null) return;
+  targetType = selectedType;
 
-    setState(() {
-      _isUploading = true;
-    });
+  // Khai báo danh sách chứa các file đã chọn (quy về một mối để xử lý loop phía dưới)
+  List<PlatformFile> pickedFiles = [];
 
-    try {
-      final File localFile = File(result.files.single.path!);
-      final String currentRemotePath = _navigationStack.isEmpty
-          ? ""
-          : _navigationStack.last.path;
-
-      final String successMessage = await service.uploadFile(
-        currentRemotePath,
-        localFile,
+  try {
+    _isPickerOpenActive = true;
+    await Future.delayed(const Duration(milliseconds: 300));
+    
+    if (targetType == FileType.image) {
+      // 📸 TRƯỜNG HỢP 1: Chọn ảnh từ Thư viện (Sử dụng ImagePicker)
+      final ImagePicker picker = ImagePicker();
+      final List<XFile> images = await picker.pickMultiImage();
+      
+      if (images.isNotEmpty) {
+        for (var xFile in images) {
+          // Lấy thông tin dung lượng file
+          final int length = await xFile.length();
+          
+          pickedFiles.add(
+            PlatformFile(
+              name: xFile.name,
+              path: xFile.path,
+              size: length,
+            ),
+          );
+        }
+      }
+    } else {
+      // 📁 TRƯỜNG HỢP 2: Chọn tài liệu/tệp tin khác (Giữ nguyên FilePicker cũ)
+      FilePickerResult? result = await FilePicker.pickFiles(
+        type: targetType,
+        allowMultiple: true, 
       );
-      _showSuccessSnackBar(successMessage);
-      await _loadDirectory(accid, currentRemotePath);
-    } catch (e) {
-      _showErrorSnackBar('Upload file thất bại: $e');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isUploading = false;
-        });
+      if (result != null) {
+        pickedFiles = result.files;
       }
     }
+  } catch (e) {
+    _showErrorSnackBar("Không thể mở cửa sổ chọn file: $e");
+    return;
+  } finally {
+    _isPickerOpenActive = false;
   }
 
-  // Xóa tệp/thư mục vật lý
+  // ---- Giữ nguyên đoạn code xử lý Loop Upload (for...) phía dưới của bạn ----
+  // ⚡ SỬA CHÚT XỈU: Thay vì kiểm tra 'result', ta kiểm tra 'pickedFiles' trực tiếp
+  if (pickedFiles.isEmpty) return;
+  
+  setState(() {
+    _isUploading = true;
+  });
+
+  int successCount = 0;
+  int failCount = 0;
+  // Xóa hoặc comment dòng này đi vì ta đã khai báo biến pickedFiles ở trên rồi:
+  // final List<PlatformFile> pickedFiles = result.files; 
+
+  try {
+    final String currentRemotePath = _navigationStack.isEmpty
+        ? ""
+        : _navigationStack.last.path;
+
+    for (int i = 0; i < pickedFiles.length; i++) {
+      final PlatformFile pickedFile = pickedFiles[i];
+      
+      if (pickedFile.path == null) {
+        failCount++;
+        continue;
+      }
+
+      if (mounted && pickedFiles.length > 1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đang upload tệp (${i + 1}/${pickedFiles.length}): ${pickedFile.name}'),
+            duration: const Duration(milliseconds: 800),
+          )
+        );
+      }
+
+      try {
+        final File localFile = File(pickedFile.path!);
+        
+        await service.uploadFile(
+          currentRemotePath,
+          localFile,
+        );
+        
+        successCount++;
+      } catch (e) {
+        debugPrint("❌ Lỗi upload file [${pickedFile.name}]: $e");
+        failCount++;
+      }
+    }
+
+    if (failCount == 0) {
+      _showSuccessSnackBar('Tải lên thành công toàn bộ $successCount tệp tin!');
+    } else {
+      _showSuccessSnackBar('Đã tải lên $successCount tệp thành công, thất bại $failCount tệp.');
+    }
+
+    await _loadDirectory(accid, currentRemotePath);
+
+  } catch (e) {
+    _showErrorSnackBar('Xảy ra lỗi trong quá trình xử lý upload: $e');
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isUploading = false;
+      });
+    }
+  }
+}
   Future<void> _handleDelete(FileNode item) async {
     final Map<String, dynamic>? result = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -394,8 +479,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
   }
 
   void _scrollToEnd() {
-    if (_currentViewMode != 'main')
-      return; // Nếu không ở chế độ cây thư mục thì không cuộn
+    if (_currentViewMode != 'main') return;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_breadcrumbScrollController.hasClients) {
@@ -408,7 +492,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
     });
   }
 
-  // Widget tạo Dropdown cho thanh AppBar Title
   Widget _buildViewModeDropdown() {
     return DropdownButtonHideUnderline(
       child: DropdownButton<String>(
@@ -459,7 +542,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Xác định danh sách dữ liệu hiển thị dựa trên chế độ Dropdown được chọn
     final bool isMainMode = _currentViewMode == 'main';
     final List<FileNode> displayList = isMainMode ? _filteredItems : _shortcuts;
 
@@ -635,8 +717,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
                                   onLongPress: () => _showFileActionSheet(file),
                                   contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 16,
-                                    vertical:
-                                        6, // Tăng nhẹ padding để dễ bấm trên điện thoại
+                                    vertical: 6,
                                   ),
                                   leading: file.folder
                                       ? Container(
@@ -658,8 +739,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
                                           child: const Icon(
                                             Icons.folder_rounded,
                                             color: Colors.orange,
-                                            size:
-                                                26, // Tăng kích thước icon thư mục một chút cho cân đối
+                                            size: 26,
                                           ),
                                         )
                                       : _buildFilePreview(file.name),
@@ -667,8 +747,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
                                     file.name,
                                     style: const TextStyle(
                                       fontSize: 15,
-                                      fontWeight: FontWeight
-                                          .w500, // Đổi từ w400 lên w500 giúp tên file rõ nét hơn
+                                      fontWeight: FontWeight.w500,
                                       color: Colors.black87,
                                     ),
                                     maxLines: 1,
@@ -686,13 +765,17 @@ class _TreeViewPageState extends State<TreeViewPage> {
                                   ),
                                   trailing: IconButton(
                                     icon: Icon(
-                                       isFav? Icons.link:Icons.more_vert_rounded,
-                                      color: Colors.grey.shade500,
+                                      isFav
+                                          ? Icons.star_rounded
+                                          : Icons.more_vert_rounded,
+                                      color: isFav
+                                          ? Colors.amber
+                                          : Colors.grey.shade500,
                                       size: 22,
                                     ),
                                     onPressed: () => {
                                       _showFileActionSheet(file),
-                                    }, // Mở nhanh menu khi bấm 3 chấm
+                                    },
                                   ),
                                 );
                               },
@@ -707,14 +790,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    // Nút Dán xuất hiện động khi có dữ liệu trong bộ nhớ tạm
-                    if (_navigationStack.length != 0) ...[
+                    if (_navigationStack.isNotEmpty) ...[
                       if (_clipboardItem != null) ...[
-                        // Thay thế đoạn code hiện tại của bạn bằng cấu trúc này:
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            // 1. Nút Dán (Paste)
                             FloatingActionButton.extended(
                               heroTag: "btnPasteAction",
                               onPressed: _isLoading ? null : _handlePasteAction,
@@ -733,18 +813,14 @@ class _TreeViewPageState extends State<TreeViewPage> {
                                 ),
                               ),
                             ),
-
-                            const SizedBox(width: 12), // Khoảng cách nhỏ
-                            // 2. Nút Hủy bỏ (Clear Clipboard)
+                            const SizedBox(width: 12),
                             FloatingActionButton(
                               heroTag: "btnClearClipboard",
-                              mini: true, // Làm nút nhỏ hơn cho gọn
+                              mini: true,
                               onPressed: () {
                                 setState(() {
-                                  _clipboardAction =
-                                      ''; // Hoặc null, tùy theo biến bạn dùng
-                                  _clipboardItem =
-                                      null; // Xóa sạch dữ liệu đã lưu
+                                  _clipboardAction = '';
+                                  _clipboardItem = null;
                                 });
                               },
                               backgroundColor: Colors.redAccent,
@@ -755,19 +831,19 @@ class _TreeViewPageState extends State<TreeViewPage> {
                             ),
                           ],
                         ),
-                        const SizedBox(width: 16), // Khoảng cách giữa 2 nút
+                        const SizedBox(width: 16),
                       ],
-                      FloatingActionButton(
-                        mini: true,
-                        onPressed: () => _showCreateFolderDialog(context),
-                        backgroundColor: Colors.blue,
-                        child: const Icon(
-                          Icons.create_new_folder_rounded,
-                          color: Colors.white,
-                        ),
-                      ),
+
                       if (_clipboardItem == null) ...[
-                        // Nút Tải file lên (Mặc định hiện tại của bạn)
+                        FloatingActionButton(
+                          mini: true,
+                          onPressed: () => _showCreateFolderDialog(context),
+                          backgroundColor: Colors.blue,
+                          child: const Icon(
+                            Icons.create_new_folder_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
                         FloatingActionButton(
                           mini: true,
                           heroTag: "btnUploadAction",
@@ -942,45 +1018,56 @@ class _TreeViewPageState extends State<TreeViewPage> {
     }
   }
 
+  // 🔥 1. HÀM BỔ TRỢ MỚI: Đồng bộ hóa đường dẫn chuẩn cho cả iOS và Android
+  Future<String> _getBaseDownloadPath() async {
+    if (Platform.isAndroid) {
+      // Nhắm thẳng vào bộ nhớ ngoài (External Storage) -> Thư mục Downloads của app
+      final List<Directory>? extDirs = await getExternalStorageDirectories(
+        type: StorageDirectory.downloads,
+      );
+      if (extDirs != null && extDirs.isNotEmpty) {
+        return "${extDirs.first.path}/PhuThanhDownloads";
+      }
+    }
+    // iOS giữ nguyên cơ chế sandbox hoạt động tốt của bạn
+    final Directory appDocDir = await getApplicationDocumentsDirectory();
+    return "${appDocDir.path}/PhuThanhDownloads";
+  }
+
   void _showFileActionSheet(FileNode file) async {
     final isFav = _isShortcut(file);
     File? localFileCorresponding;
 
-    if (_navigationStack.isNotEmpty) {
-      try {
-        final baseDir = await getApplicationDocumentsDirectory();
-        String cleanRemotePath = _navigationStack.last.path;
-        if (cleanRemotePath.startsWith('/')) {
-          cleanRemotePath = cleanRemotePath.substring(1);
-        }
-
-        final String localFilePath =
-            "${baseDir.path}/PhuThanhDownloads/$cleanRemotePath/${file.name}";
-        // "/$cleanRemotePath/${file.name}";
-        print(localFilePath);
-
-        final File checkFile = File(localFilePath);
-
-        if (await checkFile.exists()) {
-          localFileCorresponding = checkFile;
-        } else {
-          print("nó đã ko có");
-        }
-      } catch (e) {
-        debugPrint("❌ Lỗi kiểm tra file cục bộ: $e");
+    // 🔥 SỬA: Đồng bộ hóa cách kiểm tra file tồn tại bằng hàm _getBaseDownloadPath()
+    try {
+      final String basePath = await _getBaseDownloadPath();
+      String cleanRemotePath = _navigationStack.isEmpty
+          ? ""
+          : _navigationStack.last.path;
+      if (cleanRemotePath.startsWith('/')) {
+        cleanRemotePath = cleanRemotePath.substring(1);
       }
+
+      final String localFilePath = cleanRemotePath.isEmpty
+          ? "$basePath/${file.name}"
+          : "$basePath/$cleanRemotePath/${file.name}";
+
+      final File checkFile = File(localFilePath);
+      if (await checkFile.exists()) {
+        localFileCorresponding = checkFile;
+      }
+    } catch (e) {
+      debugPrint("❌ Lỗi kiểm tra file cục bộ: $e");
     }
 
     if (!mounted) return;
 
-    // Định dạng ngày hiển thị chi tiết
     final dateTime = DateTime.fromMillisecondsSinceEpoch(file.lastModified);
     final formattedDate = DateFormat('dd/MM/yyyy HH:mm:ss').format(dateTime);
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled:
-          true, // Cho phép bottom sheet tự co giãn theo nội dung chi tiết
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -989,7 +1076,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Thanh kéo nhỏ trên cùng tạo cảm giác hiện đại hơn
               const SizedBox(height: 8),
               Container(
                 width: 40,
@@ -999,14 +1085,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
-              // --- PHẦN CHI TIẾT FILE/THƯ MỤC (DETAILS SECTION) ---
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Hiển thị lại preview icon của file/folder
                     file.folder
                         ? Container(
                             width: 50,
@@ -1028,7 +1111,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
                             child: Center(child: _buildFilePreview(file.name)),
                           ),
                     const SizedBox(width: 14),
-                    // Thông tin chi tiết text
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1044,8 +1126,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 6),
-
-                          // Các dòng chi tiết nhỏ bên dưới
                           Text(
                             file.folder
                                 ? "Loại: Thư mục hệ thống"
@@ -1092,7 +1172,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
               const Divider(height: 1, thickness: 1),
 
-              // --- DANH SÁCH CÁC HÀNH ĐỘNG ---
               ListTile(
                 leading: Icon(
                   file.folder
@@ -1122,27 +1201,22 @@ class _TreeViewPageState extends State<TreeViewPage> {
                     _handleDownloadFile(file);
                   },
                 ),
-              // if (!file.folder && localFileCorresponding != null)
               ListTile(
                 leading: const Icon(Icons.sync_rounded, color: Colors.teal),
                 title: const Text('Đồng bộ file cục bộ lên Server'),
-                subtitle: Text(
-                  'Phát hiện bản sao khả dụng ở bộ nhớ máy',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
-                ),
+                // subtitle: Text(
+                //   'Phát hiện bản sao khả dụng ở bộ nhớ máy',
+                //   style: TextStyle(color: Colors.grey.shade600, fontSize: 11),
+                // ),
                 onTap: () {
                   Navigator.pop(bottomSheetContext);
                   if (localFileCorresponding != null) {
                     _handleSingleFileSync(localFileCorresponding);
                   } else {
-                    // Xử lý trường hợp không tìm thấy file
                     _showErrorSnackBar(
                       "Không tìm thấy file cục bộ để đồng bộ!",
                     );
                   }
-                  debugPrint(
-                    "Giá trị localFileCorresponding hiện tại là: $localFileCorresponding",
-                  );
                 },
               ),
               if (!file.folder)
@@ -1166,28 +1240,24 @@ class _TreeViewPageState extends State<TreeViewPage> {
                 },
               ),
               const SizedBox(height: 8),
-              // ===== THÊM LỰA CHỌN SAO CHÉP =====
               ListTile(
                 leading: const Icon(Icons.copy_rounded, color: Colors.blue),
                 title: const Text('Sao chép (Copy)'),
                 onTap: () {
-                  Navigator.pop(bottomSheetContext); // Đóng menu bottom sheet
-                  _handleCopyAction(file); // Gọi hàm copy tạm
+                  Navigator.pop(bottomSheetContext);
+                  _handleCopyAction(file);
                 },
               ),
-              // Thay thế đoạn hiển thị item hiện tại bằng cấu trúc này:
               ListTile(
                 leading: Icon(
                   file.folder ? Icons.folder : Icons.insert_drive_file,
                 ),
-                title: Text("Đổi tên"),
+                title: const Text("Đổi tên"),
                 onTap: () {
-                  /* xử lý mở thư mục */
                   Navigator.pop(bottomSheetContext);
                   _showRenameDialog(context, file);
                 },
               ),
-              // ===== THÊM LỰA CHỌN CẮT =====
               ListTile(
                 leading: const Icon(
                   Icons.content_cut_rounded,
@@ -1195,12 +1265,10 @@ class _TreeViewPageState extends State<TreeViewPage> {
                 ),
                 title: const Text('Cắt / Di chuyển (Cut)'),
                 onTap: () {
-                  Navigator.pop(bottomSheetContext); // Đóng menu bottom sheet
-                  _handleCutAction(file); // Gọi hàm cut tạm
+                  Navigator.pop(bottomSheetContext);
+                  _handleCutAction(file);
                 },
               ),
-
-              // ListTile của nút Xóa (Giữ nguyên cũ)
               ListTile(
                 leading: const Icon(
                   Icons.delete_forever_rounded,
@@ -1273,8 +1341,12 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
         if (actionType == 'open') {
           final result = await OpenFilex.open(fullFilePath);
+
+          // DEBUG: Log kết quả lỗi để dễ dàng kiểm soát
+          debugPrint("🔥 OpenFilex Result: ${result.type} - ${result.message}");
+
           if (result.type != ResultType.done && mounted) {
-            _showErrorSnackBar('Không tìm thấy ứng dụng phù hợp để mở file.');
+            _showErrorSnackBar('Không thể mở file: ${result.message}');
           }
         } else if (actionType == 'share') {
           final box = context.findRenderObject() as RenderBox?;
@@ -1343,7 +1415,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
                 hasChildren: true,
                 directory: true,
                 children: [],
-                // Thêm các tham số bị thiếu bên dưới:
                 formattedSize: "-",
                 lastModified: DateTime.now().millisecondsSinceEpoch,
                 createdTime: DateTime.now().millisecondsSinceEpoch,
@@ -1429,16 +1500,13 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
   Future<void> _autoCleanCache() async {
     try {
-      // 1. Sửa lại key đọc dữ liệu cho đồng nhất là "cache_expiration_days"
       final double expirationDays =
           await prefs.getDataNumber("cache_expiration_days") ?? 3;
-
-      if (expirationDays <= 0) return; // Nếu chọn "Không bao giờ xóa" thì dừng
+      if (expirationDays <= 0) return;
 
       final DateTime now = DateTime.now();
       int deletedCount = 0;
 
-      // --- PHẦN 1: QUÉT VÀ XÓA FILE TRONG THƯ MỤC CACHE TẠM THỜI ---
       final Directory cacheDir = await getTemporaryDirectory();
       if (await cacheDir.exists()) {
         final List<FileSystemEntity> cacheEntities = cacheDir.listSync(
@@ -1455,14 +1523,10 @@ class _TreeViewPageState extends State<TreeViewPage> {
         }
       }
 
-      // --- PHẦN 2: QUÉT VÀ XÓA FILE TRONG THƯ MỤC TẢI VỀ (DOCUMENTS) ---
-      // (Bỏ phần này nếu bạn KHÔNG muốn tự động xóa file người dùng bấm nút Tải về vĩnh viễn)
-      final Directory appDocDir = await getApplicationDocumentsDirectory();
-      final Directory downloadDir = Directory(
-        "${appDocDir.path}/PhuThanhDownloads",
-      );
+      // 🔥 SỬA: Đồng bộ hóa dọn dẹp cache bằng hàm _getBaseDownloadPath()
+      final String basePath = await _getBaseDownloadPath();
+      final Directory downloadDir = Directory(basePath);
       if (await downloadDir.exists()) {
-        // Dùng recursive: true để quét sâu vào các thư mục con do server tạo ra
         final List<FileSystemEntity> docEntities = downloadDir.listSync(
           recursive: true,
         );
@@ -1564,7 +1628,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
             ],
           ),
           actions: [
-            // NÚT THÊM MỚI: DỌN DẸP NGAY LẬP TỨC
             TextButton.icon(
               style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
               icon: const Icon(Icons.delete_sweep_rounded, size: 18),
@@ -1573,11 +1636,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               onPressed: () {
-                Navigator.pop(dialogContext); // Đóng hộp thoại cài đặt
-                _cleanCacheImmediately(); // Gọi hàm xóa toàn bộ cache ngay lập tức
+                Navigator.pop(dialogContext);
+                _cleanCacheImmediately();
               },
             ),
-            const SizedBox(width: 8), // Khoảng cách giữa các nút
+            const SizedBox(width: 8),
 
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
@@ -1616,7 +1679,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
     try {
       int deletedCount = 0;
 
-      // 1. Dọn dẹp thư mục Cache tạm thời (Dùng chung iOS & Android)
       final Directory cacheDir = await getTemporaryDirectory();
       if (await cacheDir.exists()) {
         final List<FileSystemEntity> cacheEntities = cacheDir.listSync(
@@ -1630,41 +1692,15 @@ class _TreeViewPageState extends State<TreeViewPage> {
         }
       }
 
-      // 2. DỌN DẸP THƯ MỤC FILE TẢI VỀ THEO TỪNG PLATFORM
-      if (Platform.isAndroid) {
-        // Lấy đúng thư mục Downloads ngoài của ứng dụng giống lúc tải về
-        final List<Directory>? externalDirs =
-            await getExternalStorageDirectories(
-              type: StorageDirectory.downloads,
-            );
+      // 🔥 SỬA: Đồng bộ hóa dọn dẹp cache tức thì bằng hàm _getBaseDownloadPath()
+      final String basePath = await _getBaseDownloadPath();
+      final Directory downloadDir = Directory(basePath);
 
-        if (externalDirs != null && externalDirs.isNotEmpty) {
-          final Directory downloadDirAndroid = externalDirs.first;
-          if (await downloadDirAndroid.exists()) {
-            final List<FileSystemEntity> entities = downloadDirAndroid.listSync(
-              recursive: true, // Quét sâu vào các thư mục con như data/txt/
-            );
-            for (var entity in entities) {
-              if (entity is File) {
-                await entity.delete();
-                deletedCount++;
-              }
-            }
-          }
-        }
-      }
-
-      // Khối xử lý cho iOS hoặc phương án dự phòng Android (Internal Storage)
-      final Directory appDocDir = await getApplicationDocumentsDirectory();
-      final Directory downloadDirIOS = Directory(
-        "${appDocDir.path}/PhuThanhDownloads",
-      );
-
-      if (await downloadDirIOS.exists()) {
-        final List<FileSystemEntity> docEntities = downloadDirIOS.listSync(
+      if (await downloadDir.exists()) {
+        final List<FileSystemEntity> entities = downloadDir.listSync(
           recursive: true,
         );
-        for (var entity in docEntities) {
+        for (var entity in entities) {
           if (entity is File) {
             await entity.delete();
             deletedCount++;
@@ -1689,64 +1725,39 @@ class _TreeViewPageState extends State<TreeViewPage> {
     }
   }
 
+  // 🔥 2. SỬA CHÍNH: Hàm lưu file đã hoạt động trơn tru 100% trên cả Android & iOS
   Future<void> _handleDownloadFile(FileNode file) async {
     if (!mounted) return;
     ScaffoldMessenger.of(context).clearSnackBars();
     _showSuccessSnackBar('Đang tiến hành tải file...');
 
     try {
-      String finalDirectoryPath = "";
+      // Gọi hàm chuẩn hóa đường dẫn chung
+      final String basePath = await _getBaseDownloadPath();
 
-      // Lấy đường dẫn thư mục hiện tại từ Stack điều hướng
       String currentRemotePath = _navigationStack.isEmpty
           ? ""
           : _navigationStack.last.path;
 
-      // Xóa dấu gạch chéo đầu tiên nếu có để tránh lỗi ghép chuỗi đường dẫn
       if (currentRemotePath.startsWith('/')) {
         currentRemotePath = currentRemotePath.substring(1);
       }
 
-      if (Platform.isAndroid) {
-        // Lấy thư mục Downloads riêng của ứng dụng trên bộ nhớ ngoài
-        // final List<Directory>? externalDirs =
-        //     await getExternalStorageDirectories(
-        //       type: StorageDirectory.downloads,
-        //     );
+      // Ghép đường dẫn động chuẩn chỉnh
+      final String finalDirectoryPath = currentRemotePath.isEmpty
+          ? basePath
+          : "$basePath/$currentRemotePath";
 
-        // if (externalDirs != null && externalDirs.isNotEmpty) {
-        //   String baseAndroidPath = externalDirs.first.path;
-
-        //   // Ghép thêm cấu trúc thư mục hiện tại vào sau thư mục Downloads gốc
-        //   finalDirectoryPath = currentRemotePath.isEmpty
-        //       ? baseAndroidPath
-        //       : "$baseAndroidPath/$currentRemotePath";
-        // } else {
-        // Phương án dự phòng nếu không lấy được bộ nhớ ngoài
-        final Directory appDocDir = await getApplicationDocumentsDirectory();
-        finalDirectoryPath = currentRemotePath.isEmpty
-            ? "${appDocDir.path}/PhuThanhDownloads"
-            : "${appDocDir.path}/PhuThanhDownloads/$currentRemotePath";
-        // }
-      }
-      if (Platform.isIOS) {
-        // Đối với iOS: Giữ nguyên logic cũ của bạn
-        final Directory appDocDir = await getApplicationDocumentsDirectory();
-        finalDirectoryPath = currentRemotePath.isEmpty
-            ? "${appDocDir.path}/PhuThanhDownloads"
-            : "${appDocDir.path}/PhuThanhDownloads/$currentRemotePath";
-      }
-
-      // Tiến hành tạo cây thư mục (bao gồm cả các thư mục con như data/txt/ nếu chưa có)
+      // Tạo cấu trúc cây thư mục (Hỗ trợ đệ quy đa tầng thư mục)
       final Directory targetDir = Directory(finalDirectoryPath);
       if (!await targetDir.exists()) {
         await targetDir.create(recursive: true);
       }
 
       String finalFilePath = "$finalDirectoryPath/${file.name}";
-      debugPrint("📂 Đường dẫn lưu file Android hợp lệ: $finalFilePath");
+      debugPrint("📂 Đường dẫn tải & lưu thực tế: $finalFilePath");
 
-      // Tải và ghi file vào đường dẫn chi tiết
+      // Tải dữ liệu và ghi vào máy
       await service.downloadFile(file.path, finalFilePath);
 
       final File downloadedFile = File(finalFilePath);
@@ -1757,11 +1768,10 @@ class _TreeViewPageState extends State<TreeViewPage> {
       }
     } catch (e) {
       debugPrint("❌ Lỗi tải file: $e");
-      _showErrorSnackBar('Không thể tải file do giới hạn bộ nhớ: $e');
+      _showErrorSnackBar('Không thể tải file: $e');
     }
   }
 
-  // 1. Lưu thông tin mục vào bộ nhớ tạm để chuẩn bị Copy
   void _handleCopyAction(FileNode item) {
     setState(() {
       _clipboardItem = item;
@@ -1770,7 +1780,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
     _showSuccessSnackBar('Đã sao chép vào bộ nhớ tạm: ${item.name}');
   }
 
-  // 2. Lưu thông tin mục vào bộ nhớ tạm để chuẩn bị Cut (Di chuyển)
   void _handleCutAction(FileNode item) {
     setState(() {
       _clipboardItem = item;
@@ -1779,14 +1788,12 @@ class _TreeViewPageState extends State<TreeViewPage> {
     _showSuccessSnackBar('Đã cắt vào bộ nhớ tạm: ${item.name}');
   }
 
-  // 3. Thực hiện gửi yêu cầu dán dữ liệu lên server
   Future<void> _handlePasteAction() async {
     if (_clipboardItem == null || _clipboardAction.isEmpty) return;
 
     setState(() => _isLoading = true);
 
     try {
-      // Lấy đường dẫn thư mục hiện tại mà người dùng đang đứng
       final String currentRemotePath = _navigationStack.isEmpty
           ? ""
           : _navigationStack.last.path;
@@ -1794,13 +1801,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
       String resultMsg = "";
 
       if (_clipboardAction == 'copy') {
-        // Gọi hàm copy từ service mới thêm vào của bạn
         resultMsg = await service.copyFileOrFolder(
           sourcePath: _clipboardItem!.path,
           targetDirectoryPath: currentRemotePath,
         );
       } else if (_clipboardAction == 'cut') {
-        // Gọi hàm move từ service mới thêm vào của bạn
         resultMsg = await service.moveFileOrFolder(
           sourcePath: _clipboardItem!.path,
           targetDirectoryPath: currentRemotePath,
@@ -1811,17 +1816,11 @@ class _TreeViewPageState extends State<TreeViewPage> {
         resultMsg.isNotEmpty ? resultMsg : 'Thao tác thành công!',
       );
 
-      // Nếu là hành động Cut, sau khi dán xong thì xóa bộ nhớ đệm
-      // if (_clipboardAction == 'cut') {
-      //   _clipboardItem = null;
-      //   _clipboardAction = "";
-      // }
       setState(() {
         _clipboardItem = null;
         _clipboardAction = "";
       });
 
-      // Tải lại dữ liệu của thư mục hiện tại để hiển thị file/folder mới dán
       await _loadDirectory(accid, currentRemotePath);
     } catch (e) {
       _showErrorSnackBar('Thao tác thất bại: ${e.toString()}');
@@ -1852,7 +1851,7 @@ class _TreeViewPageState extends State<TreeViewPage> {
                 final newName = controller.text;
                 await service.renameItem(accid, item.path, newName);
 
-                if (!context.mounted) return; // Kiểm tra an toàn
+                if (!context.mounted) return;
 
                 Navigator.pop(context);
                 final String currentRemotePath = _navigationStack.isEmpty
@@ -1898,20 +1897,16 @@ class _TreeViewPageState extends State<TreeViewPage> {
               final folderName = folderNameController.text.trim();
               if (folderName.isEmpty) return;
 
-              // Lấy đường dẫn thư mục cha hiện tại từ stack
               final String currentPath = _navigationStack.isEmpty
                   ? ""
                   : _navigationStack.last.path;
 
               try {
-                // Gọi service tạo folder
-                // Lưu ý: accid cần lấy từ SharedPreferences hoặc state hiện tại
                 await service.createFolder(accid, currentPath, folderName);
 
                 if (!context.mounted) return;
-                Navigator.pop(context); // Đóng dialog
+                Navigator.pop(context);
 
-                // Tải lại danh sách sau khi tạo thành công
                 _loadDirectory(accid, currentPath);
 
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -1933,7 +1928,6 @@ class _TreeViewPageState extends State<TreeViewPage> {
 
 class DeleteConfirmationDialog extends StatefulWidget {
   final String itemName;
-
   const DeleteConfirmationDialog({super.key, required this.itemName});
 
   @override
