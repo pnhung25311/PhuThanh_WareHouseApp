@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomCartFilter.custom.dart';
 import 'package:phuthanh_warehouseapp/business/components/CustomCartItem.custom.dart';
@@ -10,10 +10,11 @@ import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Country.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Employee.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Manufacturer.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Supplier.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/ResponsiveListGrid.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 
 class CartListScreen extends StatefulWidget {
@@ -327,7 +328,7 @@ class _CartListScreenState extends State<CartListScreen> {
           ? const Center(child: Text("Không có dữ liệu"))
           : RefreshIndicator(
               onRefresh: _loadData,
-              child: ListView.builder(
+              child: ResponsiveListGrid(
                 itemCount: _carts.length,
                 itemBuilder: (context, index) {
                   final cart = _carts[index];

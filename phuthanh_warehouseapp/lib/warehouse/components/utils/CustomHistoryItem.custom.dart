@@ -3,7 +3,7 @@ import 'package:phuthanh_warehouseapp/helper/FormatDateHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/ViewHistory.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/history/HistoryDetailScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/warehouse/screen/history/HistoryDetailScreen.screen.dart';
 
 class HistoryItem extends StatelessWidget {
   final ViewHistory history;

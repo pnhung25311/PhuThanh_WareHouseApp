@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Country.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Employee.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Manufacturer.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Supplier.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDropdownField.custom.dart';
 
 class CartFilterResult {

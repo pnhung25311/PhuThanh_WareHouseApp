@@ -3,7 +3,8 @@ import 'package:phuthanh_warehouseapp/business/components/CustomBusinessLongClic
 import 'package:phuthanh_warehouseapp/business/components/CustomHistoryBusinessItem.custom.dart';
 import 'package:phuthanh_warehouseapp/business/service/BusinessService.service.dart';
 import 'package:phuthanh_warehouseapp/model/business/History.model.dart';
-// import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/ScanBarcodeScreen.screen.dart'; // import màn scan
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/ResponsiveListGrid.custom.dart';
+// import 'package:phuthanh_warehouseapp/warehouse/screen/WareHouse/ScanBarcodeScreen.screen.dart'; // import màn scan
 
 class HistoryBusinessScreenALL extends StatefulWidget {
   final isExIm;
@@ -223,7 +224,7 @@ class _HistoryBusinessScreenALLScreenState
               onRefresh: () => _loadHistory(),
               child: _filteredProducts.isEmpty
                   ? _buildEmptyState()
-                  : ListView.builder(
+                  : ResponsiveListGrid(
                       itemCount: _filteredProducts.length,
                       itemBuilder: (context, index) {
                         final history = _filteredProducts[index];

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
+import 'package:phuthanh_warehouseapp/model/business/Business.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/DesktopContentConstraint.custom.dart';
 
 class BusinessDetailScreen extends StatelessWidget {
   final Business item;
@@ -36,7 +37,8 @@ class BusinessDetailScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      body: DesktopContentConstraint(
+        child: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -183,6 +185,7 @@ class BusinessDetailScreen extends StatelessWidget {
 
             const SizedBox(height: 32),
           ],
+        ),
         ),
       ),
     );

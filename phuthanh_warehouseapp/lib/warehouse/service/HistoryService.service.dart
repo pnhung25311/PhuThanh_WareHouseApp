@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
-import 'package:phuthanh_warehouseapp/model/info/DrawerItem.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/DrawerItem.model.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/History.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/ViewHistory.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';

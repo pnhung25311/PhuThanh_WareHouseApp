@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
 import 'package:phuthanh_warehouseapp/model/business/BusinessType.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Bill.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Location.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Payment.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Unit.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Category.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Guaranteet.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Bill.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Country.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Employee.model.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/Location.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Manufacturer.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Payment.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Supplier.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Unit.model.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/Category.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/VehicleTypeID.model.dart';
+import 'package:phuthanh_warehouseapp/model/warehouse/Guaranteet.model.dart';
 
 class InfoService {
   Future<List<Country>> LoadDtataCountry() async {

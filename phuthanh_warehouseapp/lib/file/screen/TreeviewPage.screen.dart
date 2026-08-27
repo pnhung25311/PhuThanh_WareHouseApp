@@ -5,9 +5,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:phuthanh_warehouseapp/file/service/TreeviewService.service.dart';
+import 'package:phuthanh_warehouseapp/helper/ResponsiveHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/file/FileNode.dart';
-import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawerUtils.custom.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/ResponsiveDrawerScaffold.custom.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
@@ -551,20 +552,21 @@ Future<void> _handlePickAndUploadFile() async {
         if (didPop) return;
         _handleBackNavigation();
       },
-      child: Scaffold(
+      child: ResponsiveDrawerScaffold(
         backgroundColor: Colors.white,
-        drawer: const CustomDrawerUtils(),
         appBar: AppBar(
           leading: _navigationStack.isEmpty
-              ? Builder(
-                  builder: (context) => IconButton(
-                    icon: const Icon(Icons.menu_rounded, color: Colors.black87),
-                    tooltip: 'Mở menu',
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                  ),
-                )
+              ? (isDesktopLayout(context)
+                    ? null
+                    : Builder(
+                        builder: (context) => IconButton(
+                          icon: const Icon(Icons.menu_rounded, color: Colors.black87),
+                          tooltip: 'Mở menu',
+                          onPressed: () {
+                            Scaffold.of(context).openDrawer();
+                          },
+                        ),
+                      ))
               : IconButton(
                   icon: const Icon(
                     Icons.arrow_back_ios_new_rounded,

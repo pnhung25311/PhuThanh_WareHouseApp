@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/Product/ProductDetailScreen.sreen.dart';
+import 'package:phuthanh_warehouseapp/warehouse/screen/Product/ProductDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/VehicleTypeID.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 

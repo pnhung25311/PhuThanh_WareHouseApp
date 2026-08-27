@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/helper/ResponsiveHelper.helper.dart';
 
 class CustomBottomNavigatorSheetCheck extends StatelessWidget {
   final List<Widget> screens;
@@ -35,8 +36,37 @@ class CustomBottomNavigatorSheetCheck extends StatelessWidget {
     this.scanSize = 48,
   });
 
+  void _handleTap(int index) {
+    if (scanIndex != null && index == scanIndex && onScanTap != null) {
+      onScanTap!();
+      return;
+    }
+    onTabChanged(index);
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (isDesktopLayout(context)) {
+      return Scaffold(
+        body: Row(
+          children: [
+            NavigationRail(
+              selectedIndex: currentIndex,
+              onDestinationSelected: _handleTap,
+              labelType: NavigationRailLabelType.all,
+              selectedIconTheme: IconThemeData(color: selectedColor),
+              unselectedIconTheme: IconThemeData(color: unselectedColor),
+              destinations: _buildRailDestinations(),
+            ),
+            const VerticalDivider(width: 1),
+            Expanded(
+              child: IndexedStack(index: currentIndex, children: screens),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       body: IndexedStack(index: currentIndex, children: screens),
       bottomNavigationBar: BottomNavigationBar(
@@ -45,13 +75,7 @@ class CustomBottomNavigatorSheetCheck extends StatelessWidget {
         unselectedItemColor: unselectedColor,
         type: BottomNavigationBarType.fixed,
         items: _buildItems(),
-        onTap: (index) {
-          if (scanIndex != null && index == scanIndex && onScanTap != null) {
-            onScanTap!();
-            return;
-          }
-          onTabChanged(index);
-        },
+        onTap: _handleTap,
       ),
     );
   }
@@ -72,6 +96,25 @@ class CustomBottomNavigatorSheetCheck extends StatelessWidget {
         );
       }
       return item;
+    }).toList();
+  }
+
+  List<NavigationRailDestination> _buildRailDestinations() {
+    return items.asMap().entries.map((entry) {
+      final index = entry.key;
+      final item = entry.value;
+
+      if (scanIndex != null && index == scanIndex) {
+        return NavigationRailDestination(
+          icon: Icon(scanIcon, color: scanColor),
+          label: Text(item.label ?? ''),
+        );
+      }
+      return NavigationRailDestination(
+        icon: item.icon,
+        selectedIcon: item.activeIcon,
+        label: Text(item.label ?? ''),
+      );
     }).toList();
   }
 }

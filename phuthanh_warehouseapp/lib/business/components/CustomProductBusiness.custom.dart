@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/product/ProductBusinessDetailsScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/StockAllocatorHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/business/Business.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Product.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 
 class ProductCard extends StatelessWidget {
@@ -197,42 +199,7 @@ class ProductCard extends StatelessWidget {
                             ],
                           ),
 
-                          if (images.length > 1) ...[
-                            const SizedBox(height: 20),
-                            Text(
-                              'Hình ảnh khác',
-                              style: textTheme.labelMedium?.copyWith(
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            SizedBox(
-                              height: 86,
-                              child: ListView.separated(
-                                scrollDirection: Axis.horizontal,
-                                itemCount: images.length - 1,
-                                separatorBuilder: (_, __) =>
-                                    const SizedBox(width: 12),
-                                itemBuilder: (context, index) {
-                                  final url = images[index + 1];
-                                  return ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      url,
-                                      width: 120,
-                                      height: 86,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) =>
-                                          _placeholderImage(
-                                            width: 120,
-                                            height: 86,
-                                          ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
+                          _ProductImageStrip(images: images),
                         ],
                       ),
                     ),
@@ -243,15 +210,6 @@ class ProductCard extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  Widget _placeholderImage({double? width, double? height}) {
-    return Container(
-      width: width,
-      height: height,
-      color: Colors.grey.shade200,
-      child: const Icon(Icons.broken_image, color: Colors.grey, size: 40),
     );
   }
 
@@ -600,4 +558,150 @@ class _Stock {
   final Color color;
 
   _Stock(this.label, this.qty, this.color);
+}
+
+/// Dải ảnh phụ (bỏ ảnh đầu tiên) của sản phẩm, tự đổi IP nội bộ -> IP public
+/// khi thiết bị không ở trong mạng LAN, và cho phép bấm vào ảnh để xem
+/// toàn màn hình có zoom to/nhỏ (pinch/double-tap qua [InteractiveViewer]).
+class _ProductImageStrip extends StatefulWidget {
+  final List<String> images;
+
+  const _ProductImageStrip({required this.images});
+
+  @override
+  State<_ProductImageStrip> createState() => _ProductImageStripState();
+}
+
+class _ProductImageStripState extends State<_ProductImageStrip> {
+  final ApiClient _apiClient = ApiClient();
+  final FunctionConvertHelper _convertHelper = FunctionConvertHelper();
+  bool? _isInternalNetwork;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkNetwork();
+  }
+
+  Future<void> _checkNetwork() async {
+    try {
+      final result = await _apiClient.isInternalNetwork();
+      if (mounted) setState(() => _isInternalNetwork = result);
+    } catch (_) {
+      if (mounted) setState(() => _isInternalNetwork = false);
+    }
+  }
+
+  String _resolveUrl(String url) {
+    if (_isInternalNetwork == true) return url;
+    return _convertHelper.convertToPublicIP(url);
+  }
+
+  void _openViewer(BuildContext context, int initialIndex) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => _ProductImageViewer(
+          urls: widget.images.map(_resolveUrl).toList(),
+          initialIndex: initialIndex,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.images.length <= 1) return const SizedBox.shrink();
+
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 20),
+        Text(
+          'Hình ảnh khác',
+          style: textTheme.labelMedium?.copyWith(color: Colors.grey.shade700),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 86,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: widget.images.length - 1,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final url = _resolveUrl(widget.images[index + 1]);
+              return GestureDetector(
+                onTap: () => _openViewer(context, index + 1),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    url,
+                    width: 120,
+                    height: 86,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) =>
+                        _placeholderImage(width: 120, height: 86),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _placeholderImage({double? width, double? height}) {
+    return Container(
+      width: width,
+      height: height,
+      color: Colors.grey.shade200,
+      child: const Icon(Icons.broken_image, color: Colors.grey, size: 40),
+    );
+  }
+}
+
+/// Xem ảnh sản phẩm toàn màn hình, vuốt ngang giữa các ảnh, zoom to/nhỏ
+/// bằng pinch hoặc double-tap nhờ [InteractiveViewer].
+class _ProductImageViewer extends StatelessWidget {
+  final List<String> urls;
+  final int initialIndex;
+
+  const _ProductImageViewer({required this.urls, required this.initialIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: PageView.builder(
+        controller: PageController(initialPage: initialIndex),
+        itemCount: urls.length,
+        itemBuilder: (context, index) {
+          return InteractiveViewer(
+            minScale: 0.8,
+            maxScale: 4,
+            child: Center(
+              child: Image.network(
+                urls[index],
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    color: Colors.white,
+                    size: 60,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
 }

@@ -5,8 +5,9 @@ import 'package:phuthanh_warehouseapp/business/components/CustomBusinessLongClic
 import 'package:phuthanh_warehouseapp/business/components/CustomProductBusiness.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawerUtils.custom.dart';
+import 'package:phuthanh_warehouseapp/model/business/Business.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/ResponsiveDrawerScaffold.custom.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/ResponsiveListGrid.custom.dart';
 
 class BusinessScreen extends StatefulWidget {
   const BusinessScreen({super.key});
@@ -153,7 +154,7 @@ class _BusinessScreenState extends State<BusinessScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ResponsiveDrawerScaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
         title: AnimatedSwitcher(
@@ -214,7 +215,6 @@ class _BusinessScreenState extends State<BusinessScreen> {
           ),
         ],
       ),
-      drawer: CustomDrawerUtils(),
       body: _isLoading
           ? _buildLoading()
           : _errorMessage != null
@@ -232,7 +232,7 @@ class _BusinessScreenState extends State<BusinessScreen> {
               onRefresh: _loadProducts,
               child: _filteredProducts.isEmpty
                   ? _buildEmptyState()
-                  : ListView.builder(
+                  : ResponsiveListGrid(
                       itemCount: _filteredProducts.length,
                       itemBuilder: (context, index) {
                         final product = _filteredProducts[index];

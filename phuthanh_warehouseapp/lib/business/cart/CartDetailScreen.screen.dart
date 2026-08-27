@@ -9,21 +9,22 @@ import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/business/BusinessType.model.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Bill.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Country.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Manufacturer.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/OptionAction.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Payment.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Supplier.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Employee.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Unit.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/VehicleTypeID.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Bill.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Country.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Manufacturer.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/OptionAction.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Payment.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Supplier.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Employee.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Unit.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/VehicleTypeID.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/formatters/DotToMinusFormatte.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDropdownField.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomSmartDropdown.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextField.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/DesktopContentConstraint.custom.dart';
 
 const gapH12 = SizedBox(height: 12);
 
@@ -463,7 +464,8 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(header ?? ""), centerTitle: true),
-      body: Stack(
+      body: DesktopContentConstraint(
+        child: Stack(
         children: [
           Form(
             key: _formKey,
@@ -895,6 +897,7 @@ class _CartDetailScreenState extends State<CartDetailScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

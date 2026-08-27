@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-// import 'package:phuthanh_warehouseapp/Screen/WareHouse/WareHouseTransfer.screen.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/WareHouse/WarehouseDetailScreen.screen.dart';
+// import 'package:phuthanh_warehouseapp/screen/WareHouse/WareHouseTransfer.screen.dart';
+import 'package:phuthanh_warehouseapp/warehouse/screen/WareHouse/WarehouseDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/history/WarehouseHistoryScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/warehouse/screen/history/WarehouseHistoryScreen.screen.dart';
 import 'package:flutter/services.dart';
 
 class WarehouseLongClick {

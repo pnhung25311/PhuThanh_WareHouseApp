@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-// import 'package:phuthanh_warehouseapp/Screen/WareHouse/ViewImgWareHouse.screen.dart';
+// import 'package:phuthanh_warehouseapp/screen/WareHouse/ViewImgWareHouse.screen.dart';
 // import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';

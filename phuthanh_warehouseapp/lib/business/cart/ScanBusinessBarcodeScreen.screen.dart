@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Product.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
+import 'package:phuthanh_warehouseapp/warehouse/components/utils/DesktopContentConstraint.custom.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/WareHouseService.service.dart';
@@ -98,7 +99,8 @@ class _ScanBusinessCartScreenState extends State<ScanBusinessCartScreen> {
     final rectHeight = 300.0;
 
     return Scaffold(
-      body: Stack(
+      body: DesktopContentConstraint(
+        child: Stack(
         children: [
           // CAMERA
           LayoutBuilder(
@@ -263,6 +265,7 @@ class _ScanBusinessCartScreenState extends State<ScanBusinessCartScreen> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

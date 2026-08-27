@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
-import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/Screen/Product/ViewImgProduct.screen.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Product.model.dart';
+import 'package:phuthanh_warehouseapp/warehouse/screen/Product/ViewImgProduct.screen.dart';
 import 'package:flutter/services.dart';
 
 class ProductLongClick {

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:phuthanh_warehouseapp/Screen/auth/LoginScreen.screen.dart';
+import 'package:phuthanh_warehouseapp/screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/cart/CartDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/business/history/HistoryBusinessScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/business/Cart.model.dart';
-import 'package:phuthanh_warehouseapp/model/info/Business.model.dart';
+import 'package:phuthanh_warehouseapp/model/business/Business.model.dart';
 import 'package:flutter/services.dart';
-import 'package:phuthanh_warehouseapp/model/info/Product.model.dart';
+import 'package:phuthanh_warehouseapp/model/shared/Product.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 
 class BusinessLongClick {
