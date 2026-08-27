@@ -1,11 +1,54 @@
 import 'package:flutter/material.dart';
+import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
+import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/business/Business.model.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/DesktopContentConstraint.custom.dart';
 
-class BusinessDetailScreen extends StatelessWidget {
+class BusinessDetailScreen extends StatefulWidget {
   final Business item;
 
   const BusinessDetailScreen({super.key, required this.item});
+
+  @override
+  State<BusinessDetailScreen> createState() => _BusinessDetailScreenState();
+}
+
+class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
+  final ApiClient _apiClient = ApiClient();
+  final FunctionConvertHelper _convertHelper = FunctionConvertHelper();
+  bool? _isInternalNetwork;
+
+  Business get item => widget.item;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkNetwork();
+  }
+
+  Future<void> _checkNetwork() async {
+    try {
+      final result = await _apiClient.isInternalNetwork();
+      if (mounted) setState(() => _isInternalNetwork = result);
+    } catch (_) {
+      if (mounted) setState(() => _isInternalNetwork = false);
+    }
+  }
+
+  String _resolveUrl(String url) {
+    if (_isInternalNetwork == true) return url;
+    return _convertHelper.convertToPublicIP(url);
+  }
+
+  void _openViewer(BuildContext context, List<String> urls, int initialIndex) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            _ImageViewerScreen(urls: urls, initialIndex: initialIndex),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +56,11 @@ class BusinessDetailScreen extends StatelessWidget {
       item.hinhAnh1,
       item.hinhAnh2,
       item.hinhAnh3,
-    ].whereType<String>().where((url) => url.trim().isNotEmpty).toList();
+    ]
+        .whereType<String>()
+        .where((url) => url.trim().isNotEmpty)
+        .map(_resolveUrl)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -46,21 +93,24 @@ class BusinessDetailScreen extends StatelessWidget {
             if (images.isNotEmpty) ...[
               const SizedBox(height: 12),
               Center(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.network(
-                    images.first,
-                    height: 220,
-                    width: MediaQuery.of(context).size.width * 0.9,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
+                child: GestureDetector(
+                  onTap: () => _openViewer(context, images, 0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      images.first,
                       height: 220,
                       width: MediaQuery.of(context).size.width * 0.9,
-                      color: Colors.grey.shade200,
-                      child: const Icon(
-                        Icons.broken_image,
-                        size: 80,
-                        color: Colors.grey,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        height: 220,
+                        width: MediaQuery.of(context).size.width * 0.9,
+                        color: Colors.grey.shade200,
+                        child: const Icon(
+                          Icons.broken_image,
+                          size: 80,
+                          color: Colors.grey,
+                        ),
                       ),
                     ),
                   ),
@@ -85,18 +135,21 @@ class BusinessDetailScreen extends StatelessWidget {
                     separatorBuilder: (_, __) => const SizedBox(width: 12),
                     itemBuilder: (context, index) {
                       final url = images[index + 1];
-                      return ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          url,
-                          width: 140,
-                          height: 100,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
+                      return GestureDetector(
+                        onTap: () => _openViewer(context, images, index + 1),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.network(
+                            url,
                             width: 140,
                             height: 100,
-                            color: Colors.grey.shade200,
-                            child: const Icon(Icons.image_not_supported),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 140,
+                              height: 100,
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.image_not_supported),
+                            ),
                           ),
                         ),
                       );
@@ -451,6 +504,49 @@ class BusinessDetailScreen extends StatelessWidget {
       backgroundColor: color.withOpacity(0.15),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       visualDensity: VisualDensity.compact,
+    );
+  }
+}
+
+/// Xem ảnh sản phẩm toàn màn hình, vuốt ngang giữa các ảnh, zoom to/nhỏ
+/// bằng pinch hoặc double-tap nhờ [InteractiveViewer].
+class _ImageViewerScreen extends StatelessWidget {
+  final List<String> urls;
+  final int initialIndex;
+
+  const _ImageViewerScreen({required this.urls, required this.initialIndex});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: PageView.builder(
+        controller: PageController(initialPage: initialIndex),
+        itemCount: urls.length,
+        itemBuilder: (context, index) {
+          return InteractiveViewer(
+            minScale: 0.8,
+            maxScale: 4,
+            child: Center(
+              child: Image.network(
+                urls[index],
+                fit: BoxFit.contain,
+                errorBuilder: (_, __, ___) => const Center(
+                  child: Icon(
+                    Icons.broken_image,
+                    color: Colors.white,
+                    size: 60,
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
