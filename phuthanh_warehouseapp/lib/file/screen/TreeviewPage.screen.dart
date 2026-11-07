@@ -13,6 +13,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 
+enum _UploadSource { galleryImages, galleryVideo, cameraPhoto, cameraVideo, files }
+
 class TreeViewPage extends StatefulWidget {
   const TreeViewPage({super.key});
 
@@ -182,10 +184,9 @@ class _TreeViewPageState extends State<TreeViewPage> {
 Future<void> _handlePickAndUploadFile() async {
   if (_isUploading || _isPickerOpenActive) return;
 
-  // Hiển thị một Dialog nhỏ hoặc BottomSheet để người dùng chọn nguồn
-  FileType targetType = FileType.any;
-  
-  final FileType? selectedType = await showModalBottomSheet<FileType>(
+  // Hiển thị một BottomSheet để người dùng chọn nguồn: chụp/quay trực tiếp,
+  // chọn từ thư viện ảnh/video hoặc mở trình quản lý tệp tin.
+  final _UploadSource? selectedSource = await showModalBottomSheet<_UploadSource>(
     context: context,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
@@ -196,14 +197,29 @@ Future<void> _handlePickAndUploadFile() async {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
+              leading: const Icon(Icons.camera_alt_rounded, color: Colors.blue),
+              title: const Text('Chụp ảnh'),
+              onTap: () => Navigator.pop(context, _UploadSource.cameraPhoto),
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam_rounded, color: Colors.red),
+              title: const Text('Quay video'),
+              onTap: () => Navigator.pop(context, _UploadSource.cameraVideo),
+            ),
+            ListTile(
               leading: const Icon(Icons.image_rounded, color: Colors.purple),
               title: const Text('Mở Thư viện ảnh (Gallery)'),
-              onTap: () => Navigator.pop(context, FileType.image),
+              onTap: () => Navigator.pop(context, _UploadSource.galleryImages),
+            ),
+            ListTile(
+              leading: const Icon(Icons.video_library_rounded, color: Colors.teal),
+              title: const Text('Mở Thư viện video (Gallery)'),
+              onTap: () => Navigator.pop(context, _UploadSource.galleryVideo),
             ),
             ListTile(
               leading: const Icon(Icons.folder_open_rounded, color: Colors.orange),
               title: const Text('Mở Quản lý tệp tin (Files)'),
-              onTap: () => Navigator.pop(context, FileType.any),
+              onTap: () => Navigator.pop(context, _UploadSource.files),
             ),
           ],
         ),
@@ -211,8 +227,7 @@ Future<void> _handlePickAndUploadFile() async {
     },
   );
 
-  if (selectedType == null) return;
-  targetType = selectedType;
+  if (selectedSource == null) return;
 
   // Khai báo danh sách chứa các file đã chọn (quy về một mối để xử lý loop phía dưới)
   List<PlatformFile> pickedFiles = [];
@@ -220,35 +235,64 @@ Future<void> _handlePickAndUploadFile() async {
   try {
     _isPickerOpenActive = true;
     await Future.delayed(const Duration(milliseconds: 300));
-    
-    if (targetType == FileType.image) {
-      // 📸 TRƯỜNG HỢP 1: Chọn ảnh từ Thư viện (Sử dụng ImagePicker)
-      final ImagePicker picker = ImagePicker();
-      final List<XFile> images = await picker.pickMultiImage();
-      
-      if (images.isNotEmpty) {
+
+    final ImagePicker picker = ImagePicker();
+
+    switch (selectedSource) {
+      case _UploadSource.galleryImages:
+        // 📸 Chọn ảnh từ Thư viện (nhiều ảnh)
+        final List<XFile> images = await picker.pickMultiImage();
         for (var xFile in images) {
-          // Lấy thông tin dung lượng file
           final int length = await xFile.length();
-          
           pickedFiles.add(
-            PlatformFile(
-              name: xFile.name,
-              path: xFile.path,
-              size: length,
-            ),
+            PlatformFile(name: xFile.name, path: xFile.path, size: length),
           );
         }
-      }
-    } else {
-      // 📁 TRƯỜNG HỢP 2: Chọn tài liệu/tệp tin khác (Giữ nguyên FilePicker cũ)
-      FilePickerResult? result = await FilePicker.pickFiles(
-        type: targetType,
-        allowMultiple: true, 
-      );
-      if (result != null) {
-        pickedFiles = result.files;
-      }
+        break;
+
+      case _UploadSource.galleryVideo:
+        // 🎞️ Chọn video từ Thư viện
+        final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+        if (video != null) {
+          final int length = await video.length();
+          pickedFiles.add(
+            PlatformFile(name: video.name, path: video.path, size: length),
+          );
+        }
+        break;
+
+      case _UploadSource.cameraPhoto:
+        // 📷 Chụp ảnh trực tiếp bằng camera
+        final XFile? photo = await picker.pickImage(source: ImageSource.camera);
+        if (photo != null) {
+          final int length = await photo.length();
+          pickedFiles.add(
+            PlatformFile(name: photo.name, path: photo.path, size: length),
+          );
+        }
+        break;
+
+      case _UploadSource.cameraVideo:
+        // 🎥 Quay video trực tiếp bằng camera
+        final XFile? video = await picker.pickVideo(source: ImageSource.camera);
+        if (video != null) {
+          final int length = await video.length();
+          pickedFiles.add(
+            PlatformFile(name: video.name, path: video.path, size: length),
+          );
+        }
+        break;
+
+      case _UploadSource.files:
+        // 📁 Chọn tài liệu/tệp tin khác (mọi định dạng, bao gồm cả video)
+        FilePickerResult? result = await FilePicker.pickFiles(
+          type: FileType.any,
+          allowMultiple: true,
+        );
+        if (result != null) {
+          pickedFiles = result.files;
+        }
+        break;
     }
   } catch (e) {
     _showErrorSnackBar("Không thể mở cửa sổ chọn file: $e");

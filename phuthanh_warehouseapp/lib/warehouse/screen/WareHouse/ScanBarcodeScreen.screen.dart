@@ -10,6 +10,7 @@ import 'package:phuthanh_warehouseapp/model/warehouse/WareHouse.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/WareHouseService.service.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:phuthanh_warehouseapp/components/ScanFromImageButton.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 
 class ScanScreen extends StatefulWidget {
@@ -326,6 +327,17 @@ class _ScanScreenState extends State<ScanScreen> {
                   onPressed: () => _controller.toggleTorch(),
                 );
               },
+            ),
+          ),
+
+          // NÚT QUÉT TỪ ẢNH (chỉ debug) — test trên máy ảo
+          Positioned(
+            top: 90,
+            right: 20,
+            child: ScanFromImageButton(
+              controller: _controller,
+              onDetect: _handleBarcode,
+              iconSize: 30,
             ),
           ),
 

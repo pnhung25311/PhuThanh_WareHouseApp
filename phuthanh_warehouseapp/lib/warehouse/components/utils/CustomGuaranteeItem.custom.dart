@@ -67,12 +67,10 @@ class _GuaranteeListItemState extends State<GuaranteeListItem>
     if (rawUrl == null || rawUrl.trim().isEmpty) return '';
     final url = rawUrl.trim();
 
-    if (_cachedInternalNetwork == 'internal') return url;
-    if (_cachedInternalNetwork == 'public') {
-      return _convertHelper.convertToPublicIP(url);
-    }
-    // fallback
-    return url;
+    // fallback (chưa xác định được mạng): giữ nguyên, không cố đổi IP
+    if (_cachedInternalNetwork == null) return url;
+
+    return _convertHelper.resolveNetworkUrl(url, _cachedInternalNetwork == 'internal');
   }
 
   String _formatDate(DateTime? date) =>

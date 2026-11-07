@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/screen/auth/LoginScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
 import 'package:phuthanh_warehouseapp/model/auth/Acount.model.dart';
-import 'package:phuthanh_warehouseapp/warehouse/screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomDrawerLongClick.custom.dart';
+import 'package:phuthanh_warehouseapp/helper/ChangeSystemDialog.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/helper/sharedPreferences.dart';
 import 'package:phuthanh_warehouseapp/model/shared/DrawerItem.model.dart';
@@ -113,47 +112,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
     );
   }
 
-  void _changeSystem() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Chọn hệ thống"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              /// HỆ THỐNG KHO
-              ListTile(
-                leading: const Icon(Icons.warehouse, color: Colors.blue),
-                title: const Text("Hệ thống kho"),
-                onTap: () {
-                  navigationHelper.pop(context);
-
-                  navigationHelper.pushAndRemoveUntil(
-                    context,
-                    const HomeScreen(),
-                  );
-                },
-              ),
-
-              /// HỆ THỐNG KINH DOANH
-              ListTile(
-                leading: const Icon(Icons.point_of_sale, color: Colors.green),
-                title: const Text("Hệ thống kinh doanh"),
-                onTap: () {
-                  navigationHelper.pop(context);
-                  navigationHelper.pushAndRemoveUntil(
-                    context,
-                    const HomeBusinessScreen(),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  void _changeSystem() => showChangeSystemDialog(context);
 
   @override
   Widget build(BuildContext context) {
@@ -279,10 +238,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
           // ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.change_circle, color: Colors.green),
+            leading: const Icon(kChangeSystemIcon, color: kChangeSystemColor),
             title: const Text(
               'Đổi hệ thống',
-              style: TextStyle(color: Colors.green),
+              style: TextStyle(color: kChangeSystemColor),
             ),
             onTap: _changeSystem,
           ),

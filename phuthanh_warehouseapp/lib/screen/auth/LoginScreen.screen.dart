@@ -3,12 +3,10 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:phuthanh_warehouseapp/screen/auth/ChangePasswordScreen.screen.dart';
-import 'package:phuthanh_warehouseapp/business/HomeBusiness.dart';
-import 'package:phuthanh_warehouseapp/file/screen/TreeviewPage.screen.dart';
+import 'package:phuthanh_warehouseapp/core/config/SystemRegistry.dart';
 import 'package:phuthanh_warehouseapp/helper/FunctionConvertHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/model/system/SystemOption.model.dart';
 // import 'package:phuthanh_warehouseapp/service/FirebaseService.service.dart';
-import 'package:phuthanh_warehouseapp/warehouse/screen/HomeScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/DesktopContentConstraint.custom.dart';
 import 'package:phuthanh_warehouseapp/core/network/api_client.dart';
@@ -37,12 +35,9 @@ class _LoginscreenState extends State<Loginscreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _rememberMe = false;
+  bool _canUseBiometric = false;
 
-  final List<SystemOption> _systems = [
-    SystemOption(name: 'Hệ thống kho', value: 'system1', id: 1),
-    SystemOption(name: 'Hệ thống kinh doanh', value: 'system2', id: 2),
-    SystemOption(name: 'Quản lý tệp tin', value: 'system3', id: 3),
-  ];
+  final List<SystemOption> _systems = SystemRegistry.systems;
 
   SystemOption? _selectedSystem;
   bool? statusConnect;
@@ -98,14 +93,19 @@ class _LoginscreenState extends State<Loginscreen> {
         }
       });
 
-      // 3. TỰ ĐỘNG GỌI QUÉT VÂN TAY/KHUÔN MẶT KHI CÓ DỮ LIỆU ĐÃ LƯU
+      // 3. CHỈ HIỂN THỊ ICON FACEID/VÂN TAY KHI CÓ DỮ LIỆU ĐÃ LƯU, KHÔNG TỰ ĐỘNG QUÉT
       if (savedUsername.isNotEmpty && savedPassword.isNotEmpty) {
-        _handleBiometricAuth();
+        final isSupported = await _biometricAuthService.isDeviceSupported();
+        if (mounted) {
+          setState(() {
+            _canUseBiometric = isSupported;
+          });
+        }
       }
     }
   }
 
-  // 4. HÀM XỬ LÝ QUÉT SINH TRẮC HỌC VÀ ĐĂNG NHẬP
+  // 4. HÀM XỬ LÝ QUÉT SINH TRẮC HỌC VÀ ĐĂNG NHẬP (CHỈ CHẠY KHI NGƯỜI DÙNG BẤM ICON)
   Future<void> _handleBiometricAuth() async {
     // Kiểm tra máy có hỗ trợ phần cứng không
     bool isSupported = await _biometricAuthService.isDeviceSupported();
@@ -264,19 +264,10 @@ class _LoginscreenState extends State<Loginscreen> {
           return;
         }
 
-        switch (_selectedSystem!.id) {
-          case 1:
-            navigationHelper.pushAndRemoveUntil(context, HomeScreen());
-            break;
-          case 2:
-            navigationHelper.pushAndRemoveUntil(context, HomeBusinessScreen());
-            break;
-          case 3:
-            navigationHelper.pushAndRemoveUntil(context, TreeViewPage());
-            break;
-          default:
-            print('ko có hệ thống');
-        }
+        navigationHelper.pushAndRemoveUntil(
+          context,
+          SystemRegistry.screenFor(context, _selectedSystem!),
+        );
       } else {
         String message = "Đăng nhập thất bại (${response.statusCode})";
         try {
@@ -461,7 +452,30 @@ class _LoginscreenState extends State<Loginscreen> {
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      if (_canUseBiometric) ...[
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 49,
+                          height: 49,
+                          child: Material(
+                            color: const Color(
+                              0xFF3B62FF,
+                            ).withValues(alpha: 0.1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              side: const BorderSide(color: Color(0xFF3B62FF)),
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: _handleBiometricAuth,
+                              child: const Icon(
+                                Icons.face,
+                                color: Color(0xFF3B62FF),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
 

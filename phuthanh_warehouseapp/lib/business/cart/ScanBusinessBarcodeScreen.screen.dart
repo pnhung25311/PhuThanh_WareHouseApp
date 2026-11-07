@@ -8,6 +8,7 @@ import 'package:phuthanh_warehouseapp/helper/FunctionScreenHelper.helper.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/Info.service.dart';
 import 'package:phuthanh_warehouseapp/warehouse/service/WareHouseService.service.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:phuthanh_warehouseapp/components/ScanFromImageButton.custom.dart';
 
 class ScanBusinessCartScreen extends StatefulWidget {
   final bool isCart;
@@ -215,6 +216,17 @@ class _ScanBusinessCartScreenState extends State<ScanBusinessCartScreen> {
                   onPressed: () => _controller.toggleTorch(),
                 );
               },
+            ),
+          ),
+
+          // NÚT QUÉT TỪ ẢNH (chỉ debug) — test trên máy ảo
+          Positioned(
+            top: 90,
+            right: 20,
+            child: ScanFromImageButton(
+              controller: _controller,
+              onDetect: _handleBarcode,
+              iconSize: 30,
             ),
           ),
 

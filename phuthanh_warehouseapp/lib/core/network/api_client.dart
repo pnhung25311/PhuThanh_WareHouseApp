@@ -2,6 +2,7 @@
 // import 'dart:io';
 
 // import 'package:flutter_demo/model/warehouse/WareHouse.dart';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
@@ -10,11 +11,14 @@ import 'package:phuthanh_warehouseapp/warehouse/store/AppState.store.dart';
 class ApiClient {
   const ApiClient();
 
+  /// Địa chỉ API qua IP public (dùng khi cần link gửi cho người ngoài mạng LAN).
+  static const String publicBaseUrl = 'http://14.224.207.115:2010/api/';
+
   Future<String> getBaseUrl() async {
     String localIP = 'http://192.168.1.54:2010/api/';
-    String puclicIP = 'http://14.224.207.115:2010/api/';
+    // String puclicIP = 'http://14.224.207.115:2010/api/';
     // String localIP = 'http://192.168.1.11:8080/api/';
-    // String puclicIP = 'http://14.224.207.115:8080/api/';
+    String puclicIP = publicBaseUrl;
     try {
       final url = Uri.parse('http://checkip.amazonaws.com/');
       final result = await http.get(url);
@@ -83,6 +87,8 @@ class ApiClient {
     File file, {
     Map<String, String>? fields, // optional: gửi thêm form-data text
     String fileField = "file", // tên field upload (backend nhận)
+    String? filename, // đặt tên file gửi lên; mặc định giữ nguyên tên gốc
+    void Function(int sent, int total)? onProgress, // tiến độ gửi (byte)
   }) async {
     final baseUrl = await getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
@@ -97,14 +103,30 @@ class ApiClient {
       request.fields.addAll(fields);
     }
 
-    // Gửi file
-    final fileStream = http.MultipartFile.fromBytes(
-      fileField,
-      await file.readAsBytes(),
-      filename: file.path.split('/').last,
+    // Gửi file: đọc từ đĩa theo stream (không load hết vào RAM) để chịu
+    // được file lớn như video.
+    // Đếm số byte thật sự được gửi đi (stream kéo theo nhu cầu của kết nối nên
+    // vẫn không đọc hết file vào RAM).
+    final length = await file.length();
+    var sent = 0;
+    final countedStream = file.openRead().transform(
+      StreamTransformer<List<int>, List<int>>.fromHandlers(
+        handleData: (chunk, sink) {
+          sent += chunk.length;
+          onProgress?.call(sent, length);
+          sink.add(chunk);
+        },
+      ),
     );
 
-    request.files.add(fileStream);
+    request.files.add(
+      http.MultipartFile(
+        fileField,
+        countedStream,
+        length,
+        filename: filename ?? file.path.split('/').last,
+      ),
+    );
 
     return await request.send();
   }

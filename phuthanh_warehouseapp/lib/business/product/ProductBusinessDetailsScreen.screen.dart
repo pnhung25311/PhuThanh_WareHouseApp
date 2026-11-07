@@ -36,8 +36,7 @@ class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
   }
 
   String _resolveUrl(String url) {
-    if (_isInternalNetwork == true) return url;
-    return _convertHelper.convertToPublicIP(url);
+    return _convertHelper.resolveNetworkUrl(url, _isInternalNetwork == true);
   }
 
   void _openViewer(BuildContext context, List<String> urls, int initialIndex) {

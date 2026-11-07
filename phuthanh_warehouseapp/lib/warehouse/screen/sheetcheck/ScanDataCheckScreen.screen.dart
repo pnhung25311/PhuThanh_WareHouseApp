@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:phuthanh_warehouseapp/components/ScanFromImageButton.custom.dart';
 import 'package:phuthanh_warehouseapp/screen/auth/LoginScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/screen/datacheck/DataCheckDetailScreen.screen.dart';
 import 'package:phuthanh_warehouseapp/warehouse/components/utils/CustomTextFieldIcon.custom.dart';
@@ -351,6 +352,17 @@ class _ScanDataCheckScreenState extends State<ScanDataCheckScreen> {
                   onPressed: () => _controller.toggleTorch(),
                 );
               },
+            ),
+          ),
+
+          // NÚT QUÉT TỪ ẢNH (chỉ debug) — test trên máy ảo
+          Positioned(
+            top: 90,
+            right: 20,
+            child: ScanFromImageButton(
+              controller: _controller,
+              onDetect: _handleBarcode,
+              iconSize: 30,
             ),
           ),
 
